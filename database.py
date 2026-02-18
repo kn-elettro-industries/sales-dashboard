@@ -9,3 +9,10 @@ def load_data():
     conn.close()
     df["DATE"] = pd.to_datetime(df["DATE"])
     return df
+
+def clear_all_data():
+    conn = sqlite3.connect(config.DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS sales_master")
+    conn.commit()
+    conn.close()

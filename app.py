@@ -391,6 +391,20 @@ elif selected == "Data Management":
         "text/csv",
         key='download-csv'
     )
+    
+    st.markdown("---")
+    st.subheader("⚠️ Danger Zone")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🗑️ Clear All Data (Reset Dashboard)", type="primary"):
+            import database
+            try:
+                database.clear_all_data()
+                st.success("Database cleared! Please re-upload your Excel file to refresh the data.")
+                time.sleep(2)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error clearing data: {e}")
 
 # --- F. System Architecture ---
 elif selected == "System Architecture":

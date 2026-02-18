@@ -153,16 +153,21 @@ def generate_pdf(df, report_type, specific_entity=None):
         ax.set_xlabel("Month", fontsize=11, fontweight='bold')
         ax.set_ylabel("Revenue", fontsize=11, fontweight='bold')
         
-        # Add data labels
-        for x, y in zip(trend["MONTH"], trend["AMOUNT"]):
-            label = format_currency_pdf(y)
-            ax.annotate(label, 
-                        (x, y), 
-                        textcoords="offset points", 
-                        xytext=(0,10), 
-                        ha='center', 
-                        fontsize=8,
-                        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#dddddd", alpha=0.8))
+        # Rotate Labels 45 Degrees
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        
+        # Add data labels (skip overlapping ones if too many)
+        step = 1 if len(trend) < 15 else 2
+        for i, (x, y) in enumerate(zip(trend["MONTH"], trend["AMOUNT"])):
+            if i % step == 0:
+                label = format_currency_pdf(y)
+                ax.annotate(label, 
+                            (x, y), 
+                            textcoords="offset points", 
+                            xytext=(0,10), 
+                            ha='center', 
+                            fontsize=8,
+                            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#dddddd", alpha=0.8))
         
         img_path = create_chart(fig)
         plt.close(fig)
@@ -199,14 +204,17 @@ def generate_pdf(df, report_type, specific_entity=None):
         # Gold based colors
         colors = plt.cm.YlOrBr(np.linspace(0.4, 0.9, len(final_data)))
         
-        # Donut Chart
-        wedges, texts, autotexts = ax.pie(final_data, autopct='%1.1f%%', startangle=90, 
+        # Donut Chart with filtered labels
+        def autopct_format(pct):
+            return ('%1.1f%%' % pct) if pct > 4 else ''
+
+        wedges, texts, autotexts = ax.pie(final_data, autopct=autopct_format, startangle=90, 
                                           colors=colors, wedgeprops=dict(width=0.4, edgecolor='w'),
-                                          textprops={'fontsize': 10, 'weight': 'bold'})
+                                          textprops={'fontsize': 10, 'weight': 'bold'}, pctdistance=0.85)
         
         # Legend Side
-        ax.legend(wedges, final_data.index, title="Categories", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1), fontsize=10)
-        ax.set_title(f"Revenue by {grp_col}", fontsize=14, fontweight='bold')
+        ax.legend(wedges, final_data.index, title="Categories", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1), fontsize=9)
+        ax.set_title(f"Revenue by {grp_col}", fontsize=14, fontweight='bold', pad=20)
         
         img_path = create_chart(fig)
         plt.close(fig)
@@ -334,6 +342,9 @@ def generate_pdf(df, report_type, specific_entity=None):
             ax.legend(fontsize=10)
             ax.set_xlabel("Month", fontsize=11, fontweight='bold')
             ax.set_ylabel("Revenue", fontsize=11, fontweight='bold')
+            
+            # Rotate labels if needed
+            plt.xticks(rotation=45)
             
             img_path = create_chart(fig)
             plt.close(fig)

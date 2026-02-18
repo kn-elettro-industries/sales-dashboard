@@ -174,6 +174,15 @@ with st.sidebar:
         if selected_state:
             df = df[df["STATE"].isin(selected_state)]
 
+    # City Filter (Added based on user request)
+    city_col = "CITY" if "CITY" in df.columns else None
+    if city_col:
+        # Filter cities based on selected state if any
+        city_options = sorted(df[city_col].dropna().unique().tolist())
+        selected_city = st.multiselect("City", city_options)
+        if selected_city:
+            df = df[df[city_col].isin(selected_city)]
+
     # Dynamic filters for Customer and Material
     if "CUSTOMER_NAME" in df.columns:
         # Get unique customers, sorted

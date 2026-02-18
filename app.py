@@ -42,7 +42,27 @@ load_css()
 apply_theme()
 
 # ---------------------------------------------------------
-# 2. Data Loading
+# 2. Sidebar & Cloud Upload (MUST BE BEFORE DATA STOP)
+# ---------------------------------------------------------
+with st.sidebar:
+    # Logo
+    try:
+        st.image("assets/logo_white_text.png", width=None, use_container_width=True)
+    except:
+        st.markdown('<h2 style="text-align: center; color: #ffffff; margin-bottom: 20px; font-weight: 700; letter-spacing: 1px;">ELETTRO</h2>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Cloud Data Uploader
+    import cloud_data_wrapper
+    cloud_data_wrapper.render_cloud_uploader()
+    
+    st.markdown("---")
+
+    # Navigation (will be rendered later if data exists)
+    
+# ---------------------------------------------------------
+# 3. Data Loading
 # ---------------------------------------------------------
 @st.cache_data
 def get_data():
@@ -64,26 +84,17 @@ def get_data():
         return df
     except Exception as e:
         st.error(f"Error loading data: {e}")
-        return pd.DataFrame() # Return empty df to avoid crashes
+        return pd.DataFrame() 
 
 df = get_data()
-
 if df.empty:
-    st.warning("No data available. Please upload a file to the 'raw' folder.")
+    st.warning("⚠️ Application Ready! Upload data in the Sidebar found on the left 👈")
     st.stop()
 
 # ---------------------------------------------------------
-# 3. Sidebar Navigation & Filters
+# 4. Navigation & Filters (Requires Data)
 # ---------------------------------------------------------
 with st.sidebar:
-    # Logo Integration
-    try:
-        st.image("assets/logo_white_text.png", width=None, use_container_width=True)
-    except:
-        st.markdown('<h2 style="text-align: center; color: #ffffff; margin-bottom: 20px; font-weight: 700; letter-spacing: 1px;">ELETTRO</h2>', unsafe_allow_html=True)
-    
-    st.markdown("---")
-
     selected = option_menu(
         "Main Menu", 
         [
@@ -104,28 +115,16 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "transparent"},
-            "icon": {"color": "#FFD700", "font-size": "16px"}, # Gold Icons
+            "icon": {"color": "#FFD700", "font-size": "16px"}, 
             "nav-link": {"font-size": "14px", "text-align": "left", "margin":"0px", "--hover-color": "#333333"},
             "nav-link-selected": {"background-color": "#444444", "color": "#FFD700"},
         }
     )
-    
     st.markdown("---")
     
-
-    # --- Pipeline Monitor / Data Upload ---
+    # Pipeline Monitor
     st.markdown("### System Status")
-    
-    # Check if running locally or on cloud (simple heuristic: generic status check)
-    # We can use an environment variable or just check if 'watcher.py' is running?
-    # Actually, let's just show the Cloud Uploader if the Local Watcher isn't active/detected,
-    # OR just add it as an option always for manual uploads.
-    
-    import cloud_data_wrapper
-    cloud_data_wrapper.render_cloud_uploader()
-
     status_placeholder = st.empty()
-
     def check_pipeline_status():
         try:
             status = pipeline_monitor.get_status()
@@ -136,7 +135,6 @@ with st.sidebar:
                     time.sleep(1)
                     st.rerun()
                 elif status["status"] == "Completed":
-                    # On cloud, this might persist from last run
                     st.caption(f"Last Update: {status['details']}")
                 elif status["status"] == "Failed":
                     st.error(f"Error: {status['details']}")
@@ -144,7 +142,6 @@ with st.sidebar:
                     st.caption("Auto-Watcher: Idle")
         except:
             st.caption("Status unavailable")
-
     check_pipeline_status()
     st.markdown("---")
 

@@ -1,0 +1,45 @@
+import os
+
+# Base Directory (Current Working Directory)
+BASE_DIR = os.getcwd()
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+# Folder Paths
+RAW_FOLDER = os.path.join(DATA_DIR, "raw")
+MASTER_FOLDER = os.path.join(DATA_DIR, "masters")
+OUTPUT_FOLDER = os.path.join(DATA_DIR, "output")
+PROCESSED_FOLDER = os.path.join(DATA_DIR, "processed")
+
+# Ensure directories exist
+for folder in [RAW_FOLDER, MASTER_FOLDER, OUTPUT_FOLDER, PROCESSED_FOLDER]:
+    os.makedirs(folder, exist_ok=True)
+
+# Database
+DB_NAME = "sales_database.db"
+DB_PATH = os.path.join(DATA_DIR, DB_NAME)
+    
+# Files
+CUSTOMER_MASTER_FILE = os.path.join(MASTER_FOLDER, "customer_master.xlsx")
+SALES_MASTER_FILE = os.path.join(OUTPUT_FOLDER, "sales_master.xlsx")
+AUDIT_LOG_FILE = os.path.join(OUTPUT_FOLDER, "audit_log.xlsx")
+MONTHLY_SUMMARY_FILE = os.path.join(OUTPUT_FOLDER, "monthly_summary.xlsx")
+
+# Business Logic
+FY_START_MONTH = 4
+
+# Exclusion List (Material Groups to Ignore)
+EXCLUDE_KEYWORDS = [
+    "SERVICE", "AIR VENT", "PACKING", "RAW", "BRASS", "PANEL",
+    "SALES ACCOUNT", "MASTER BATCH", "SEMI", "PPCP", "FIXED",
+    "PROTECTION", "HIPS", "ABS", "INDIRECT", "NYLOAN", "PP BLACK",
+    "NASER MILES PARIS", "DOCUMENT HOLDER",
+    "SWISS MILITARY MODLE MAZE",
+    "SELF ADHESIVE TIE MOUNT", "SCREW TYPE TIE MOUNT"
+]
+
+# Rename Mappings (Standardizing Material Groups)
+MATERIAL_GROUP_MAPPINGS = {
+    r"CONDUIT.*GLAND": "POLYAMIDE CONDUIT GLAND",
+    r"REVER": "REVERSE FORWARD",
+    r"REVERSE FORWORD": "REVERSE FORWARD"
+}

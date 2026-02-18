@@ -40,10 +40,10 @@ echo [INFO] Renaming branch to 'main'...
 git branch -M main
 
 echo.
-echo [INFO] Pushing to GitHub...
+echo [INFO] Pushing to GitHub (Forcing overwrite)...
 echo (If prompted, please enter your GitHub username/password/token)
 echo.
-git push -u origin main
+git push -u origin main --force
 
 if %errorlevel% neq 0 (
     echo.

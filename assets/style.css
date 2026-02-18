@@ -1,0 +1,148 @@
+/* ------------------------------------------------ */
+/* ELETTRO ENTERPRISE - PREMIUM GOLD THEME          */
+/* ------------------------------------------------ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* 1. Master Layout & Background */
+.stApp {
+    font-family: 'Inter', sans-serif;
+    background-color: #000000;
+    background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000000 70%);
+    color: #e0e0e0;
+}
+
+/* 2. Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Inter', sans-serif;
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.main-header {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+    background: linear-gradient(90deg, #FFD700, #ffffff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0px 0px 20px rgba(255, 215, 0, 0.3);
+}
+
+/* 3. Professional Cards (Glassmorphism, Bordered) */
+div[data-testid="stMetric"],
+.css-card {
+    background-color: rgba(15, 15, 15, 0.95);
+    border: 1px solid #333333;
+    border-radius: 8px;
+    /* Slightly rounded */
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+div[data-testid="stMetric"]:hover,
+.css-card:hover {
+    border-color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 4. Metric Styling */
+label[data-testid="stMetricLabel"] {
+    font-size: 0.85rem;
+    color: #aaaaaa;
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+div[data-testid="stMetricValue"] {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+div[data-testid="stMetricDelta"] {
+    background-color: #1a1a1a;
+    color: #e0e0e0 !important;
+    border: 1px solid #444;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* 5. Sidebar Restyling */
+section[data-testid="stSidebar"] {
+    background-color: #050505;
+    border-right: 1px solid #222;
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+    color: #ffffff;
+}
+
+/* 6. Chat Message */
+div[data-testid="stChatMessage"] {
+    background-color: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #e0e0e0;
+}
+
+div[data-testid="stChatMessage"][data-testid="user"] {
+    background-color: #0a0a0a;
+    border-color: #FFD700;
+    box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.05);
+}
+
+/* 7. Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #FFD700;
+}
+
+/* 8. Loader */
+.stSpinner>div {
+    border-top-color: #FFD700 !important;
+}
+
+/* Custom Colored Top Borders for Metrics */
+div[data-testid="stMetric"] {
+    border-top: 3px solid #FFD700;
+}
+
+/* Table Styling Override */
+.stDataFrame {
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}

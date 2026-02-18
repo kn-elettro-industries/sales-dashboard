@@ -1,0 +1,14 @@
+streamlit
+pandas
+plotly
+openpyxl
+scikit-learn
+numpy
+watchdog
+streamlit-option-menu
+statsmodels
+
+mlxtend
+fpdf
+openpyxl
+matplotlib

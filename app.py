@@ -69,8 +69,16 @@ def get_data():
     try:
         df = load_data()
         # Fix NULL states
+        # Fix NULL states
         if "STATE" in df.columns:
-            df["STATE"] = df["STATE"].fillna("UNKNOWN")
+            df["STATE"] = df["STATE"].fillna("Unknown")
+            
+        # Ensure CITY column exists (Safety Net)
+        if "CITY" not in df.columns:
+            df["CITY"] = "Unknown"
+        else:
+            df["CITY"] = df["CITY"].fillna("Unknown")
+
         # Determine Financial Year if missing
         if "FINANCIAL_YEAR" not in df.columns and "DATE" in df.columns:
             df["DATE"] = pd.to_datetime(df["DATE"])

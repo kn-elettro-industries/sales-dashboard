@@ -38,7 +38,16 @@ def standardize(df):
     )
     
     # Rename specific columns if they exist
-    rename_map = {"NO": "INVOICE_NO", "NO.": "INVOICE_NO"}
+    rename_map = {
+        "NO": "INVOICE_NO", 
+        "NO.": "INVOICE_NO",
+        "TOWN": "CITY",
+        "DISTRICT": "CITY",
+        "LOCATION": "CITY",
+        "REGION": "STATE",
+        "PROVINCE": "STATE",
+        "TERRITORY": "STATE"
+    }
     df = df.rename(columns=rename_map)
 
     # Standardize string/object columns
@@ -165,6 +174,10 @@ def clean_and_transform(df):
         # Total Amount
         df["TOTALAMOUNT"] = df["AMOUNT"] + df["TAX"]
 
+    # 6. Ensure CITY column exists
+    if "CITY" not in df.columns:
+        df["CITY"] = "Unknown"
+        
     return df
 
 def merge_customer_master(sales_df):
@@ -214,6 +227,19 @@ def update_database(new_df):
     # Check if table exists
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sales_master'")
     table_exists = cursor.fetchone()
+
+    if table_exists:
+        # Schema Evolution: Check if CITY column exists
+        cursor.execute("PRAGMA table_info(sales_master)")
+        columns = [info[1] for info in cursor.fetchall()]
+        
+        if "CITY" not in columns:
+            logging.info("Adding missing CITY column to sales_master")
+            try:
+                cursor.execute("ALTER TABLE sales_master ADD COLUMN CITY TEXT DEFAULT 'Unknown'")
+                conn.commit()
+            except Exception as e:
+                logging.error(f"Failed to add CITY column: {e}")
 
     new_records_count = 0
 

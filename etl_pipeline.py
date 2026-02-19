@@ -61,6 +61,11 @@ def standardize(df):
             if "ITEMNAME" not in df.columns and "GROUP" not in col_upper:
                 df.rename(columns={col: "ITEMNAME"}, inplace=True)
 
+        # INVOICE Synonyms
+        elif any(x in col_upper for x in ["INVOICE", "BILL NO", "DOC NO", "VOUCHER"]):
+            if "INVOICE_NO" not in df.columns and "DATE" not in col_upper:
+                df.rename(columns={col: "INVOICE_NO"}, inplace=True)
+
     return df
 
 def calculate_fy(date):
@@ -157,16 +162,23 @@ def clean_and_transform(df):
         logging.info("Recalculating Financials for all rows.")
         
         # Clean state column for comparison
-        if "STATE" in df.columns:
-            df["STATE"] = df["STATE"].fillna(company_state).str.upper().str.strip()
-        else:
-            df["STATE"] = company_state
+        # CRITICAL FIX: Do NOT overwrite actual data with default yet.
+        # We need to know if it's truly missing to check Customer Master later.
+        
+        calc_state_series = df["STATE"].copy() if "STATE" in df.columns else pd.Series(["Unknown"] * len(df))
+        calc_state_series = calc_state_series.fillna("Unknown").str.upper().str.strip()
+        
+        # If State is Unknown, we assume Intra-State (Maharashtra) for TAX purposes only?
+        # Or we can leave tax 0. Let's assume Intra-state for safety so totals aren't wrong.
+        # BUT we must NOT save "MAHARASHTRA" to the df["STATE"] unless it was there.
         
         # 18% Tax Rate
         tax_rate = 0.18
         
-        intra_state = df["STATE"] == company_state
-        inter_state = df["STATE"] != company_state
+        # Logic: If State is Company State OR Unknown -> CGST/SGST (Intra)
+        # Else -> IGST (Inter)
+        intra_state = calc_state_series.isin([company_state, "UNKNOWN", "MAHARASHTRA"])
+        inter_state = ~intra_state
         
         # IGST
         df.loc[inter_state, "IGST"] = df.loc[inter_state, "AMOUNT"] * tax_rate

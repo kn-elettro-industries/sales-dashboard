@@ -90,6 +90,11 @@ def get_data():
         if "MONTH" not in df.columns and "DATE" in df.columns:
             df["MONTH"] = pd.to_datetime(df["DATE"]).dt.to_period("M").astype(str)
             
+        # Ensure INVOICE_NO for KPIs
+        if "INVOICE_NO" not in df.columns:
+            # Create dummy index if missing so KPIs don't crash
+            df["INVOICE_NO"] = df.index.astype(str)
+
         return df
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -446,6 +451,14 @@ elif selected == "Data Management":
             st.write(raw_preview.columns.tolist())
         else:
             st.warning("No raw files found. Upload a file first.")
+            
+        st.markdown("---")
+        st.caption("Current Data Distribution (State):")
+        if "STATE" in df.columns:
+             st.write(df["STATE"].value_counts().head())
+        else:
+             st.error("STATE column missing in processed data.")
+             
     except Exception as e:
         st.error(f"Error reading raw file: {e}")
     

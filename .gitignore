@@ -1,7 +1,18 @@
-data/
+# Ignore Data Folders
+data/raw/
+data/processed/
+data/output/
+
+# Ignore DBs
 *.db
 *.sqlite
+
+# Ignore Excel files generally
 *.xlsx
+
+# Exception: Customer Master & Targets (Required for Cloud)
+!data/masters/customer_master.xlsx
+!data/masters/targets.xlsx
 __pycache__/
 .idea/
 venv/

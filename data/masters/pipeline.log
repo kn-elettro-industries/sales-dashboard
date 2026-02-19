@@ -1,0 +1,414 @@
+2026-02-12 16:39:06,905 - INFO - Reading file: 01. APRIL 2024.xlsx
+2026-02-12 16:39:07,049 - INFO - Reading file: 01. APRIL 2025.xlsx
+2026-02-12 16:39:07,132 - INFO - Reading file: 02. MAY 2024.xlsx
+2026-02-12 16:39:07,189 - INFO - Reading file: 02. MAY 2025.xlsx
+2026-02-12 16:39:07,252 - INFO - Reading file: 03. JUNE 2024.xlsx
+2026-02-12 16:39:07,308 - INFO - Reading file: 03. JUNE 2025.xlsx
+2026-02-12 16:39:07,373 - INFO - Reading file: 04. JULY 2024.xlsx
+2026-02-12 16:39:07,429 - INFO - Reading file: 04. JULY 2025.xlsx
+2026-02-12 16:39:07,503 - INFO - Reading file: 05. AUG 2024.xlsx
+2026-02-12 16:39:07,576 - INFO - Reading file: 05. AUG 2025.xlsx
+2026-02-12 16:39:07,643 - INFO - Reading file: 06. SEP 2024.xlsx
+2026-02-12 16:39:07,706 - INFO - Reading file: 06. SEP 2025.xlsx
+2026-02-12 16:39:07,785 - INFO - Reading file: 07. OCT 2024.xlsx
+2026-02-12 16:39:07,843 - INFO - Reading file: 07. OCT 2025.xlsx
+2026-02-12 16:39:07,911 - INFO - Reading file: 08. NOV 2024.xlsx
+2026-02-12 16:39:07,975 - INFO - Reading file: 08. NOV 2025.xlsx
+2026-02-12 16:39:08,048 - INFO - Reading file: 09. DEC 2024.xlsx
+2026-02-12 16:39:08,120 - INFO - Reading file: 09. DEC 2025.xlsx
+2026-02-12 16:39:08,215 - INFO - Reading file: 10. JAN 2025.xlsx
+2026-02-12 16:39:08,282 - INFO - Reading file: 11. FEB 2025.xlsx
+2026-02-12 16:39:08,343 - INFO - Reading file: 12. MARCH 2025.xlsx
+2026-02-12 16:39:08,407 - INFO - Reading file: JAN2026-SalesReportWithItem.xlsx
+2026-02-12 16:39:48,061 - INFO - Reading file: 01. APRIL 2024.xlsx
+2026-02-12 16:39:48,200 - INFO - Reading file: 01. APRIL 2025.xlsx
+2026-02-12 16:39:48,280 - INFO - Reading file: 02. MAY 2024.xlsx
+2026-02-12 16:39:48,336 - INFO - Reading file: 02. MAY 2025.xlsx
+2026-02-12 16:39:48,401 - INFO - Reading file: 03. JUNE 2024.xlsx
+2026-02-12 16:39:48,455 - INFO - Reading file: 03. JUNE 2025.xlsx
+2026-02-12 16:39:48,518 - INFO - Reading file: 04. JULY 2024.xlsx
+2026-02-12 16:39:48,572 - INFO - Reading file: 04. JULY 2025.xlsx
+2026-02-12 16:39:48,645 - INFO - Reading file: 05. AUG 2024.xlsx
+2026-02-12 16:39:48,719 - INFO - Reading file: 05. AUG 2025.xlsx
+2026-02-12 16:39:48,785 - INFO - Reading file: 06. SEP 2024.xlsx
+2026-02-12 16:39:48,846 - INFO - Reading file: 06. SEP 2025.xlsx
+2026-02-12 16:39:48,921 - INFO - Reading file: 07. OCT 2024.xlsx
+2026-02-12 16:39:48,982 - INFO - Reading file: 07. OCT 2025.xlsx
+2026-02-12 16:39:49,048 - INFO - Reading file: 08. NOV 2024.xlsx
+2026-02-12 16:39:49,110 - INFO - Reading file: 08. NOV 2025.xlsx
+2026-02-12 16:39:49,183 - INFO - Reading file: 09. DEC 2024.xlsx
+2026-02-12 16:39:49,254 - INFO - Reading file: 09. DEC 2025.xlsx
+2026-02-12 16:39:49,343 - INFO - Reading file: 10. JAN 2025.xlsx
+2026-02-12 16:39:49,408 - INFO - Reading file: 11. FEB 2025.xlsx
+2026-02-12 16:39:49,467 - INFO - Reading file: 12. MARCH 2025.xlsx
+2026-02-12 16:39:49,530 - INFO - Reading file: JAN2026-SalesReportWithItem.xlsx
+2026-02-12 16:39:49,710 - INFO - Duplicates removed: 8
+2026-02-12 16:39:49,713 - WARNING - Missing CITY rows: 1130
+2026-02-12 16:39:49,713 - WARNING - Missing STATE rows: 1130
+2026-02-12 16:40:20,639 - INFO - Reading file: 01. APRIL 2024.xlsx
+2026-02-12 16:40:20,783 - INFO - Reading file: 01. APRIL 2025.xlsx
+2026-02-12 16:40:20,864 - INFO - Reading file: 02. MAY 2024.xlsx
+2026-02-12 16:40:20,919 - INFO - Reading file: 02. MAY 2025.xlsx
+2026-02-12 16:40:20,982 - INFO - Reading file: 03. JUNE 2024.xlsx
+2026-02-12 16:40:21,038 - INFO - Reading file: 03. JUNE 2025.xlsx
+2026-02-12 16:40:21,103 - INFO - Reading file: 04. JULY 2024.xlsx
+2026-02-12 16:40:21,158 - INFO - Reading file: 04. JULY 2025.xlsx
+2026-02-12 16:40:21,234 - INFO - Reading file: 05. AUG 2024.xlsx
+2026-02-12 16:40:21,306 - INFO - Reading file: 05. AUG 2025.xlsx
+2026-02-12 16:40:21,373 - INFO - Reading file: 06. SEP 2024.xlsx
+2026-02-12 16:40:21,433 - INFO - Reading file: 06. SEP 2025.xlsx
+2026-02-12 16:40:21,511 - INFO - Reading file: 07. OCT 2024.xlsx
+2026-02-12 16:40:21,570 - INFO - Reading file: 07. OCT 2025.xlsx
+2026-02-12 16:40:21,639 - INFO - Reading file: 08. NOV 2024.xlsx
+2026-02-12 16:40:21,703 - INFO - Reading file: 08. NOV 2025.xlsx
+2026-02-12 16:40:21,773 - INFO - Reading file: 09. DEC 2024.xlsx
+2026-02-12 16:40:21,843 - INFO - Reading file: 09. DEC 2025.xlsx
+2026-02-12 16:40:21,931 - INFO - Reading file: 10. JAN 2025.xlsx
+2026-02-12 16:40:21,994 - INFO - Reading file: 11. FEB 2025.xlsx
+2026-02-12 16:40:22,054 - INFO - Reading file: 12. MARCH 2025.xlsx
+2026-02-12 16:40:22,116 - INFO - Reading file: JAN2026-SalesReportWithItem.xlsx
+2026-02-12 16:40:22,291 - INFO - Duplicates removed: 8
+2026-02-12 16:40:22,295 - WARNING - Missing CITY rows: 1130
+2026-02-12 16:40:22,295 - WARNING - Missing STATE rows: 1130
+2026-02-14 12:55:20,096 - INFO - --- Starting ETL Pipeline ---
+2026-02-14 12:55:20,096 - INFO - No new raw files found.
+2026-02-14 12:55:20,096 - INFO - Pipeline finished: No data to process.
+2026-02-14 12:57:31,962 - INFO - --- Starting ETL Pipeline ---
+2026-02-14 12:57:31,962 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-14 12:57:31,964 - ERROR - Error loading 01. APRIL 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:31,978 - ERROR - Error loading 01. APRIL 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:31,992 - ERROR - Error loading 02. MAY 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,003 - ERROR - Error loading 02. MAY 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,014 - ERROR - Error loading 03. JUNE 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,025 - ERROR - Error loading 03. JUNE 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,035 - ERROR - Error loading 04. JULY 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,047 - ERROR - Error loading 04. JULY 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,048 - ERROR - Error loading 05. AUG 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,062 - ERROR - Error loading 05. AUG 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,073 - ERROR - Error loading 06. SEP 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,086 - ERROR - Error loading 06. SEP 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,097 - ERROR - Error loading 07. OCT 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,108 - ERROR - Error loading 07. OCT 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,118 - ERROR - Error loading 08. NOV 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,128 - ERROR - Error loading 08. NOV 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,140 - ERROR - Error loading 09. DEC 2024.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,152 - ERROR - Error loading 09. DEC 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,163 - ERROR - Error loading 10. JAN 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,174 - ERROR - Error loading 11. FEB 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,184 - ERROR - Error loading 12. MARCH 2025.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,195 - ERROR - Error loading JAN2026-SalesReportWithItem.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+2026-02-14 12:57:32,195 - INFO - Pipeline finished: No data to process.
+2026-02-14 13:03:28,167 - INFO - --- Starting ETL Pipeline ---
+2026-02-14 13:03:28,168 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-14 13:03:28,364 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-14 13:03:28,451 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-14 13:03:28,513 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-14 13:03:28,587 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-14 13:03:28,651 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-14 13:03:28,726 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-14 13:03:28,791 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-14 13:03:28,873 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-14 13:03:28,937 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-14 13:03:29,012 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-14 13:03:29,074 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-14 13:03:29,162 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-14 13:03:29,221 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-14 13:03:29,297 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-14 13:03:29,381 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-14 13:03:29,453 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-14 13:03:29,529 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-14 13:03:29,626 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-14 13:03:29,697 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-14 13:03:29,767 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-14 13:03:29,844 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-14 13:03:29,937 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-14 13:03:30,298 - INFO - Rows excluded by keywords: 1654
+2026-02-14 13:03:30,401 - INFO - Customer Master merged.
+2026-02-14 13:03:30,419 - INFO - No new records to append to DB.
+2026-02-14 13:03:34,480 - INFO - --- Pipeline Completed Successfully ---
+2026-02-14 13:05:22,903 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-14 13:06:21,904 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-16 17:50:11,190 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-17 12:32:17,985 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-17 12:32:17,986 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-17 12:33:05,419 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-17 12:33:05,419 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-17 12:34:52,559 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-17 12:34:52,559 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-17 12:35:58,056 - INFO - --- Starting ETL Pipeline ---
+2026-02-17 12:35:58,058 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-17 12:35:58,319 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-17 12:35:58,401 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-17 12:35:58,462 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-17 12:35:58,551 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-17 12:35:58,619 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-17 12:35:58,691 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-17 12:35:58,760 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-17 12:35:58,842 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-17 12:35:58,907 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-17 12:35:58,978 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-17 12:35:59,037 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-17 12:35:59,121 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-17 12:35:59,185 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-17 12:35:59,255 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-17 12:35:59,320 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-17 12:35:59,394 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-17 12:35:59,473 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-17 12:35:59,567 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-17 12:35:59,637 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-17 12:35:59,703 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-17 12:35:59,788 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-17 12:35:59,883 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-17 12:36:00,123 - INFO - Rows excluded by keywords: 1654
+2026-02-17 12:36:00,204 - INFO - Customer Master merged.
+2026-02-17 12:36:00,222 - INFO - No new records to append to DB.
+2026-02-17 12:36:01,143 - ERROR - Pipeline Failed: [Errno 13] Permission denied: 'C:\\Users\\Admin\\PycharmProjects\\sales_pipeline (EXPERIMENT)\\data\\output\\sales_master.xlsx'
+2026-02-17 12:36:46,100 - INFO - --- Starting ETL Pipeline ---
+2026-02-17 12:36:46,101 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-17 12:36:46,263 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-17 12:36:46,345 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-17 12:36:46,407 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-17 12:36:46,475 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-17 12:36:46,533 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-17 12:36:46,613 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-17 12:36:46,702 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-17 12:36:46,787 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-17 12:36:46,855 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-17 12:36:46,926 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-17 12:36:46,984 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-17 12:36:47,071 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-17 12:36:47,133 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-17 12:36:47,203 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-17 12:36:47,270 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-17 12:36:47,348 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-17 12:36:47,420 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-17 12:36:47,514 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-17 12:36:47,589 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-17 12:36:47,659 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-17 12:36:47,734 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-17 12:36:47,830 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-17 12:36:48,070 - INFO - Rows excluded by keywords: 1654
+2026-02-17 12:36:48,172 - INFO - Customer Master merged.
+2026-02-17 12:36:48,293 - INFO - Created new table with 25124 records.
+2026-02-17 12:36:49,226 - WARNING - Could not update C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\output\sales_master.xlsx (File open?). Skipping Excel export.
+2026-02-17 12:36:49,227 - INFO - Archived 01. APRIL 2024.xlsx
+2026-02-17 12:36:49,227 - INFO - Archived 01. APRIL 2025.xlsx
+2026-02-17 12:36:49,228 - INFO - Archived 02. MAY 2024.xlsx
+2026-02-17 12:36:49,228 - INFO - Archived 02. MAY 2025.xlsx
+2026-02-17 12:36:49,229 - INFO - Archived 03. JUNE 2024.xlsx
+2026-02-17 12:36:49,229 - INFO - Archived 03. JUNE 2025.xlsx
+2026-02-17 12:36:49,252 - INFO - Archived 04. JULY 2024.xlsx
+2026-02-17 12:36:49,269 - INFO - Archived 04. JULY 2025.xlsx
+2026-02-17 12:36:49,270 - INFO - Archived 05. AUG 2024.xlsx
+2026-02-17 12:36:49,270 - INFO - Archived 05. AUG 2025.xlsx
+2026-02-17 12:36:49,270 - INFO - Archived 06. SEP 2024.xlsx
+2026-02-17 12:36:49,271 - INFO - Archived 06. SEP 2025.xlsx
+2026-02-17 12:36:49,271 - INFO - Archived 07. OCT 2024.xlsx
+2026-02-17 12:36:49,271 - INFO - Archived 07. OCT 2025.xlsx
+2026-02-17 12:36:49,285 - INFO - Archived 08. NOV 2024.xlsx
+2026-02-17 12:36:49,285 - INFO - Archived 08. NOV 2025.xlsx
+2026-02-17 12:36:49,286 - INFO - Archived 09. DEC 2024.xlsx
+2026-02-17 12:36:49,286 - INFO - Archived 09. DEC 2025.xlsx
+2026-02-17 12:36:49,286 - INFO - Archived 10. JAN 2025.xlsx
+2026-02-17 12:36:49,287 - INFO - Archived 11. FEB 2025.xlsx
+2026-02-17 12:36:49,287 - INFO - Archived 12. MARCH 2025.xlsx
+2026-02-17 12:36:49,287 - INFO - Archived JAN2026-SalesReportWithItem.xlsx
+2026-02-17 12:36:49,287 - INFO - --- Pipeline Completed Successfully ---
+2026-02-17 12:37:46,770 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-17 12:37:46,771 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-17 12:54:14,069 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-17 12:54:14,069 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-17 15:23:10,143 - INFO - --- Starting ETL Pipeline ---
+2026-02-17 15:23:10,144 - INFO - No new raw files found.
+2026-02-17 15:23:10,144 - INFO - Pipeline finished: No data to process.
+2026-02-17 15:23:45,931 - INFO - --- Starting ETL Pipeline ---
+2026-02-17 15:23:45,932 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-17 15:23:46,187 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-17 15:23:46,275 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-17 15:23:46,343 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-17 15:23:46,424 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-17 15:23:46,500 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-17 15:23:46,578 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-17 15:23:46,657 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-17 15:23:46,755 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-17 15:23:46,836 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-17 15:23:46,915 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-17 15:23:46,986 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-17 15:23:47,086 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-17 15:23:47,153 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-17 15:23:47,230 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-17 15:23:47,308 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-17 15:23:47,399 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-17 15:23:47,479 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-17 15:23:47,625 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-17 15:23:47,704 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-17 15:23:47,789 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-17 15:23:47,884 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-17 15:23:47,991 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-17 15:23:48,270 - INFO - Rows excluded by keywords: 1654
+2026-02-17 15:23:48,352 - INFO - Recalculating Financials for all rows.
+2026-02-17 15:23:48,386 - INFO - Customer Master merged.
+2026-02-17 15:23:48,505 - INFO - Created new table with 25124 records.
+2026-02-17 15:23:51,318 - INFO - Excel Master updated successfully.
+2026-02-17 15:23:51,319 - INFO - Archived 01. APRIL 2024.xlsx
+2026-02-17 15:23:51,320 - INFO - Archived 01. APRIL 2025.xlsx
+2026-02-17 15:23:51,320 - INFO - Archived 02. MAY 2024.xlsx
+2026-02-17 15:23:51,320 - INFO - Archived 02. MAY 2025.xlsx
+2026-02-17 15:23:51,321 - INFO - Archived 03. JUNE 2024.xlsx
+2026-02-17 15:23:51,336 - INFO - Archived 03. JUNE 2025.xlsx
+2026-02-17 15:23:51,336 - INFO - Archived 04. JULY 2024.xlsx
+2026-02-17 15:23:51,336 - INFO - Archived 04. JULY 2025.xlsx
+2026-02-17 15:23:51,337 - INFO - Archived 05. AUG 2024.xlsx
+2026-02-17 15:23:51,337 - INFO - Archived 05. AUG 2025.xlsx
+2026-02-17 15:23:51,337 - INFO - Archived 06. SEP 2024.xlsx
+2026-02-17 15:23:51,338 - INFO - Archived 06. SEP 2025.xlsx
+2026-02-17 15:23:51,338 - INFO - Archived 07. OCT 2024.xlsx
+2026-02-17 15:23:51,338 - INFO - Archived 07. OCT 2025.xlsx
+2026-02-17 15:23:51,339 - INFO - Archived 08. NOV 2024.xlsx
+2026-02-17 15:23:51,339 - INFO - Archived 08. NOV 2025.xlsx
+2026-02-17 15:23:51,339 - INFO - Archived 09. DEC 2024.xlsx
+2026-02-17 15:23:51,339 - INFO - Archived 09. DEC 2025.xlsx
+2026-02-17 15:23:51,352 - INFO - Archived 10. JAN 2025.xlsx
+2026-02-17 15:23:51,352 - INFO - Archived 11. FEB 2025.xlsx
+2026-02-17 15:23:51,352 - INFO - Archived 12. MARCH 2025.xlsx
+2026-02-17 15:23:51,353 - INFO - Archived JAN2026-SalesReportWithItem.xlsx
+2026-02-17 15:23:51,353 - INFO - --- Pipeline Completed Successfully ---
+2026-02-17 15:27:15,700 - INFO - --- Starting ETL Pipeline ---
+2026-02-17 15:27:15,701 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-17 15:27:15,879 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-17 15:27:15,975 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-17 15:27:16,035 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-17 15:27:16,114 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-17 15:27:16,185 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-17 15:27:16,291 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-17 15:27:16,372 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-17 15:27:16,462 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-17 15:27:16,534 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-17 15:27:16,609 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-17 15:27:16,683 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-17 15:27:16,774 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-17 15:27:16,844 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-17 15:27:16,919 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-17 15:27:16,989 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-17 15:27:17,075 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-17 15:27:17,155 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-17 15:27:17,258 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-17 15:27:17,348 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-17 15:27:17,430 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-17 15:27:17,513 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-17 15:27:17,613 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-17 15:27:17,895 - INFO - Rows excluded by keywords: 1654
+2026-02-17 15:27:17,976 - INFO - Recalculating Financials for all rows.
+2026-02-17 15:27:18,007 - INFO - Customer Master merged and columns cleaned.
+2026-02-17 15:27:18,145 - INFO - Created new table with 25124 records.
+2026-02-17 15:27:19,307 - WARNING - Could not update C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\output\sales_master.xlsx (File open?). Skipping Excel export.
+2026-02-17 15:27:19,307 - INFO - Archived 01. APRIL 2024.xlsx
+2026-02-17 15:27:19,308 - INFO - Archived 01. APRIL 2025.xlsx
+2026-02-17 15:27:19,320 - INFO - Archived 02. MAY 2024.xlsx
+2026-02-17 15:27:19,321 - INFO - Archived 02. MAY 2025.xlsx
+2026-02-17 15:27:19,334 - INFO - Archived 03. JUNE 2024.xlsx
+2026-02-17 15:27:19,334 - INFO - Archived 03. JUNE 2025.xlsx
+2026-02-17 15:27:19,335 - INFO - Archived 04. JULY 2024.xlsx
+2026-02-17 15:27:19,335 - INFO - Archived 04. JULY 2025.xlsx
+2026-02-17 15:27:19,335 - INFO - Archived 05. AUG 2024.xlsx
+2026-02-17 15:27:19,336 - INFO - Archived 05. AUG 2025.xlsx
+2026-02-17 15:27:19,336 - INFO - Archived 06. SEP 2024.xlsx
+2026-02-17 15:27:19,336 - INFO - Archived 06. SEP 2025.xlsx
+2026-02-17 15:27:19,337 - INFO - Archived 07. OCT 2024.xlsx
+2026-02-17 15:27:19,337 - INFO - Archived 07. OCT 2025.xlsx
+2026-02-17 15:27:19,337 - INFO - Archived 08. NOV 2024.xlsx
+2026-02-17 15:27:19,338 - INFO - Archived 08. NOV 2025.xlsx
+2026-02-17 15:27:19,338 - INFO - Archived 09. DEC 2024.xlsx
+2026-02-17 15:27:19,338 - INFO - Archived 09. DEC 2025.xlsx
+2026-02-17 15:27:19,339 - INFO - Archived 10. JAN 2025.xlsx
+2026-02-17 15:27:19,339 - INFO - Archived 11. FEB 2025.xlsx
+2026-02-17 15:27:19,339 - INFO - Archived 12. MARCH 2025.xlsx
+2026-02-17 15:27:19,340 - INFO - Archived JAN2026-SalesReportWithItem.xlsx
+2026-02-17 15:27:19,340 - INFO - --- Pipeline Completed Successfully ---
+2026-02-17 15:28:01,892 - INFO - --- Starting ETL Pipeline ---
+2026-02-17 15:28:01,893 - INFO - No new raw files found.
+2026-02-17 15:28:01,894 - INFO - Pipeline finished: No data to process.
+2026-02-17 17:48:06,929 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-17 17:48:06,932 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 11:26:03,060 - INFO - --- Starting ETL Pipeline ---
+2026-02-18 11:26:03,062 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx']
+2026-02-18 11:26:03,254 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-18 11:26:03,357 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-18 11:26:03,433 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-18 11:26:03,521 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-18 11:26:03,608 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-18 11:26:03,696 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-18 11:26:03,780 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-18 11:26:03,874 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-18 11:26:03,994 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-18 11:26:04,085 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-18 11:26:04,173 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-18 11:26:04,302 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-18 11:26:04,385 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-18 11:26:04,478 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-18 11:26:04,574 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-18 11:26:04,667 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-18 11:26:04,766 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-18 11:26:04,883 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-18 11:26:04,977 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-18 11:26:05,061 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-18 11:26:05,157 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-18 11:26:05,270 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-18 11:26:05,571 - INFO - Rows excluded by keywords: 1654
+2026-02-18 11:26:05,673 - INFO - Recalculating Financials for all rows.
+2026-02-18 11:26:05,730 - INFO - Customer Master merged and columns cleaned.
+2026-02-18 11:26:05,853 - INFO - Created new table with 25124 records.
+2026-02-18 11:26:08,771 - WARNING - Could not update C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\output\sales_master.xlsx (File open?). Skipping Excel export.
+2026-02-18 11:26:08,772 - INFO - Archived 01. APRIL 2024.xlsx
+2026-02-18 11:26:08,773 - INFO - Archived 01. APRIL 2025.xlsx
+2026-02-18 11:26:08,773 - INFO - Archived 02. MAY 2024.xlsx
+2026-02-18 11:26:08,773 - INFO - Archived 02. MAY 2025.xlsx
+2026-02-18 11:26:08,774 - INFO - Archived 03. JUNE 2024.xlsx
+2026-02-18 11:26:08,774 - INFO - Archived 03. JUNE 2025.xlsx
+2026-02-18 11:26:08,774 - INFO - Archived 04. JULY 2024.xlsx
+2026-02-18 11:26:08,775 - INFO - Archived 04. JULY 2025.xlsx
+2026-02-18 11:26:08,775 - INFO - Archived 05. AUG 2024.xlsx
+2026-02-18 11:26:08,775 - INFO - Archived 05. AUG 2025.xlsx
+2026-02-18 11:26:08,775 - INFO - Archived 06. SEP 2024.xlsx
+2026-02-18 11:26:08,776 - INFO - Archived 06. SEP 2025.xlsx
+2026-02-18 11:26:08,776 - INFO - Archived 07. OCT 2024.xlsx
+2026-02-18 11:26:08,776 - INFO - Archived 07. OCT 2025.xlsx
+2026-02-18 11:26:08,777 - INFO - Archived 08. NOV 2024.xlsx
+2026-02-18 11:26:08,777 - INFO - Archived 08. NOV 2025.xlsx
+2026-02-18 11:26:08,777 - INFO - Archived 09. DEC 2024.xlsx
+2026-02-18 11:26:08,777 - INFO - Archived 09. DEC 2025.xlsx
+2026-02-18 11:26:08,777 - INFO - Archived 10. JAN 2025.xlsx
+2026-02-18 11:26:08,778 - INFO - Archived 11. FEB 2025.xlsx
+2026-02-18 11:26:08,778 - INFO - Archived 12. MARCH 2025.xlsx
+2026-02-18 11:26:08,778 - INFO - Archived JAN2026-SalesReportWithItem.xlsx
+2026-02-18 11:26:08,778 - INFO - --- Pipeline Completed Successfully ---
+2026-02-18 11:30:01,689 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 11:30:01,689 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 11:31:40,098 - INFO - --- Starting ETL Pipeline ---
+2026-02-18 11:31:40,100 - INFO - files detected: ['SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-18 11:31:40,316 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-18 11:31:40,334 - INFO - Rows excluded by keywords: 39
+2026-02-18 11:31:40,341 - INFO - Recalculating Financials for all rows.
+2026-02-18 11:31:40,356 - INFO - Customer Master merged and columns cleaned.
+2026-02-18 11:31:40,387 - INFO - Appended 1031 new records.
+2026-02-18 11:31:43,088 - WARNING - Could not update C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\output\sales_master.xlsx (File open?). Skipping Excel export.
+2026-02-18 11:31:43,089 - INFO - Archived SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx
+2026-02-18 11:31:43,089 - INFO - --- Pipeline Completed Successfully ---
+2026-02-18 11:31:45,094 - INFO - --- Starting ETL Pipeline ---
+2026-02-18 11:31:45,095 - INFO - No new raw files found.
+2026-02-18 11:31:45,096 - INFO - Pipeline finished: No data to process.
+2026-02-18 11:31:47,100 - INFO - --- Starting ETL Pipeline ---
+2026-02-18 11:31:47,102 - INFO - No new raw files found.
+2026-02-18 11:31:47,103 - INFO - Pipeline finished: No data to process.
+2026-02-18 11:32:22,000 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 11:32:22,000 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 12:40:55,020 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 12:40:55,020 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 13:03:22,215 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 13:03:22,215 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 13:04:46,963 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 13:04:46,963 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 13:30:54,334 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 13:30:54,334 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-18 17:53:29,869 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-18 17:53:29,869 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)

@@ -408,6 +408,22 @@ elif selected == "Data Management":
         st.info("Ensure your Excel file has columns named 'City', 'Town', 'Location' for City, and 'State', 'Region' for State.")
     else:
         st.success("All critical columns detected!")
+        
+    st.markdown("---")
+    st.subheader("📁 Master Files Status")
+    import os
+    import config
+    
+    if os.path.exists(config.CUSTOMER_MASTER_FILE):
+        st.success("✅ Customer Master Connected")
+        try:
+            m_df = pd.read_excel(config.CUSTOMER_MASTER_FILE)
+            st.caption(f"Contains {len(m_df)} records.")
+        except:
+            st.error("❌ Customer Master corrupted or unreadable.")
+    else:
+        st.error("❌ Customer Master NOT FOUND (Cloud Sync Issue)")
+        st.info("Ensure data/masters/customer_master.xlsx is in your GitHub repo.")
     
     st.markdown("---")
     st.subheader("⚠️ Danger Zone")

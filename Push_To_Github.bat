@@ -32,6 +32,8 @@ git remote add origin https://github.com/Commanderadi/sales-dashboard.git
 :: 3. Add Files & Commit
 echo [INFO] Staging files...
 git add .
+:: Force add the master file in case it was ignored
+git add -f data/masters/customer_master.xlsx
 echo [INFO] Committing changes...
 git commit -m "Auto-Deploy: Initial Setup"
 

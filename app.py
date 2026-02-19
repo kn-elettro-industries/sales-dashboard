@@ -433,6 +433,21 @@ elif selected == "Data Management":
         except:
              st.write("Could not list directory.")
         st.info("Ensure data/masters/customer_master.xlsx is in your GitHub repo and not ignored.")
+
+    st.markdown("---")
+    st.subheader("🕵️ Raw File headers")
+    st.caption("Inspect the first file in 'data/raw' to see original column names.")
+    try:
+        raw_files = [f for f in os.listdir(config.RAW_FOLDER) if f.endswith(".xlsx")]
+        if raw_files:
+            file_path = os.path.join(config.RAW_FOLDER, raw_files[0])
+            raw_preview = pd.read_excel(file_path, nrows=2)
+            st.write(f"File: {raw_files[0]}")
+            st.write(raw_preview.columns.tolist())
+        else:
+            st.warning("No raw files found. Upload a file first.")
+    except Exception as e:
+        st.error(f"Error reading raw file: {e}")
     
     st.markdown("---")
     st.subheader("⚠️ Danger Zone")

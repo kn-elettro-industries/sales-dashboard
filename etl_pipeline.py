@@ -39,20 +39,26 @@ def standardize(df):
     
     # fuzzy column matching for critical fields
     for col in df.columns:
-        if "CITY" in col or "TOWN" in col or "DISTRICT" in col or "LOCATION" in col:
+        col_upper = col.upper()
+        
+        # CITY Synonyms
+        if any(x in col_upper for x in ["CITY", "TOWN", "DISTRICT", "LOCATION", "STATION", "DESTINATION", "PLACE"]):
             if "CITY" not in df.columns:
                 df.rename(columns={col: "CITY"}, inplace=True)
         
-        elif "STATE" in col or "REGION" in col or "PROVINCE" in col or "TERRITORY" in col:
+        # STATE Synonyms
+        elif any(x in col_upper for x in ["STATE", "REGION", "PROVINCE", "TERRITORY", "POS", "SUPPLY"]):
             if "STATE" not in df.columns:
                 df.rename(columns={col: "STATE"}, inplace=True)
                 
-        elif "CUSTOMER" in col or "PARTY" in col:
+        # CUSTOMER Synonyms
+        elif any(x in col_upper for x in ["CUSTOMER", "PARTY", "BILL TO", "BUYER", "DEBTOR"]):
             if "CUSTOMER_NAME" not in df.columns:
                  df.rename(columns={col: "CUSTOMER_NAME"}, inplace=True)
                  
-        elif "ITEM" in col or "MATERIAL" in col or "PRODUCT" in col:
-            if "ITEMNAME" not in df.columns and "GROUP" not in col:
+        # ITEM Synonyms
+        elif any(x in col_upper for x in ["ITEM", "MATERIAL", "PRODUCT", "DESCRIPTION", "PART"]):
+            if "ITEMNAME" not in df.columns and "GROUP" not in col_upper:
                 df.rename(columns={col: "ITEMNAME"}, inplace=True)
 
     return df

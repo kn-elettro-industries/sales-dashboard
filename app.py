@@ -108,9 +108,19 @@ if df.empty:
 # 4. Navigation & Filters (Requires Data)
 # ---------------------------------------------------------
 with st.sidebar:
-    selected = option_menu(
-        "Main Menu", 
-        [
+    # Role Selection
+    user_role = st.sidebar.selectbox("👤 User Role", ["Managing Director", "Sales Team", "Admin Operations"])
+    st.sidebar.markdown("---")
+
+    # Define Menus based on Role
+    if user_role == "Managing Director":
+        menu_options = ["Executive Home", "Geographic Intelligence", "Executive Reporting", "AI Assistant"]
+        menu_icons = ["house", "globe", "file-earmark-text", "robot"]
+    elif user_role == "Sales Team":
+        menu_options = ["Customer Intelligence", "Product Intelligence", "Predictive Churn Risk", "AI Assistant"]
+        menu_icons = ["people", "box", "graph-down-arrow", "robot"]
+    else: # Admin (Show All)
+        menu_options = [
             "Executive Home", 
             "Customer Intelligence", 
             "Product Intelligence", 
@@ -120,8 +130,13 @@ with st.sidebar:
             "Data Management", 
             "System Architecture", 
             "AI Assistant"
-        ], 
-        icons=['house', 'people', 'box', 'globe', 'table', 'diagram-3', 'cpu'], 
+        ]
+        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "database", "diagram-3", "robot"]
+
+    selected = option_menu(
+        "Main Menu", 
+        menu_options, 
+        icons=menu_icons, 
         menu_icon="list", 
         default_index=0,
         styles={

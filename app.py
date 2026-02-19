@@ -764,9 +764,10 @@ elif selected == "User Management" and app_role == "Admin Operations":
             new_status = st.selectbox("Status", ["Active", "Pending", "Blocked"], index=["Active", "Pending", "Blocked"].index(curr_info.get("status", "Active")))
             
         if st.button("Update User"):
-            users[target_user]["role"] = new_role
-            users[target_user]["status"] = new_status
-            auth.save_users(users)
-            st.success(f"Updated {target_user}!")
-            time.sleep(1)
-            st.rerun()
+            success, msg = auth.update_user_details(target_user, new_role, new_status)
+            if success:
+                st.success(f"{msg}: {target_user}")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error(f"Error: {msg}")

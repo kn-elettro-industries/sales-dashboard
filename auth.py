@@ -7,15 +7,13 @@ import time
 USER_DB_FILE = "data/users.json"
 
 def load_users():
-    """Loads users from JSON file. Creates default admin if empty."""
+    """Loads users from Local JSON file."""
     if not os.path.exists(USER_DB_FILE):
-        # Create default dict
         default_users = {
             "admin": {"password": "admin123", "role": "Admin", "name": "System Administrator", "status": "Active"},
             "manager": {"password": "manager123", "role": "Manager", "name": "Sales Manager", "status": "Active"},
             "user": {"password": "user123", "role": "Viewer", "name": "Sales Representative", "status": "Active"}
         }
-        # Ensure dir exists
         os.makedirs(os.path.dirname(USER_DB_FILE), exist_ok=True)
         with open(USER_DB_FILE, "w") as f:
             json.dump(default_users, f, indent=4)
@@ -34,19 +32,29 @@ def save_users(users):
         json.dump(users, f, indent=4)
 
 def register_user(username, password, name):
-    """Registers a new user with Pending status."""
+    """Registers a new user."""
     users = load_users()
     if username in users:
         return False, "Username already exists."
     
     users[username] = {
         "password": password,
-        "role": "Viewer", # Default role
+        "role": "Viewer",
         "name": name,
-        "status": "Pending" # Needs Admin Approval
+        "status": "Pending"
     }
     save_users(users)
     return True, "Request sent! Please wait for Admin approval."
+
+def update_user_details(username, role, status):
+    """Updates user role/status locally."""
+    users = load_users()
+    if username in users:
+        users[username]["role"] = role
+        users[username]["status"] = status
+        save_users(users)
+        return True, "Updated locally"
+    return False, "User not found locally"
 
 def check_password():
     """Returns `True` if the user is authenticated."""

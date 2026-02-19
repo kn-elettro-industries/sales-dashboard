@@ -418,12 +418,21 @@ elif selected == "Data Management":
         st.success("✅ Customer Master Connected")
         try:
             m_df = pd.read_excel(config.CUSTOMER_MASTER_FILE)
-            st.caption(f"Contains {len(m_df)} records.")
-        except:
-            st.error("❌ Customer Master corrupted or unreadable.")
+            st.caption(f"Master contains {len(m_df)} records.")
+            with st.expander("View Master File Sample"):
+                st.dataframe(m_df.head())
+        except Exception as e:
+            st.error(f"❌ Customer Master corrupted: {e}")
     else:
-        st.error("❌ Customer Master NOT FOUND (Cloud Sync Issue)")
-        st.info("Ensure data/masters/customer_master.xlsx is in your GitHub repo.")
+        st.error("❌ Customer Master NOT FOUND on Cloud")
+        # List what IS there
+        st.write("Files found in data/masters/:")
+        try:
+             files = os.listdir(config.MASTER_FOLDER)
+             st.write(files)
+        except:
+             st.write("Could not list directory.")
+        st.info("Ensure data/masters/customer_master.xlsx is in your GitHub repo and not ignored.")
     
     st.markdown("---")
     st.subheader("⚠️ Danger Zone")

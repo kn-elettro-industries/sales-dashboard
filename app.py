@@ -164,11 +164,11 @@ with st.sidebar:
 
     # Define Menus based on Role
     if app_role == "Managing Director":
-        menu_options = ["Executive Home", "Geographic Intelligence", "Executive Reporting", "AI Assistant"]
-        menu_icons = ["house", "globe", "file-earmark-text", "robot"]
+        menu_options = ["Executive Home", "Geographic Intelligence", "Executive Reporting"]
+        menu_icons = ["house", "globe", "file-earmark-text"]
     elif app_role == "Sales Team":
-        menu_options = ["Customer Intelligence", "Product Intelligence", "Predictive Churn Risk", "AI Assistant"]
-        menu_icons = ["people", "box", "graph-down-arrow", "robot"]
+        menu_options = ["Customer Intelligence", "Product Intelligence", "Predictive Churn Risk"]
+        menu_icons = ["people", "box", "graph-down-arrow"]
     else: # Admin (Show All)
         menu_options = [
             "Executive Home", 
@@ -179,10 +179,9 @@ with st.sidebar:
             "Executive Reporting",
             "Data Management", 
             "System Architecture", 
-            "AI Assistant",
             "User Management"
         ]
-        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "database", "diagram-3", "robot", "people-fill"]
+        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "database", "diagram-3", "people-fill"]
 
     selected = option_menu(
         "Main Menu", 
@@ -700,35 +699,7 @@ elif selected == "System Architecture":
     </div>
     """, unsafe_allow_html=True)
 
-# --- G. AI Assistant ---
-elif selected == "AI Assistant":
-    st.markdown("### 🤖 Krishiv (AI Analyst)")
-    st.caption("Ask questions like: 'Sales in Mumbai', 'Top 5 Customers', 'Total Revenue'")
 
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hello! I am Krishiv. Ask me anything about your data."}]
-
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    # Chat Input
-    if prompt := st.chat_input("Ask a question..."):
-        # User message
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        # Assistant response
-        with st.chat_message("assistant"):
-            with st.spinner("Analyzing..."):
-                time.sleep(0.5) 
-                response = process_query(prompt, df)
-                st.markdown(response)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response})
 
 # --- H. User Management (Admin Only) ---
 elif selected == "User Management" and app_role == "Admin Operations":

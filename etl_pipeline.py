@@ -195,7 +195,7 @@ def clean_and_transform(df):
 
     # 6. Ensure CITY column exists
     if "CITY" not in df.columns:
-        df["CITY"] = "Unknown"
+        df["CITY"] = "City Not Found"
         
     return df
 
@@ -255,7 +255,7 @@ def update_database(new_df):
         if "CITY" not in columns:
             logging.info("Adding missing CITY column to sales_master")
             try:
-                cursor.execute("ALTER TABLE sales_master ADD COLUMN CITY TEXT DEFAULT 'Unknown'")
+                cursor.execute("ALTER TABLE sales_master ADD COLUMN CITY TEXT DEFAULT 'City Not Found'")
                 conn.commit()
             except Exception as e:
                 logging.error(f"Failed to add CITY column: {e}")

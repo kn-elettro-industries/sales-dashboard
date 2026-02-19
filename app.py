@@ -71,14 +71,15 @@ def get_data():
         df = load_data()
         # Fix NULL states
         # Fix NULL states
+        # Fix NULL states
         if "STATE" in df.columns:
-            df["STATE"] = df["STATE"].fillna("Unknown")
+            df["STATE"] = df["STATE"].fillna("State Not Found ⚠️")
             
         # Ensure CITY column exists (Safety Net)
         if "CITY" not in df.columns:
-            df["CITY"] = "Unknown"
+            df["CITY"] = "City Not Found ⚠️"
         else:
-            df["CITY"] = df["CITY"].fillna("Unknown")
+            df["CITY"] = df["CITY"].fillna("City Not Found ⚠️")
 
         # Determine Financial Year if missing
         if "FINANCIAL_YEAR" not in df.columns and "DATE" in df.columns:
@@ -196,8 +197,8 @@ with st.sidebar:
     if city_col:
         # Filter cities based on selected state if any
         raw_options = df[city_col].dropna().unique().tolist()
-        # Remove 'Unknown' from options to clean up UI (optional, but requested)
-        city_options = sorted([x for x in raw_options if str(x).upper() != "UNKNOWN"])
+        # Remove 'Unknown' or 'Not Found' from options to clean up UI
+        city_options = sorted([x for x in raw_options if "NOT FOUND" not in str(x).upper() and "UNKNOWN" not in str(x).upper()])
         selected_city = st.multiselect("City", city_options)
         if selected_city:
             df = df[df[city_col].isin(selected_city)]
@@ -471,10 +472,11 @@ elif selected == "Data Management":
     st.subheader("🕵️ Data Quality Inspector")
     st.caption("Find rows where Location data is missing.")
     
-    # Filter for Unknowns
+    # Filter for Missing Locations
+    # Check for 'Unknown' OR the new 'Not Found' label
     unknown_df = df[
-        (df["CITY"].str.upper() == "UNKNOWN") | 
-        (df["STATE"].str.upper() == "UNKNOWN") |
+        (df["CITY"].astype(str).str.contains("NOT FOUND|UNKNOWN", case=False)) | 
+        (df["STATE"].astype(str).str.contains("NOT FOUND|UNKNOWN", case=False)) |
         (df["STATE"].str.upper() == "MAHARASHTRA") # excessive default checking
     ]
     

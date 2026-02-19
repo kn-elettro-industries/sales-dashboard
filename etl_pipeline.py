@@ -37,22 +37,23 @@ def standardize(df):
         .str.replace(" ", "_")
     )
     
-    # Rename specific columns if they exist
-    rename_map = {
-        "NO": "INVOICE_NO", 
-        "NO.": "INVOICE_NO",
-        "TOWN": "CITY",
-        "DISTRICT": "CITY",
-        "LOCATION": "CITY",
-        "REGION": "STATE",
-        "PROVINCE": "STATE",
-        "TERRITORY": "STATE"
-    }
-    df = df.rename(columns=rename_map)
-
-    # Standardize string/object columns
-    for col in df.select_dtypes(include=["object", "string"]).columns:
-        df[col] = df[col].astype(str).str.strip().str.upper()
+    # fuzzy column matching for critical fields
+    for col in df.columns:
+        if "CITY" in col or "TOWN" in col or "DISTRICT" in col or "LOCATION" in col:
+            if "CITY" not in df.columns:
+                df.rename(columns={col: "CITY"}, inplace=True)
+        
+        elif "STATE" in col or "REGION" in col or "PROVINCE" in col or "TERRITORY" in col:
+            if "STATE" not in df.columns:
+                df.rename(columns={col: "STATE"}, inplace=True)
+                
+        elif "CUSTOMER" in col or "PARTY" in col:
+            if "CUSTOMER_NAME" not in df.columns:
+                 df.rename(columns={col: "CUSTOMER_NAME"}, inplace=True)
+                 
+        elif "ITEM" in col or "MATERIAL" in col or "PRODUCT" in col:
+            if "ITEMNAME" not in df.columns and "GROUP" not in col:
+                df.rename(columns={col: "ITEMNAME"}, inplace=True)
 
     return df
 

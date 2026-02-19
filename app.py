@@ -58,6 +58,7 @@ with st.sidebar:
     cloud_data_wrapper.render_cloud_uploader()
     
     st.markdown("---")
+    st.caption("v1.2 (Fuzzy Logic)")
 
     # Navigation (will be rendered later if data exists)
     
@@ -391,6 +392,22 @@ elif selected == "Data Management":
         "text/csv",
         key='download-csv'
     )
+    
+    st.markdown("---")
+    st.subheader("🔍 Column Inspector (Debug)")
+    st.write("Current Detected Columns:", df.columns.tolist())
+    
+    # Check for missing critical columns
+    missing = []
+    for col in ["CITY", "STATE", "CUSTOMER_NAME", "ITEMNAME"]:
+        if col not in df.columns:
+            missing.append(col)
+    
+    if missing:
+        st.error(f"Missing Critical Columns: {missing}")
+        st.info("Ensure your Excel file has columns named 'City', 'Town', 'Location' for City, and 'State', 'Region' for State.")
+    else:
+        st.success("All critical columns detected!")
     
     st.markdown("---")
     st.subheader("⚠️ Danger Zone")

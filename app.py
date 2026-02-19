@@ -147,25 +147,25 @@ st.markdown("""
 <style>
 /* Float the Popover Container */
 [data-testid="stPopover"] {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 10000;
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    z-index: 999999 !important;
 }
 /* Style the Button */
 [data-testid="stPopover"] button {
-    background-color: #FFD700;
-    color: black;
-    border: none;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    background-color: #FFD700 !important;
+    color: black !important;
+    border: 2px solid #FFFFFF !important;
+    border-radius: 50% !important;
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 24px !important;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
 }
 [data-testid="stPopover"] button:hover {
-    background-color: #FFEE55;
-    transform: scale(1.1);
+    background-color: #FFEE55 !important;
+    transform: scale(1.1) !important;
 }
 </style>
 """, unsafe_allow_html=True)

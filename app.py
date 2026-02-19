@@ -41,10 +41,19 @@ def load_css():
 load_css()
 apply_theme()
 
+# --- 2. Login Check ---
+import auth
+if not auth.check_password():
+    st.stop()
+    
 # ---------------------------------------------------------
-# 2. Sidebar & Cloud Upload (MUST BE BEFORE DATA STOP)
+# 3. Sidebar & Cloud Upload (MUST BE BEFORE DATA STOP)
 # ---------------------------------------------------------
 with st.sidebar:
+    # Cleanup Sidebar if logged in
+    st.markdown(f"**Welcome, {st.session_state.get('user_name', 'User')}**")
+    if st.button("Logout", key="logout_btn"):
+        auth.logout()
     # Logo
     try:
         st.image("assets/logo_white_text.png", width=None, use_container_width=True)
@@ -135,15 +144,29 @@ if df.empty:
 # 4. Navigation & Filters (Requires Data)
 # ---------------------------------------------------------
 with st.sidebar:
-    # Role Selection
-    user_role = st.sidebar.selectbox("👤 User Role", ["Managing Director", "Sales Team", "Admin Operations"])
+    # Role Selection (Override with Auth Role)
+    user_role_auth = st.session_state.get("role", "Viewer")
+    
+    # Map Auth Role to App Role (Simulating the previous dropdown logic but enforcing it)
+    # Admin -> Admin Operations
+    # Manager -> Managing Director
+    # Viewer -> Sales Team
+    
+    if user_role_auth == "Admin":
+        app_role = "Admin Operations"
+    elif user_role_auth == "Manager":
+        app_role = "Managing Director"
+    else:
+        app_role = "Sales Team"
+        
+    st.caption(f"Access Level: {app_role}")
     st.sidebar.markdown("---")
 
     # Define Menus based on Role
-    if user_role == "Managing Director":
+    if app_role == "Managing Director":
         menu_options = ["Executive Home", "Geographic Intelligence", "Executive Reporting", "AI Assistant"]
         menu_icons = ["house", "globe", "file-earmark-text", "robot"]
-    elif user_role == "Sales Team":
+    elif app_role == "Sales Team":
         menu_options = ["Customer Intelligence", "Product Intelligence", "Predictive Churn Risk", "AI Assistant"]
         menu_icons = ["people", "box", "graph-down-arrow", "robot"]
     else: # Admin (Show All)

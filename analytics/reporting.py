@@ -655,6 +655,135 @@ def render_reporting(df):
             except Exception as e:
                 st.error(f"Error: {e}")
 
+
+# --- New Pages for Strategy Deck ---
+
+def create_category_performance_page(pdf, df, grp_col):
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "2. Category Performance Analysis", 0, 1)
+    pdf.ln(5)
+    
+    # 1. Horizontal Bar Chart (Top 15) - Replacing Pareto
+    top_cats = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(15)
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+    
+    y_pos = np.arange(len(top_cats))
+    ax.barh(y_pos, top_cats.values, color="#DAA520", height=0.6)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([str(x)[:40] for x in top_cats.index], fontsize=8)
+    ax.invert_yaxis()
+    ax.set_xlabel("Revenue")
+    ax.set_title("Top 15 Categories by Revenue", fontweight='bold')
+    
+    # Value Labels
+    for i, v in enumerate(top_cats.values):
+        ax.text(v, i, f" {format_currency_pdf(v)}", va='center', fontsize=7)
+        
+    img_path = create_chart(fig)
+    plt.close(fig)
+    pdf.image(img_path, x=10, w=190)
+    os.remove(img_path)
+    
+    # 2. Detailed Performance Matrix (Top 15 table)
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "Category Performance Matrix (Top 15)", 0, 1)
+    
+    # Table Header
+    pdf.set_font("Arial", 'B', 9)
+    pdf.set_fill_color(220, 220, 220)
+    pdf.cell(90, 8, "Category Name", 1, 0, 'L', 1)
+    pdf.cell(35, 8, "Revenue", 1, 0, 'R', 1)
+    pdf.cell(25, 8, "Orders", 1, 0, 'C', 1)
+    pdf.cell(40, 8, "Avg Order Val", 1, 1, 'R', 1)
+    
+    pdf.set_font("Arial", '', 8)
+    # Re-calc stats for table to get orders too
+    stats = df.groupby(grp_col).agg(
+        Revenue=("AMOUNT", "sum"),
+        Orders=("INVOICE_NO", "nunique")
+    ).sort_values("Revenue", ascending=False).head(15)
+    
+    for cat, row in stats.iterrows():
+        aov = row["Revenue"] / row["Orders"] if row["Orders"] > 0 else 0
+        pdf.cell(90, 7, str(cat)[:50], 1, 0, 'L')
+        pdf.cell(35, 7, format_currency_pdf(row["Revenue"]), 1, 0, 'R')
+        pdf.cell(25, 7, str(row["Orders"]), 1, 0, 'C')
+        pdf.cell(40, 7, format_currency_pdf(aov), 1, 1, 'R')
+
+def create_consolidation_page(pdf, df, grp_col):
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "3. Efficiency & Consolidation Opportunities", 0, 1)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", '', 10)
+    pdf.multi_cell(0, 6, "The following analysis identifies 'High Frequency / Low Value' categories (Fragmented). Bundling these items can reduce logistical overhead and improve margins.", 0, 'L')
+    pdf.ln(5)
+    
+    # 1. Scatter Plot (Frequency vs Value)
+    stats = df.groupby(grp_col).agg(
+        Revenue=("AMOUNT", "sum"),
+        Orders=("INVOICE_NO", "nunique")
+    ).reset_index()
+    stats["AOV"] = stats["Revenue"] / stats["Orders"]
+    
+    # Filter out extreme outliers for better chart
+    stats = stats[stats["Revenue"] > 0]
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    fig.patch.set_facecolor('white')
+    ax.scatter(stats["Orders"], stats["AOV"], alpha=0.6, c="#FFD700", edgecolors='black')
+    
+    ax.set_title("Order Frequency vs. Average Order Value", fontweight='bold')
+    ax.set_xlabel("Order Frequency (Count)")
+    ax.set_ylabel("Average Order Value (INR)")
+    ax.grid(True, linestyle='--', alpha=0.5)
+    
+    # Highlight Quadrant 4 (High Freq, Low Val)
+    avg_ord = stats["Orders"].mean()
+    avg_val = stats["AOV"].mean()
+    
+    ax.axvline(avg_ord, color='red', linestyle='--', alpha=0.5)
+    ax.axhline(avg_val, color='red', linestyle='--', alpha=0.5)
+    
+    ax.text(avg_ord * 1.1, avg_val * 0.2, "Consolidation Zone\n(High Freq, Low Val)", color='red', fontsize=8)
+    
+    img_path = create_chart(fig)
+    plt.close(fig)
+    pdf.image(img_path, x=10, w=190)
+    os.remove(img_path)
+    
+    # 2. Actionable List
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "Top 10 Consolidation Candidates", 0, 1)
+    
+    pdf.set_font("Arial", 'B', 9)
+    pdf.set_fill_color(220, 220, 220)
+    pdf.cell(100, 8, "Category Name", 1, 0, 'L', 1)
+    pdf.cell(30, 8, "Order Freq", 1, 0, 'C', 1)
+    pdf.cell(30, 8, "Avg Value", 1, 0, 'R', 1)
+    pdf.cell(30, 8, "Recommendation", 1, 1, 'C', 1)
+    
+    pdf.set_font("Arial", '', 8)
+    
+    # Logic: High Freq (> Avg), Low Value (< Avg)
+    candidates = stats[(stats["Orders"] > avg_ord) & (stats["AOV"] < avg_val)].sort_values("Orders", ascending=False).head(10)
+    
+    if candidates.empty:
+        pdf.cell(0, 8, "No significant fragmentation detected.", 1, 1, 'C')
+    else:
+        for _, row in candidates.iterrows():
+            pdf.cell(100, 7, str(row[grp_col])[:55], 1, 0, 'L')
+            pdf.cell(30, 7, f"{row['Orders']:.0f}", 1, 0, 'C')
+            pdf.cell(30, 7, format_currency_pdf(row["AOV"]), 1, 0, 'R')
+            pdf.cell(30, 7, "BUNDLE", 1, 1, 'C')
+
 def generate_distributor_strategy_report(df, customer_name, fy_list):
     """
     Generates a high-end strategy report (Dashboard Style) for a specific customer.
@@ -670,6 +799,8 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
     
     if cust_df.empty:
         return None
+
+    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in cust_df.columns else "MATERIALGROUP"
 
     # --- 1. Cover Page ---
     pdf.create_cover_page(customer_name, fy_list)
@@ -710,7 +841,6 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
         avg_order = 0
             
     # Find Top Category
-    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in cust_df.columns else "MATERIALGROUP"
     top_cat = cust_df.groupby(grp_col)["AMOUNT"].sum().idxmax() if not cust_df.empty else "N/A"
     
     metrics = [
@@ -873,4 +1003,10 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
     pdf.set_text_color(50, 50, 50)
     pdf.multi_cell(content_width - 10, 6, insight_text)
     
+    # --- 3. Category Performance Page ---
+    create_category_performance_page(pdf, cust_df, grp_col)
+    
+    # --- 4. Consolidation & Efficiency Page ---
+    create_consolidation_page(pdf, cust_df, grp_col)
+
     return pdf

@@ -15,7 +15,7 @@ for folder in [RAW_FOLDER, MASTER_FOLDER, OUTPUT_FOLDER, PROCESSED_FOLDER]:
     os.makedirs(folder, exist_ok=True)
 
 # Database
-DB_NAME = "sales_database.db"
+DB_NAME = "sales_v2.db"
 DB_PATH = os.path.join(DATA_DIR, DB_NAME)
     
 # Files

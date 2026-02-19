@@ -99,7 +99,32 @@ def get_data():
         st.error(f"Error loading data: {e}")
         return pd.DataFrame() 
 
+@st.cache_data
+def get_targets():
+    """Loads Sales Targets. Creates template if missing."""
+    if not os.path.exists(config.TARGETS_FILE):
+        # Create Template
+        data = {
+            "FINANCIAL_YEAR": ["FY2024", "FY2024", "FY2025", "FY2025"],
+            "MONTH": ["APR-24", "MAY-24", "APR-25", "MAY-25"],
+            "TARGET_AMOUNT": [5000000, 5500000, 6000000, 6500000],
+            "CUSTOMER_NAME": ["All", "All", "All", "All"],
+            "MATERIAL_GROUP": ["All", "All", "All", "All"]
+        }
+        df = pd.DataFrame(data)
+        try:
+            df.to_excel(config.TARGETS_FILE, index=False)
+        except: pass
+        return df
+    
+    try:
+        return pd.read_excel(config.TARGETS_FILE)
+    except:
+        return pd.DataFrame()
+
 df = get_data()
+targets_df = get_targets()
+
 if df.empty:
     st.warning("⚠️ Application Ready! Upload data in the Sidebar found on the left 👈")
     st.stop()
@@ -240,16 +265,45 @@ st.markdown("---")
 
 # --- A. Executive Home ---
 if selected == "Executive Home":
-    # 1. Clean Header Section
-    # 1. Clean Header Section
-    st.markdown("""
-    <div style="background-color: #111111; padding: 15px; border-radius: 4px; border-left: 4px solid #FFD700; border: 1px solid #333;">
-        <h4 style="margin:0; color: #ffffff; font-weight: 600;">Performance Summary</h4>
-        <p style="margin-top: 5px; color: #aaaaaa; font-size: 0.95rem; margin-bottom: 0;">
-            Revenue momentum is positive. 
-            <span style="color: #FFD700; font-weight: 600;">Maharashtra</span> leads regional sales. 
-            Inventory alert for <em>Product Category A</em>.
-        </p>
+    # 1. Clean Header Section (With Target Context)
+    
+    # Calculate Target Achievement
+    target_msg = "Targets not loaded."
+    achievement_pct = 0
+    total_target = 0
+    
+    if not targets_df.empty and "MONTH" in df.columns:
+        # Filter targets for selected months/FY if possible
+        # For now, just sum all matching targets for the current view
+        try:
+            # Simple matching: Sum targets for months present in the filtered dataframe
+            active_months = df["MONTH"].unique()
+            relevant_targets = targets_df[targets_df["MONTH"].isin(active_months)]
+            total_target = relevant_targets["TARGET_AMOUNT"].sum()
+            
+            current_revenue = df["AMOUNT"].sum()
+            if total_target > 0:
+                achievement_pct = (current_revenue / total_target) * 100
+                target_msg = f"{achievement_pct:.1f}% of Target Achieved ({format_indian_currency(current_revenue)} / {format_indian_currency(total_target)})"
+            else:
+                target_msg = "No Targets defined for selected period."
+        except Exception as e:
+            target_msg = f"Target Error: {e}"
+
+    # Header with Gauge Context
+    st.markdown(f"""
+    <div style="background-color: #111111; padding: 15px; border-radius: 4px; border-left: 4px solid #FFD700; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h4 style="margin:0; color: #ffffff; font-weight: 600;">Performance Summary</h4>
+            <p style="margin-top: 5px; color: #aaaaaa; font-size: 0.95rem; margin-bottom: 0;">
+                Revenue momentum is positive. 
+                <span style="color: #FFD700; font-weight: 600;">Maharashtra</span> leads regional sales. 
+            </p>
+        </div>
+        <div style="text-align: right;">
+             <h3 style="margin:0; color: {'#00ff00' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'};">{achievement_pct:.1f}%</h3>
+             <span style="color: #888; font-size: 0.8rem;">Target Achievement</span>
+        </div>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -265,6 +319,11 @@ if selected == "Executive Home":
     try:
         monthly_sales["SortKey"] = pd.to_datetime(monthly_sales["MONTH"], format="%b-%y", errors='coerce')
         monthly_sales = monthly_sales.sort_values("SortKey")
+        
+        # Merge Targets for Chart
+        if not targets_df.empty:
+            target_trend = targets_df.groupby("MONTH")["TARGET_AMOUNT"].sum().reset_index()
+            monthly_sales = pd.merge(monthly_sales, target_trend, on="MONTH", how="left").fillna(0)
     except:
         pass # Fallback to existing order
         
@@ -272,11 +331,17 @@ if selected == "Executive Home":
         monthly_sales, 
         x="MONTH", 
         y="AMOUNT", 
-        title="Monthly Revenue Trend",
+        title="Monthly Revenue vs Target",
         markers=True,
         template="corporate_black"
     )
-    fig_trend.update_traces(line_color="#FFD700", fillcolor="rgba(255, 215, 0, 0.25)")
+    fig_trend.update_traces(line_color="#FFD700", fillcolor="rgba(255, 215, 0, 0.25)", name="Actual Revenue")
+    
+    # Add Target Line
+    if "TARGET_AMOUNT" in monthly_sales.columns:
+        fig_trend.add_scatter(x=monthly_sales["MONTH"], y=monthly_sales["TARGET_AMOUNT"], mode='lines+markers', 
+                              name='Target', line=dict(color='white', width=2, dash='dot'))
+                              
     st.plotly_chart(fig_trend, use_container_width=True)
 
     # 4. Forecast & Risk (High Level)

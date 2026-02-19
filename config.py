@@ -20,6 +20,7 @@ DB_PATH = os.path.join(DATA_DIR, DB_NAME)
     
 # Files
 CUSTOMER_MASTER_FILE = os.path.join(MASTER_FOLDER, "customer_master.xlsx")
+TARGETS_FILE = os.path.join(MASTER_FOLDER, "targets.xlsx")
 SALES_MASTER_FILE = os.path.join(OUTPUT_FOLDER, "sales_master.xlsx")
 AUDIT_LOG_FILE = os.path.join(OUTPUT_FOLDER, "audit_log.xlsx")
 MONTHLY_SUMMARY_FILE = os.path.join(OUTPUT_FOLDER, "monthly_summary.xlsx")

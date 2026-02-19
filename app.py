@@ -702,12 +702,12 @@ elif selected == "System Architecture":
 
 # --- G. AI Assistant ---
 elif selected == "AI Assistant":
-    st.markdown("### Data Assistant (NLP Powered)")
+    st.markdown("### 🤖 Krishiv (AI Analyst)")
     st.caption("Ask questions like: 'Sales in Mumbai', 'Top 5 Customers', 'Total Revenue'")
 
     # Initialize chat history
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hello! I can analyze your sales data. Ask me anything."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Hello! I am Krishiv. Ask me anything about your data."}]
 
     # Display chat messages
     for message in st.session_state.messages:
@@ -771,3 +771,62 @@ elif selected == "User Management" and app_role == "Admin Operations":
                 st.rerun()
             else:
                 st.error(f"Error: {msg}")
+
+# ---------------------------------------------------------
+# FLOATING CHATBOT (Global)
+# ---------------------------------------------------------
+st.markdown("""
+<style>
+/* Float the Popover Container */
+[data-testid="stPopover"] {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 10000;
+}
+/* Style the Button */
+[data-testid="stPopover"] button {
+    background-color: #FFD700;
+    color: black;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+}
+[data-testid="stPopover"] button:hover {
+    background-color: #FFEE55;
+    transform: scale(1.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Popover Chat
+with st.popover("💬", use_container_width=False):
+    st.markdown("### 🤖 Krishiv (AI Analyst)")
+    st.caption("Ask me about Revenue, Targets, or Top Products.")
+    
+    # Initialize Chat History if not present
+    if "messages" not in st.session_state:
+        st.session_state.messages = [{"role": "assistant", "content": "Hi! I am Krishiv. How can I help you today?"}]
+
+    # Display Chat History (Limit to last 5 for space)
+    for message in st.session_state.messages[-5:]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat Input
+    if prompt := st.chat_input("Ask a question...", key="float_chat"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                time.sleep(0.5)
+                response = process_query(prompt, df)
+                st.markdown(response)
+        
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.rerun()

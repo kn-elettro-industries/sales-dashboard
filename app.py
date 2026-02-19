@@ -179,9 +179,10 @@ with st.sidebar:
             "Executive Reporting",
             "Data Management", 
             "System Architecture", 
-            "AI Assistant"
+            "AI Assistant",
+            "User Management"
         ]
-        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "database", "diagram-3", "robot"]
+        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "database", "diagram-3", "robot", "people-fill"]
 
     selected = option_menu(
         "Main Menu", 
@@ -728,3 +729,44 @@ elif selected == "AI Assistant":
                 st.markdown(response)
         
         st.session_state.messages.append({"role": "assistant", "content": response})
+
+# --- H. User Management (Admin Only) ---
+elif selected == "User Management" and app_role == "Admin Operations":
+    st.markdown("## 👥 User Management")
+    st.info("Manage access and roles. Changes are saved immediately.")
+    
+    users = auth.load_users()
+    
+    # Convert to DataFrame for display
+    user_list = []
+    for uname, info in users.items():
+        user_list.append({
+            "Username": uname,
+            "Name": info.get("name", "Unknown"),
+            "Role": info.get("role", "Viewer"),
+            "Status": info.get("status", "Active")
+        })
+    
+    user_df = pd.DataFrame(user_list)
+    st.dataframe(user_df, use_container_width=True)
+    
+    st.markdown("### ✏️ Edit User")
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        target_user = st.selectbox("Select User", sorted(users.keys()))
+    
+    if target_user:
+        curr_info = users[target_user]
+        with c2:
+            new_role = st.selectbox("Assign Role", ["Admin", "Manager", "Viewer"], index=["Admin", "Manager", "Viewer"].index(curr_info.get("role", "Viewer")))
+        with c3:
+            new_status = st.selectbox("Status", ["Active", "Pending", "Blocked"], index=["Active", "Pending", "Blocked"].index(curr_info.get("status", "Active")))
+            
+        if st.button("Update User"):
+            users[target_user]["role"] = new_role
+            users[target_user]["status"] = new_status
+            auth.save_users(users)
+            st.success(f"Updated {target_user}!")
+            time.sleep(1)
+            st.rerun()

@@ -13,9 +13,7 @@ from analytics.risk import render_risk
 from analytics.advanced import render_pareto, render_heatmap
 from analytics.elasticity import render_elasticity
 from analytics.prediction import render_churn_prediction
-from analytics.scenario import render_scenario_planner
 from analytics.reporting import render_reporting
-from analytics.market_basket import render_market_basket
 from analytics.chatbot import process_query
 from analytics.theme import apply_theme
 from analytics.utils import format_indian_currency
@@ -117,9 +115,7 @@ with st.sidebar:
             "Customer Intelligence", 
             "Product Intelligence", 
             "Predictive Churn Risk",
-            "Scenario Planner",
             "Geographic Intelligence",
-            "Market Basket Analysis",
             "Executive Reporting",
             "Data Management", 
             "System Architecture", 
@@ -363,9 +359,7 @@ elif selected == "Product Intelligence":
 elif selected == "Predictive Churn Risk":
     render_churn_prediction(df)
 
-# --- E. Scenario Planner ---
-elif selected == "Scenario Planner":
-    render_scenario_planner(df)
+
 
 # --- F. Geographic Intelligence ---
 elif selected == "Geographic Intelligence":
@@ -382,9 +376,7 @@ elif selected == "Geographic Intelligence":
     region_stats["Market Share"] = (region_stats["AMOUNT"] / region_stats["AMOUNT"].sum()) * 100
     st.dataframe(region_stats, use_container_width=True)
 
-# --- E. Market Basket Analysis ---
-elif selected == "Market Basket Analysis":
-    render_market_basket(df)
+
 
 # --- F. Executive Reporting ---
 elif selected == "Executive Reporting":

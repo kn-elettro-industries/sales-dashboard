@@ -979,10 +979,10 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
         opp_txt = f"Consider bundling '{top_opp}' (High Freq, Low Val) to improve margins."
         
     insight_text = (
-        f"• GROWTH: {customer_name} remains a key partner with {format_currency_pdf(total_rev)} in revenue.\n"
-        f"• PORTFOLIO: Business is driven by {high_val_count} core categories (High Value).\n"
-        f"• OPPORTUNITY: {opp_txt}\n"
-        f"• ACTION: Review {top_cat} inventory levels to ensure continuity."
+        f"- GROWTH: {customer_name} remains a key partner with {format_currency_pdf(total_rev)} in revenue.\n"
+        f"- PORTFOLIO: Business is driven by {high_val_count} core categories (High Value).\n"
+        f"- OPPORTUNITY: {opp_txt}\n"
+        f"- ACTION: Review {top_cat} inventory levels to ensure continuity."
     )
     
     # Insight Box Design
@@ -995,7 +995,7 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
     pdf.set_xy(margin + 5, y_row4 + 5)
     pdf.set_font("Arial", 'B', 10)
     pdf.set_text_color(218, 165, 32)
-    pdf.cell(0, 5, "💡 STRATEGIC INSIGHTS", 0, 1)
+    pdf.cell(0, 5, "Key Strategic Insights", 0, 1)
     
     # Text
     pdf.set_xy(margin + 5, y_row4 + 12)

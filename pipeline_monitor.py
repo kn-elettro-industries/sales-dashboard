@@ -34,3 +34,7 @@ def get_status():
             return json.load(f)
     except:
         return {"step": "Error", "status": "Unknown", "details": "Could not read status", "progress": 0}
+
+def reset_status():
+    """Resets the status to Idle."""
+    update_status("Idle", "Idle", "System Ready", 0)

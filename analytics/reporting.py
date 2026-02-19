@@ -657,7 +657,7 @@ def render_reporting(df):
 
 def generate_distributor_strategy_report(df, customer_name, fy_list):
     """
-    Generates a high-end strategy report for a specific customer.
+    Generates a high-end strategy report (Dashboard Style) for a specific customer.
     """
     pdf = PDF()
     pdf.alias_nb_pages()
@@ -671,131 +671,206 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
     if cust_df.empty:
         return None
 
-    # 1. Cover Page
+    # --- 1. Cover Page ---
     pdf.create_cover_page(customer_name, fy_list)
     
-    # 2. Executive Summary Page
+    # --- 2. Executive Dashboard (The One-Pager) ---
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "1. Executive Summary", 0, 1)
-    pdf.ln(5)
     
-    # Metrics
+    # Grid Setup
+    margin = 10
+    page_width = 210
+    content_width = page_width - (2 * margin)
+    
+    # A. Dashboard Header
+    pdf.set_xy(margin, 10)
+    pdf.set_font("Arial", 'B', 18)
+    pdf.set_text_color(33, 33, 33)
+    pdf.cell(content_width, 10, f"EXECUTIVE DASHBOARD: {str(customer_name)[:40].upper()}", 0, 1, 'L')
+    
+    pdf.set_font("Arial", '', 10)
+    pdf.set_text_color(100, 100, 100)
+    pdf.cell(content_width, 6, f"Period: {' | '.join(fy_list)}  |  Generated: {datetime.now().strftime('%d-%b-%Y')}", 0, 1, 'L')
+    
+    # Draw Line
+    pdf.set_draw_color(255, 215, 0) # Gold
+    pdf.set_line_width(0.5)
+    pdf.line(margin, 28, page_width - margin, 28)
+    
+    # B. KPI Cards (Row 1) - y=35
+    y_kpi = 35
+    card_w = content_width / 4 - 2
+    card_h = 25
+    
     total_rev = cust_df["AMOUNT"].sum()
     total_orders = cust_df["INVOICE_NO"].nunique()
-    avg_order = total_rev / total_orders if total_orders > 0 else 0
-    
-    # Classification Analysis
-    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in cust_df.columns else "MATERIALGROUP"
-    class_stats = classify_categories(cust_df, grp_col)
-    
-    high_val = class_stats[class_stats["Classification"] == "High Value"]
-    med_val = class_stats[class_stats["Classification"] == "Medium Value"]
-    low_val = class_stats[class_stats["Classification"] == "Low Value"]
-    
-    high_share = high_val["Share"].sum() if not high_val.empty else 0
-    
-    # Write Summary Text
-    pdf.set_font("Arial", '', 11)
-    pdf.multi_cell(0, 6, f"For the period analysis of {', '.join(fy_list)}, {customer_name} has generated a Total Revenue of {format_currency_pdf(total_rev)} across {total_orders} orders.", 0, 'L')
-    pdf.ln(5)
-    pdf.multi_cell(0, 6, f"Business Structure Analysis:\n- High Value Categories (Top 70%): {len(high_val)} categories contribute {high_share:.1f}% of business.\n- This indicates a {'concentrated' if len(high_val) < 5 else 'diversified'} portfolio reliance.", 0, 'L')
-    pdf.ln(5)
-    
-    # 3. Category Matrix (High Value)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "2. Strategic Category Matrix", 0, 1)
-    
-    # Pareto Chart
-    if not class_stats.empty:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        # Clear background
-        fig.patch.set_facecolor('white')
-        ax.set_facecolor('white')
-        
-        # Color mapped by classification
-        colors = class_stats["Classification"].map({
-            "High Value": "#FFD700", # Gold
-            "Medium Value": "#C0C0C0", # Silver
-            "Low Value": "#CD7F32" # Bronze
-        })
-        
-        # Handle missing colors if map fails (e.g. key missing)
-        colors = colors.fillna("#333333")
-        
-        chart_data = class_stats.head(15)
-        ax.bar(chart_data.index, chart_data['Revenue'], color=colors.head(15))
-        
-        ax.set_title("Top 15 Categories by Strategic Value", fontweight='bold')
-        ax.set_ylabel("Revenue")
-        ax.set_xlabel(None)
-        plt.xticks(rotation=45, ha='right')
-        plt.tight_layout()
-        
-        img_path = create_chart(fig)
-        plt.close(fig)
-        pdf.image(img_path, x=10, w=190)
-        os.remove(img_path)
-        pdf.ln(5)
-    
-    # 4. Consolidation Opportunities
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "3. Consolidation Opportunities", 0, 1)
-    pdf.set_font("Arial", '', 11)
-    pdf.multi_cell(0, 6, "Identified categories with high order frequency but low average value. Bundling these can improve logistics efficiency.", 0, 'L')
-    pdf.ln(5)
-    
-    opps = analyze_consolidation(cust_df, grp_col)
-    if not opps.empty:
-        # Table Header
-        pdf.set_font("Arial", 'B', 10)
-        pdf.set_fill_color(33, 37, 41)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(80, 10, "Category (Fragmented)", 0, 0, 'L', 1)
-        pdf.cell(40, 10, "Order Freq", 0, 0, 'C', 1)
-        pdf.cell(40, 10, "Avg Value", 0, 0, 'R', 1)
-        pdf.cell(30, 10, "Status", 0, 1, 'C', 1)
-        
-        pdf.set_font("Arial", '', 10)
-        pdf.set_text_color(0, 0, 0)
-        
-        fill = False
-        for grp, row in opps.head(10).iterrows():
-            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-            pdf.cell(80, 8, str(grp)[:40], 0, 0, 'L', fill)
-            pdf.cell(40, 8, str(row['Orders']), 0, 0, 'C', fill)
-            pdf.cell(40, 8, format_currency_pdf(row['Avg_Order_Value']), 0, 0, 'R', fill)
-            pdf.cell(30, 8, row['Classification'], 0, 1, 'C', fill)
-            fill = not fill
+    if total_orders > 0:
+        avg_order = total_rev / total_orders
     else:
-        pdf.multi_cell(0, 6, "No significant fragmentation detected. Ordering behavior appears optimized.", 0, 'L')
+        avg_order = 0
+            
+    # Find Top Category
+    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in cust_df.columns else "MATERIALGROUP"
+    top_cat = cust_df.groupby(grp_col)["AMOUNT"].sum().idxmax() if not cust_df.empty else "N/A"
+    
+    metrics = [
+        ("TOTAL REVENUE", format_currency_pdf(total_rev)),
+        ("TOTAL ORDERS", f"{total_orders:,}"),
+        ("AVG ORDER VALUE", format_currency_pdf(avg_order)),
+        ("TOP CATEGORY", str(top_cat)[:15])
+    ]
+    
+    for i, (label, val) in enumerate(metrics):
+        x = margin + (i * (card_w + 2.6))
+        
+        # Card Bg
+        pdf.set_fill_color(248, 249, 250)
+        pdf.rect(x, y_kpi, card_w, card_h, 'F')
+        
+        # Left Strip (Gold)
+        pdf.set_fill_color(218, 165, 32)
+        pdf.rect(x, y_kpi, 1.5, card_h, 'F')
+        
+        # Label
+        pdf.set_xy(x + 4, y_kpi + 4)
+        pdf.set_font("Arial", 'B', 7)
+        pdf.set_text_color(128, 128, 128)
+        pdf.cell(card_w, 5, label, 0, 1)
+        
+        # Value
+        pdf.set_xy(x + 4, y_kpi + 10)
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_text_color(33, 33, 33)
+        pdf.cell(card_w, 8, val, 0, 0)
 
-    # 5. Multi-Year View (if multiple years selected)
-    if len(fy_list) > 1 and "FINANCIAL_YEAR" in cust_df.columns:
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "4. Year-over-Year Growth Analysis", 0, 1)
+    # C. Charts Area (Row 2) - y=70
+    y_charts = 70
+    chart_h = 65
+    chart_w = (content_width / 2) - 2
+    
+    # C1. Trend Chart (Left)
+    if "MONTH" in cust_df.columns:
+        trend = cust_df.groupby("MONTH")["AMOUNT"].sum().reset_index()
+        try:
+            trend["SortKey"] = pd.to_datetime(trend["MONTH"], format="%b-%y", errors='coerce')
+            trend = trend.sort_values("SortKey")
+        except: pass
         
-        # FY Summary
-        fy_summary = cust_df.groupby("FINANCIAL_YEAR")["AMOUNT"].sum()
-        
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(6, 4))
         fig.patch.set_facecolor('white')
         ax.set_facecolor('white')
         
-        fy_summary.plot(kind='bar', color='#333333', edgecolor='#FFD700', ax=ax)
-        ax.set_title("Revenue Growth by Financial Year", fontweight='bold')
-        ax.set_ylabel("Revenue")
-        plt.xticks(rotation=0)
+        # Area Chart style
+        ax.fill_between(trend["MONTH"], trend["AMOUNT"], color="#FFD700", alpha=0.3)
+        ax.plot(trend["MONTH"], trend["AMOUNT"], color="#DAA520", linewidth=2, marker='o', markersize=4)
         
-        # Labels
-        for container in ax.containers:
-            ax.bar_label(container, fmt=lambda x: format_currency_pdf(x), padding=5)
-            
+        ax.set_title("Monthly Revenue Trend", fontsize=10, fontweight='bold', loc='left')
+        ax.tick_params(axis='x', rotation=45, labelsize=7)
+        ax.tick_params(axis='y', labelsize=7)
+        ax.set_xlabel(None)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.grid(axis='y', linestyle=':', alpha=0.5)
+        
         img_path = create_chart(fig)
         plt.close(fig)
-        pdf.image(img_path, x=10, w=190)
+        pdf.image(img_path, x=margin, y=y_charts, w=chart_w, h=chart_h)
+        os.remove(img_path)
+        
+    # C2. Category Donut (Right)
+    class_stats = classify_categories(cust_df, grp_col)
+    if not class_stats.empty:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        fig.patch.set_facecolor('white')
+        
+        # Top 5 + Others
+        chart_data = class_stats.head(5)
+        
+        colors = ['#FFD700', '#DAA520', '#B8860B', '#F0E68C', '#EEE8AA']
+        wedges, texts, autotexts = ax.pie(chart_data["Revenue"], labels=None, autopct='%1.0f%%', 
+                                          startangle=90, colors=colors, pctdistance=0.85,
+                                          wedgeprops=dict(width=0.4, edgecolor='white'))
+        
+        plt.setp(autotexts, size=8, weight="bold", color="black")
+        
+        # Legend
+        ax.legend(wedges, chart_data.index, title="Top Categories", loc="center left", 
+                  bbox_to_anchor=(1, 0, 0.5, 1), fontsize=7, title_fontsize=8, frameon=False)
+        ax.set_title("Revenue Mix", fontsize=10, fontweight='bold', loc='center')
+        
+        img_path = create_chart(fig)
+        plt.close(fig)
+        pdf.image(img_path, x=margin + chart_w + 4, y=y_charts, w=chart_w, h=chart_h)
         os.remove(img_path)
 
+    # D. Top Products & Insights (Row 3) - y=140
+    y_row3 = 140
+    
+    # D1. Top Products Bar (Full Width)
+    prod_h = 60
+    
+    top_prods = cust_df.groupby("ITEMNAME")["AMOUNT"].sum().sort_values(ascending=False).head(8)
+    
+    fig, ax = plt.subplots(figsize=(10, 3.5))
+    fig.patch.set_facecolor('white')
+    
+    # Horizontal Bar
+    y_pos = np.arange(len(top_prods))
+    ax.barh(y_pos, top_prods.values, color="#333333", height=0.6)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([str(x)[:30] for x in top_prods.index], fontsize=8)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    
+    ax.set_title("Top 8 Performing Products", fontsize=10, fontweight='bold', loc='left')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.xaxis.set_visible(False) # Hide x axis
+    
+    # Direct Labeling
+    for i, v in enumerate(top_prods.values):
+        ax.text(v + (v*0.01), i, f" {format_currency_pdf(v)}", color='black', va='center', fontsize=8, fontweight='bold')
+        
+    img_path = create_chart(fig)
+    plt.close(fig)
+    pdf.image(img_path, x=margin, y=y_row3, w=content_width, h=prod_h)
+    os.remove(img_path)
+    
+    # E. Strategic Insight Box (Row 4) - y=205
+    y_row4 = 205
+    box_h = 45
+    
+    # Auto-Insights
+    high_val_count = len(class_stats[class_stats["Classification"] == "High Value"])
+    opps = analyze_consolidation(cust_df, grp_col)
+    opp_txt = "None identified."
+    if not opps.empty:
+        top_opp = opps.iloc[0].name
+        opp_txt = f"Consider bundling '{top_opp}' (High Freq, Low Val) to improve margins."
+        
+    insight_text = (
+        f"• GROWTH: {customer_name} remains a key partner with {format_currency_pdf(total_rev)} in revenue.\n"
+        f"• PORTFOLIO: Business is driven by {high_val_count} core categories (High Value).\n"
+        f"• OPPORTUNITY: {opp_txt}\n"
+        f"• ACTION: Review {top_cat} inventory levels to ensure continuity."
+    )
+    
+    # Insight Box Design
+    pdf.set_xy(margin, y_row4)
+    pdf.set_fill_color(240, 240, 240) # Light Grey
+    pdf.set_draw_color(200, 200, 200)
+    pdf.rect(margin, y_row4, content_width, box_h, 'DF')
+    
+    # Icon/Title
+    pdf.set_xy(margin + 5, y_row4 + 5)
+    pdf.set_font("Arial", 'B', 10)
+    pdf.set_text_color(218, 165, 32)
+    pdf.cell(0, 5, "💡 STRATEGIC INSIGHTS", 0, 1)
+    
+    # Text
+    pdf.set_xy(margin + 5, y_row4 + 12)
+    pdf.set_font("Arial", '', 9)
+    pdf.set_text_color(50, 50, 50)
+    pdf.multi_cell(content_width - 10, 6, insight_text)
+    
     return pdf

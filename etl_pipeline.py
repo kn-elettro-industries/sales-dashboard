@@ -141,15 +141,25 @@ def clean_and_transform(df):
         # Create Month column for easy grouping (MMM-YY)
         df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
 
-    # 5. Clean & Recalculate Financials
-    # A. Drop unwanted columns from raw data (as per user request)
-    # We DO NOT drop AMOUNT anymore, we trust the Excel value (28cr vs 76cr)
-    cols_to_drop = ["TOTALAMOUNT", "TAX", "IGST", "CGST", "SGST"]
-    df = df.drop(columns=cols_to_drop, errors="ignore")
+    # 6. Ensure CITY column exists
+    if "CITY" not in df.columns:
+        df["CITY"] = "City Not Found"
+        
+    return df
+
+def calculate_taxes(df):
+    """Calculates IGST, CGST, SGST, and Total Amount."""
+    pipeline_monitor.update_status("Transform", "Running", "Calculating Taxes...", 65)
     
-    # B. Auto-Calculate Taxes & Total based on Excel's AMOUNT
-    # Default State to 'MAHARASHTRA' if missing for calculation
-    company_state = "MAHARASHTRA"
+    # Drop existing calc columns to be fresh (Aggressive Cleanup)
+    # The user explicitly wants to ignore raw tax/total columns and rely on AMOUNT
+    cols_to_drop = [
+        "TOTALAMOUNT", "TAX", "IGST", "CGST", "SGST", 
+        "IGST_RATE", "CGST_RATE", "SGST_RATE",
+        "GRAND_TOTAL", "NET_AMOUNT", "TOTAL_TAX",
+        "ROUND_OFF"
+    ]
+    df = df.drop(columns=cols_to_drop, errors="ignore")
     
     # Initialize columns
     df["IGST"] = 0.0
@@ -157,41 +167,38 @@ def clean_and_transform(df):
     df["SGST"] = 0.0
     df["TAX"] = 0.0
     df["TOTALAMOUNT"] = 0.0
-
-    if "AMOUNT" in df.columns:
-        logging.info("Recalculating Financials for all rows.")
+    
+    if "AMOUNT" not in df.columns:
+        return df
         
-        # Clean state column for comparison
-        # CRITICAL FIX: Do NOT overwrite actual data with default yet.
-        # We need to know if it's truly missing to check Customer Master later.
+    logging.info("Recalculating Financials for all rows.")
+    company_state = "MAHARASHTRA"
+    
+    # Use the FINAL State column (after merge)
+    calc_state_series = df["STATE"].copy() if "STATE" in df.columns else pd.Series(["Unknown"] * len(df))
+    calc_state_series = calc_state_series.fillna("Unknown").str.upper().str.strip()
+    
+    # 18% Tax Rate
+    tax_rate = 0.18
         
-        calc_state_series = df["STATE"].copy() if "STATE" in df.columns else pd.Series(["Unknown"] * len(df))
-        calc_state_series = calc_state_series.fillna("Unknown").str.upper().str.strip()
+    # Logic: If State is Company State OR Unknown -> CGST/SGST (Intra)
+    intra_state = calc_state_series.isin([company_state, "UNKNOWN", "MAHARASHTRA", "STATE NOT FOUND ⚠️"])
+    inter_state = ~intra_state
         
-        # If State is Unknown, we assume Intra-State (Maharashtra) for TAX purposes only?
-        # Or we can leave tax 0. Let's assume Intra-state for safety so totals aren't wrong.
-        # BUT we must NOT save "MAHARASHTRA" to the df["STATE"] unless it was there.
+    # IGST
+    df.loc[inter_state, "IGST"] = df.loc[inter_state, "AMOUNT"] * tax_rate
         
-        # 18% Tax Rate
-        tax_rate = 0.18
+    # CGST + SGST
+    df.loc[intra_state, "CGST"] = df.loc[intra_state, "AMOUNT"] * (tax_rate / 2)
+    df.loc[intra_state, "SGST"] = df.loc[intra_state, "AMOUNT"] * (tax_rate / 2)
         
-        # Logic: If State is Company State OR Unknown -> CGST/SGST (Intra)
-        # Else -> IGST (Inter)
-        intra_state = calc_state_series.isin([company_state, "UNKNOWN", "MAHARASHTRA"])
-        inter_state = ~intra_state
+    # Total Tax
+    df["TAX"] = df["IGST"] + df["CGST"] + df["SGST"]
         
-        # IGST
-        df.loc[inter_state, "IGST"] = df.loc[inter_state, "AMOUNT"] * tax_rate
-        
-        # CGST + SGST
-        df.loc[intra_state, "CGST"] = df.loc[intra_state, "AMOUNT"] * (tax_rate / 2)
-        df.loc[intra_state, "SGST"] = df.loc[intra_state, "AMOUNT"] * (tax_rate / 2)
-        
-        # Total Tax
-        df["TAX"] = df["IGST"] + df["CGST"] + df["SGST"]
-        
-        # Total Amount
-        df["TOTALAMOUNT"] = df["AMOUNT"] + df["TAX"]
+    # Total Amount
+    df["TOTALAMOUNT"] = df["AMOUNT"] + df["TAX"]
+    
+    return df
 
     # 6. Ensure CITY column exists
     if "CITY" not in df.columns:
@@ -315,6 +322,9 @@ def run_pipeline():
         
         # 3. Merge Master
         final_df = merge_customer_master(clean_df)
+        
+        # 3.5 Recalculate Taxes (After Merge to get correct State)
+        final_df = calculate_taxes(final_df)
 
         # 4. Update Database
         added_count = update_database(final_df)

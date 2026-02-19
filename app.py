@@ -487,7 +487,70 @@ elif selected == "Data Management":
         st.success("✅ No 'Unknown' locations found!")
     
     st.markdown("---")
-    st.subheader("⚠️ Danger Zone")
+    st.subheader("⚖️ Data Integrity Checker")
+    st.caption("Compare Raw Input vs. Final Output to find missing data.")
+    
+    col1, col2 = st.columns(2)
+    
+    # 1. Analyze Raw Data
+    raw_metrics = {"rows": 0, "amount": 0, "min_date": None, "max_date": None}
+    with col1:
+        st.info("📂 Raw Input(s)")
+        try:
+            raw_files = [f for f in os.listdir(config.RAW_FOLDER) if f.endswith(".xlsx")]
+            if raw_files:
+                dfs = []
+                for f in raw_files:
+                    path = os.path.join(config.RAW_FOLDER, f)
+                    tmp = pd.read_excel(path)
+                    # Standardize just to find AMOUNT column
+                    tmp.columns = tmp.columns.str.upper().str.strip()
+                    dfs.append(tmp)
+                
+                raw_combined = pd.concat(dfs)
+                raw_metrics["rows"] = len(raw_combined)
+                
+                # Find Amount Column loosely
+                amt_col = next((c for c in raw_combined.columns if "AMOUNT" in c), None)
+                if amt_col:
+                     raw_metrics["amount"] = raw_combined[amt_col].sum()
+                
+                st.metric("Total Rows", raw_metrics["rows"])
+                st.metric("Total Amount", f"₹{raw_metrics['amount']:,.0f}")
+            else:
+                st.warning("No raw files.")
+        except Exception as e:
+            st.error(f"Read Error: {e}")
+
+    # 2. Analyze Processed Data
+    processed_metrics = {"rows": 0, "amount": 0}
+    with col2:
+        st.success("📊 Processed Sales Master")
+        if os.path.exists(config.SALES_MASTER_FILE):
+             try:
+                 proc_df = pd.read_excel(config.SALES_MASTER_FILE)
+                 processed_metrics["rows"] = len(proc_df)
+                 if "TOTALAMOUNT" in proc_df.columns:
+                     processed_metrics["amount"] = proc_df["TOTALAMOUNT"].sum()
+                 elif "AMOUNT" in proc_df.columns:
+                     processed_metrics["amount"] = proc_df["AMOUNT"].sum()
+                     
+                 st.metric("Total Rows", processed_metrics["rows"], delta=processed_metrics["rows"] - raw_metrics["rows"])
+                 st.metric("Total Amount", f"₹{processed_metrics['amount']:,.0f}", delta=processed_metrics['amount'] - raw_metrics['amount'])
+             except:
+                 st.error("Could not read Master.")
+        else:
+             st.warning("No Sales Master found.")
+             
+    # Diagnosis
+    st.write("---")
+    diff_rows = raw_metrics["rows"] - processed_metrics["rows"]
+    if diff_rows > 0:
+        st.error(f"❌ LOST {diff_rows} ROWS! Check 'Excluded Keywords' in Config.")
+    elif diff_rows < 0:
+        st.warning(f"⚠️ GAINED {abs(diff_rows)} ROWS? Check for duplicates.")
+    else:
+        st.success("✅ Row Counts Match completely.")
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🗑️ Clear All Data (Reset Dashboard)", type="primary"):

@@ -8,11 +8,13 @@ data/output/
 *.sqlite
 
 # Ignore Excel files generally
-*.xlsx
+# Ignore Excel files in specific data folders ONLY
+data/raw/*.xlsx
+data/processed/*.xlsx
+data/output/*.xlsx
 
-# Exception: Customer Master & Targets (Required for Cloud)
-!data/masters/customer_master.xlsx
-!data/masters/targets.xlsx
+# Allow master files (DO NOT IGNORE)
+!data/masters/*.xlsx
 __pycache__/
 .idea/
 venv/

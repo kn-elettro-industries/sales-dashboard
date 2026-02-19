@@ -105,7 +105,7 @@ def render_rfm(df):
             st.table(pd.DataFrame(action_data).set_index("Segment"))
             
         with col_act2:
-             fig_pie = px.donut(
+             fig_pie = px.pie(
                 rfm, 
                 names="Segment", 
                 values="Monetary", 

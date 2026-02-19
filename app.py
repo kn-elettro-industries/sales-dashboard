@@ -466,6 +466,23 @@ elif selected == "Data Management":
              
     except Exception as e:
         st.error(f"Error reading raw file: {e}")
+
+    st.markdown("---")
+    st.subheader("🕵️ Data Quality Inspector")
+    st.caption("Find rows where Location data is missing.")
+    
+    # Filter for Unknowns
+    unknown_df = df[
+        (df["CITY"].str.upper() == "UNKNOWN") | 
+        (df["STATE"].str.upper() == "UNKNOWN") |
+        (df["STATE"].str.upper() == "MAHARASHTRA") # excessive default checking
+    ]
+    
+    if not unknown_df.empty:
+        st.warning(f"Found {len(unknown_df)} rows with potential location issues.")
+        st.dataframe(unknown_df[["INVOICE_NO", "CUSTOMER_NAME", "CITY", "STATE", "AMOUNT"]].head(20))
+    else:
+        st.success("✅ No 'Unknown' locations found!")
     
     st.markdown("---")
     st.subheader("⚠️ Danger Zone")

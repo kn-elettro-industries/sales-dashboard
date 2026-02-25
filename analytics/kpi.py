@@ -7,7 +7,13 @@ def render_kpi_card(title, value, delta=None, icon="📊"):
     """
     delta_html = ""
     if delta:
-        color = "#2ecc71" if "+" in str(delta) or float(str(delta).replace("%","").replace(" MoM","")) >= 0 else "#e74c3c"
+        clean_delta = str(delta).replace("%", "").replace(" MoM", "").replace(" (MTD)", "").replace(" (New)", "")
+        try:
+            val = float(clean_delta)
+        except ValueError:
+            val = -1 if "-" in str(delta) else 1
+            
+        color = "#2ecc71" if "+" in str(delta) or val >= 0 else "#e74c3c"
         delta_html = f'<p style="color: {color}; font-size: 0.9rem; margin: 0;">{delta}</p>'
 
     html_code = f"""

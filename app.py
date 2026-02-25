@@ -464,6 +464,15 @@ if selected == "Executive Home":
             )
             fig_mat.update_layout(title="", font=dict(color="white"), showlegend=False)
             st.plotly_chart(fig_mat, use_container_width=True)
+            
+            # Additional Table for clarity
+            st.markdown("##### Breakdown")
+            table_df = top_mat[[grp_col, "AMOUNT"]].copy()
+            table_df.rename(columns={grp_col: "Category", "AMOUNT": "Revenue"}, inplace=True)
+            # Format revenue for table
+            table_df["Revenue"] = table_df["Revenue"].apply(format_indian_currency)
+            st.dataframe(table_df, use_container_width=True, hide_index=True)
+            
         else:
             st.info("Material Group data unavailable.")
         st.markdown('</div>', unsafe_allow_html=True)

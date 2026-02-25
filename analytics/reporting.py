@@ -655,6 +655,33 @@ def render_reporting(df):
             except Exception as e:
                 st.error(f"Error: {e}")
 
+    # --- ARCHIVE REPORTS TO LOCAL DISK ---
+    st.markdown("---")
+    st.subheader("🗄️ Daily Archiving")
+    
+    if st.button("Generate & Archive Daily Reports"):
+        with st.spinner("Generating and Archiving Reports locally..."):
+            # Ensure folder exists
+            date_str = datetime.now().strftime('%Y-%m-%d')
+            folder_path = os.path.join(os.getcwd(), "reports", date_str)
+            os.makedirs(folder_path, exist_ok=True)
+            
+            try:
+                # 1. Executive Summary
+                pdf1 = generate_pdf(df, "Material Group Wise", "All")
+                fpath1 = os.path.join(folder_path, "Executive_Summary.pdf")
+                pdf1.output(fpath1)
+                
+                # 2. Customer Overview
+                pdf2 = generate_pdf(df, "Customer Wise", "All")
+                fpath2 = os.path.join(folder_path, "Customer_Overview.pdf")
+                pdf2.output(fpath2)
+                
+                st.success(f"✅ Archived reports to: `{folder_path}`")
+                st.balloons()
+            except Exception as e:
+                st.error(f"❌ Failed to archive: {e}")
+
 
 # --- New Pages for Strategy Deck ---
 

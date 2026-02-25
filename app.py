@@ -141,67 +141,35 @@ df = get_data()
 targets_df = get_targets()
 
 # ---------------------------------------------------------
-# FLOATING CHATBOT (Global - Always Run)
+# KRISHIV AI ASSISTANT — Sidebar Panel (Always Visible)
 # ---------------------------------------------------------
-st.markdown("""
-<style>
-/* Float the Popover Container */
-[data-testid="stPopover"] {
-    position: fixed !important;
-    bottom: 30px !important;
-    right: 30px !important;
-    z-index: 999999 !important;
-}
-/* Style the Button */
-[data-testid="stPopover"] button {
-    background-color: #FFD700 !important;
-    color: black !important;
-    border: 2px solid #FFFFFF !important;
-    border-radius: 50% !important;
-    width: 60px !important;
-    height: 60px !important;
-    font-size: 24px !important;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
-}
-[data-testid="stPopover"] button:hover {
-    background-color: #FFEE55 !important;
-    transform: scale(1.1) !important;
-}
-</style>
-""", unsafe_allow_html=True)
+# NOTE: st.sidebar is the ONLY Streamlit element that persists across all pages.
+# CSS position:fixed cannot move widgets out of Streamlit's flow, so we use the sidebar.
+with st.sidebar:
+    st.markdown("---")
+    with st.expander("💬 Krishiv — Ask Me Anything", expanded=False):
+        # Init history
+        if "messages" not in st.session_state:
+            st.session_state.messages = [{"role": "assistant", "content": "Hi! I am Krishiv. How can I help?"}]
 
-# Popover Chat
-with st.popover("💬", use_container_width=False):
-    st.markdown("### 🤖 Krishiv (AI Analyst)")
-    st.caption("Ask me about Revenue, Targets, or Top Products.")
-    
-    # Initialize Chat History
-    if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hi! I am Krishiv. How can I help you today?"}]
+        # Display last 4 messages to save sidebar space
+        for msg in st.session_state.messages[-4:]:
+            prefix = "You: " if msg["role"] == "user" else "Krishiv: "
+            st.markdown(f"`{prefix}`{msg['content']}")
 
-    # Display History
-    for message in st.session_state.messages[-5:]:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    # Chat Input
-    if prompt := st.chat_input("Ask a question...", key="float_chat"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                time.sleep(0.5)
-                # Check if data is available
-                if df is not None and not df.empty:
-                    response = process_query(prompt, df)
-                else:
-                    response = "I cannot access the data right now. Please check if the data file is uploaded correctly."
-                st.markdown(response)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()
+        # Input
+        user_input = st.text_input("Your query:", key="sidebar_chat_input", label_visibility="collapsed", placeholder="e.g. Top 5 customers...")
+        if st.button("Send", key="sidebar_chat_send"):
+            if user_input.strip():
+                st.session_state.messages.append({"role": "user", "content": user_input})
+                with st.spinner("Thinking..."):
+                    time.sleep(0.3)
+                    if df is not None and not df.empty:
+                        bot_response = process_query(user_input, df)
+                    else:
+                        bot_response = "Data not loaded. Please upload a file first."
+                st.session_state.messages.append({"role": "assistant", "content": bot_response})
+                st.rerun()
 
 if df.empty:
     st.warning("⚠️ Application Ready! Upload data in the Sidebar found on the left 👈")
@@ -478,10 +446,7 @@ if selected == "Executive Home":
         grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
         if grp_col in df.columns:
             top_mat = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(10).reset_index()
-            # For Pie/Donut, we usually rely on hover or legend, but can add text info
-            # Let's keep pie simple but ensure hover has formatted data if possible, or just standard %
-            # Plotly Pie text info is usually percent. Customizing it to show 'Cr' might be crowded.
-            # Let's stick to default percent for Pie, but bar definitely needs 'Cr'.
+            top_mat["Formatted_Amount"] = top_mat["AMOUNT"].apply(format_indian_currency)
             
             fig_mat = px.pie(
                 top_mat, 
@@ -489,9 +454,15 @@ if selected == "Executive Home":
                 names=grp_col, 
                 hole=0.4,
                 template="corporate_black",
-                color_discrete_sequence=px.colors.sequential.YlOrBr
+                color_discrete_sequence=px.colors.sequential.YlOrBr,
+                custom_data=["Formatted_Amount"]
             )
-            fig_mat.update_layout(title="", font=dict(color="white"))
+            fig_mat.update_traces(
+                textposition='inside', 
+                textinfo='percent+label',
+                hovertemplate="<b>%{label}</b><br>Revenue: %{customdata[0]}<br>Share: %{percent}<extra></extra>"
+            )
+            fig_mat.update_layout(title="", font=dict(color="white"), showlegend=False)
             st.plotly_chart(fig_mat, use_container_width=True)
         else:
             st.info("Material Group data unavailable.")

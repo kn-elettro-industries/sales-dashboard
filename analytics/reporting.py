@@ -656,33 +656,51 @@ def render_reporting(df):
             except Exception as e:
                 st.error(f"Error: {e}")
 
-    # --- EXECUTIVE PROCUREMENT REPORT ---
+    # --- EXECUTIVE PROCUREMENT REPORT (PER CUSTOMER) ---
     st.markdown("---")
     st.subheader("📊 Executive Procurement Analysis")
-    st.caption("Generate an 11-step, fact-based strategic analysis of procurement patterns.")
+    st.caption("Generate an 11-step, board-ready procurement analysis for any individual customer.")
     
     with st.expander("Configure Procurement Report"):
-        proc_dealer = st.text_input("Dealer Name:", value="K.N. Elettro")
-        proc_supplier = st.text_input("Supplier Name:", value="Polycab India Ltd.")
+        # Customer selector — report scoped to this customer's data only
+        cust_list = sorted(df["CUSTOMER_NAME"].dropna().unique().tolist()) if "CUSTOMER_NAME" in df.columns else []
+        proc_customer = st.selectbox("Select Customer (Dealer):", cust_list) if cust_list else None
+        
+        proc_supplier = st.text_input("Your Company / Supplier Name:", value="K.N. Elettro")
+        
+        if proc_customer:
+            cust_preview = df[df["CUSTOMER_NAME"] == proc_customer]
+            amt_col = "AMOUNT" if "AMOUNT" in cust_preview.columns else None
+            if amt_col:
+                st.info(
+                    f"**{proc_customer}** — "
+                    f"{len(cust_preview):,} transactions | "
+                    f"Total Spend: ₹{cust_preview[amt_col].sum():,.0f}"
+                )
         
         if st.button("Generate Procurement Analysis (PDF)"):
-            with st.spinner("Analyzing demand concentration & efficiency..."):
-                try:
-                    pdf_path = generate_procurement_report(df, proc_dealer, proc_supplier)
-                    
-                    with open(pdf_path, "rb") as f:
-                        pdf_data = f.read()
+            if not proc_customer:
+                st.error("Please select a customer first.")
+            else:
+                with st.spinner(f"Analysing {proc_customer}'s procurement patterns..."):
+                    try:
+                        cust_df = df[df["CUSTOMER_NAME"] == proc_customer].copy()
+                        pdf_path = generate_procurement_report(cust_df, proc_customer, proc_supplier)
                         
-                    b64 = base64.b64encode(pdf_data).decode()
-                    filename = f"PROCUREMENT_ANALYSIS_{proc_dealer.replace(' ', '_')}.pdf"
-                    
-                    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">' \
-                           f'<button style="background-color:#053f3c; color:#00ffa2; border:1px solid #00ffa2; padding:12px 24px; border-radius:5px; font-weight:bold; width:100%; margin-top: 10px;">' \
-                           f'⬇️ Download Strategic Procurement Report</button></a>'
-                    st.markdown(href, unsafe_allow_html=True)
-                    st.success("Analysis Complete!")
-                except Exception as e:
-                    st.error(f"Error generating report: {e}")
+                        with open(pdf_path, "rb") as f:
+                            pdf_data = f.read()
+                        
+                        b64 = base64.b64encode(pdf_data).decode()
+                        safe_name = proc_customer.replace(' ', '_').replace('/', '-')
+                        filename = f"PROCUREMENT_ANALYSIS_{safe_name}.pdf"
+                        
+                        href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">' \
+                               f'<button style="background-color:#053f3c; color:#00ffa2; border:1px solid #00ffa2; padding:12px 24px; border-radius:5px; font-weight:bold; width:100%; margin-top: 10px;">' \
+                               f'⬇️ Download Procurement Report — {proc_customer}</button></a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                        st.success("Analysis Complete!")
+                    except Exception as e:
+                        st.error(f"Error generating report: {e}")
 
     # --- ARCHIVE REPORTS TO LOCAL DISK ---
     st.markdown("---")

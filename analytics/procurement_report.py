@@ -3,6 +3,25 @@ from fpdf import FPDF
 from datetime import datetime
 import tempfile
 import os
+import matplotlib.pyplot as plt
+import matplotlib
+import numpy as np
+matplotlib.use('Agg')
+
+from .utils import format_indian_currency
+
+def create_chart(fig):
+    # Apply professional styling before saving
+    for ax in fig.get_axes():
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.grid(True, linestyle='--', alpha=0.6, color='#dddddd')
+        ax.tick_params(axis='both', which='major', labelsize=10)
+        
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+        # High DPI for clear printing
+        fig.savefig(tmp.name, bbox_inches='tight', dpi=300, facecolor='white')
+        return tmp.name
 
 from .utils import format_indian_currency
 
@@ -54,9 +73,18 @@ def generate_procurement_report(df, dealer_name, supplier_name):
     pdf.alias_nb_pages()
     
     # --- Data Calculations ---
-    # Ensure AMOUNT and ITEMNAME exist
+    # Ensure AMOUNT and ITEM_NAME_GROUP exist
     amt_col = "AMOUNT" if "AMOUNT" in df.columns else ("TOTALAMOUNT" if "TOTALAMOUNT" in df.columns else None)
-    item_col = "ITEMNAME" if "ITEMNAME" in df.columns else ("ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else None)
+    
+    # Aggressively target Material Group
+    if "ITEM_NAME_GROUP" in df.columns:
+        item_col = "ITEM_NAME_GROUP"
+    elif "MATERIALGROUP" in df.columns:
+        item_col = "MATERIALGROUP"
+    elif "ITEMNAME" in df.columns:
+        item_col = "ITEMNAME" # Fallback
+    else:
+        item_col = None
     
     if amt_col is None or item_col is None:
         pdf.add_page()
@@ -204,6 +232,22 @@ def generate_procurement_report(df, dealer_name, supplier_name):
         f"represents only {tail_spend/total_spend*100:.1f}% of total spend, indicating highly fragmented, reactive ordering."
     )
     pdf.write_body_text(conc)
+    
+    # EMEDDED DONUT CHART: Core vs Tail
+    fig, ax = plt.subplots(figsize=(6, 3))
+    colors = ['#FFD700', '#333333']
+    wedges, texts, autotexts = ax.pie([core_spend, tail_spend], labels=["Core (90%)", "Long-Tail (10%)"], 
+                                      autopct='%1.1f%%', startangle=90, colors=colors, 
+                                      wedgeprops=dict(width=0.4, edgecolor='white'))
+    plt.setp(autotexts, size=8, weight="bold", color="white")
+    autotexts[0].set_color("black") # Make gold text black
+    ax.set_title("Spend Concentration", fontsize=10, fontweight='bold')
+    
+    img_path = create_chart(fig)
+    plt.close(fig)
+    pdf.image(img_path, x=75, y=pdf.get_y(), w=60, h=30)
+    os.remove(img_path)
+    pdf.ln(35)
 
     # --- 7. Low-Volume Materials Analysis ---
     pdf.add_page()
@@ -234,6 +278,21 @@ def generate_procurement_report(df, dealer_name, supplier_name):
     else:
         trend_text = "Monthly chronological trending data is unavailable due to data constraints. Overall observations indicate fragmented purchasing runs."
     pdf.write_body_text(trend_text)
+
+    # EMEDDED TREND CHART
+    if "MONTH" in df.columns:
+        fig, ax = plt.subplots(figsize=(8, 3))
+        ax.fill_between(trend.index, trend.values, color="#FFD700", alpha=0.3)
+        ax.plot(trend.index, trend.values, color="#DAA520", linewidth=2, marker='o', markersize=4)
+        ax.set_title("Monthly Procurement Volatility", fontsize=10, fontweight='bold', loc='left')
+        ax.tick_params(axis='x', rotation=45, labelsize=7)
+        ax.tick_params(axis='y', labelsize=7)
+        
+        img_path = create_chart(fig)
+        plt.close(fig)
+        pdf.image(img_path, x=30, y=pdf.get_y(), w=150, h=55)
+        os.remove(img_path)
+        pdf.ln(60)
 
     # --- 9. Quantified Efficiency Opportunity ---
     pdf.add_section_header("9. Quantified Efficiency Opportunity")

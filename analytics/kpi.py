@@ -20,18 +20,49 @@ def render_kpis(df):
     total_qty = df["QTY"].sum()
     total_invoices = df["INVOICE_NO"].nunique()
 
-    monthly_sales = df.groupby("MONTH")["AMOUNT"].sum().sort_index()
-    
+    # True Month-to-Date (MTD) vs Previous Month-to-Date calculation
     growth = 0
-    if len(monthly_sales) > 1:
-        last_month = monthly_sales.iloc[-1]
-        prev_month = monthly_sales.iloc[-2]
-        growth = ((last_month - prev_month) / prev_month) * 100 if prev_month != 0 else 0
+    delta_label = "0% MoM"
+    
+    if "DATE" in df.columns and not df.empty:
+        # Find the absolute latest date in the dataset
+        max_date = df["DATE"].max()
+        
+        try:
+            current_month_start = max_date.replace(day=1)
+            # Find the same day last month
+            if max_date.month == 1:
+                prev_month_end_date = max_date.replace(year=max_date.year - 1, month=12)
+            else:
+                try:
+                    prev_month_end_date = max_date.replace(month=max_date.month - 1)
+                except ValueError:
+                    # E.g. March 31 -> Feb 28
+                    import calendar
+                    last_day = calendar.monthrange(max_date.year, max_date.month - 1)[1]
+                    prev_month_end_date = max_date.replace(month=max_date.month - 1, day=last_day)
+                    
+            prev_month_start = prev_month_end_date.replace(day=1)
+
+            # Sum revenues for the exact date ranges
+            current_mtd_sales = df[(df["DATE"] >= current_month_start) & (df["DATE"] <= max_date)]["AMOUNT"].sum()
+            prev_mtd_sales = df[(df["DATE"] >= prev_month_start) & (df["DATE"] <= prev_month_end_date)]["AMOUNT"].sum()
+
+            if prev_mtd_sales > 0:
+                growth = ((current_mtd_sales - prev_mtd_sales) / prev_mtd_sales) * 100
+                delta_label = f"{growth:+.1f}% (MTD)"
+            elif current_mtd_sales > 0:
+                delta_label = "+100% (New)"
+            else:
+                delta_label = "0% (MTD)"
+        except Exception as e:
+            # Fallback if date logic fails
+            pass
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        render_kpi_card("Total Revenue", format_indian_currency(total_sales), f"{growth:+.1f}% MoM", "💰")
+        render_kpi_card("Total Revenue", format_indian_currency(total_sales), delta_label, "💰")
     
     with col2:
         render_kpi_card("Total Invoices", f"{total_invoices:,}", icon="🧾")

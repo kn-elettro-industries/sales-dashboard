@@ -11,6 +11,7 @@ import os
 import numpy as np
 
 from .utils import format_indian_currency
+from .procurement_report import generate_procurement_report
 
 # --- Data Analysis Helpers ---
 
@@ -654,6 +655,34 @@ def render_reporting(df):
                     st.success("Report Ready!")
             except Exception as e:
                 st.error(f"Error: {e}")
+
+    # --- EXECUTIVE PROCUREMENT REPORT ---
+    st.markdown("---")
+    st.subheader("📊 Executive Procurement Analysis")
+    st.caption("Generate an 11-step, fact-based strategic analysis of procurement patterns.")
+    
+    with st.expander("Configure Procurement Report"):
+        proc_dealer = st.text_input("Dealer Name:", value="K.N. Elettro")
+        proc_supplier = st.text_input("Supplier Name:", value="Polycab India Ltd.")
+        
+        if st.button("Generate Procurement Analysis (PDF)"):
+            with st.spinner("Analyzing demand concentration & efficiency..."):
+                try:
+                    pdf_path = generate_procurement_report(df, proc_dealer, proc_supplier)
+                    
+                    with open(pdf_path, "rb") as f:
+                        pdf_data = f.read()
+                        
+                    b64 = base64.b64encode(pdf_data).decode()
+                    filename = f"PROCUREMENT_ANALYSIS_{proc_dealer.replace(' ', '_')}.pdf"
+                    
+                    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">' \
+                           f'<button style="background-color:#053f3c; color:#00ffa2; border:1px solid #00ffa2; padding:12px 24px; border-radius:5px; font-weight:bold; width:100%; margin-top: 10px;">' \
+                           f'⬇️ Download Strategic Procurement Report</button></a>'
+                    st.markdown(href, unsafe_allow_html=True)
+                    st.success("Analysis Complete!")
+                except Exception as e:
+                    st.error(f"Error generating report: {e}")
 
     # --- ARCHIVE REPORTS TO LOCAL DISK ---
     st.markdown("---")

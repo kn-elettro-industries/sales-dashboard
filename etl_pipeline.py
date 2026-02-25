@@ -62,7 +62,7 @@ def standardize(df):
                 df.rename(columns={col: "ITEMNAME"}, inplace=True)
 
         # INVOICE Synonyms
-        elif any(x in col_upper for x in ["INVOICE", "BILL NO", "DOC NO", "VOUCHER"]):
+        elif col_upper == "NO" or col_upper == "NO." or any(x in col_upper for x in ["INVOICE", "BILL_NO", "DOC_NO", "VOUCHER"]):
             if "INVOICE_NO" not in df.columns and "DATE" not in col_upper:
                 df.rename(columns={col: "INVOICE_NO"}, inplace=True)
 
@@ -212,6 +212,9 @@ def merge_customer_master(sales_df):
     
     if not os.path.exists(config.CUSTOMER_MASTER_FILE):
         logging.warning("Customer Master file not found. Skipping merge.")
+        # Ensure STATE exists even if master is missing
+        if "STATE" not in sales_df.columns:
+            sales_df["STATE"] = "STATE NOT FOUND ⚠️"
         return sales_df
 
     master_df = pd.read_excel(config.CUSTOMER_MASTER_FILE)
@@ -237,6 +240,50 @@ def merge_customer_master(sales_df):
         logging.info("Customer Master merged and columns cleaned.")
     else:
         logging.warning("CUSTOMER_NAME column missing in sales or master data.")
+
+    # ---------------------------------------------------------
+    # FALLBACK LOGIC: GUESS STATE FROM CITY IF STILL MISSING
+    # ---------------------------------------------------------
+    if "STATE" not in sales_df.columns:
+        sales_df["STATE"] = pd.NA
+        
+    CITY_STATE_MAP = {
+        "MUMBAI": "MAHARASHTRA",
+        "PUNE": "MAHARASHTRA",
+        "NAGPUR": "MAHARASHTRA",
+        "NASHIK": "MAHARASHTRA",
+        "THANE": "MAHARASHTRA",
+        "AURANGABAD": "MAHARASHTRA",
+        "DELHI": "DELHI",
+        "NEW DELHI": "DELHI",
+        "GURGAON": "HARYANA",
+        "NOIDA": "UTTAR PRADESH",
+        "BANGALORE": "KARNATAKA",
+        "BENGALURU": "KARNATAKA",
+        "CHENNAI": "TAMIL NADU",
+        "HYDERABAD": "TELANGANA",
+        "KOLKATA": "WEST BENGAL",
+        "AHMEDABAD": "GUJARAT",
+        "SURAT": "GUJARAT",
+        "VADODARA": "GUJARAT",
+        "JAIPUR": "RAJASTHAN",
+        "LUCKNOW": "UTTAR PRADESH",
+        "KANPUR": "UTTAR PRADESH",
+        "INDORE": "MADHYA PRADESH",
+        "BHOPAL": "MADHYA PRADESH"
+    }
+
+    if "CITY" in sales_df.columns:
+        # Fill missing states by looking up the city (case-insensitive)
+        def guess_state(row):
+            if pd.isna(row.get("STATE")) or str(row.get("STATE")).strip() == "" or "NOT FOUND" in str(row.get("STATE")).upper():
+                city = str(row.get("CITY", "")).upper().strip()
+                return CITY_STATE_MAP.get(city, "STATE NOT FOUND ⚠️")
+            return row["STATE"]
+            
+        sales_df["STATE"] = sales_df.apply(guess_state, axis=1)
+    else:
+        sales_df["STATE"] = sales_df["STATE"].fillna("STATE NOT FOUND ⚠️")
 
     return sales_df
 
@@ -274,12 +321,20 @@ def update_database(new_df):
         new_records_count = len(new_df)
         logging.info(f"Created new table with {new_records_count} records.")
     else:
-        # Get existing invoices to avoid duplicates
-        existing_invoices = pd.read_sql("SELECT INVOICE_NO FROM sales_master", conn)
-        existing_set = set(existing_invoices["INVOICE_NO"])
-        
-        # Filter new records
-        to_insert = new_df[~new_df["INVOICE_NO"].isin(existing_set)]
+        # Get existing invoices to avoid duplicates, fallback if column missing
+        try:
+            existing_invoices = pd.read_sql("SELECT INVOICE_NO FROM sales_master", conn)
+            existing_set = set(existing_invoices["INVOICE_NO"])
+            
+            if "INVOICE_NO" in new_df.columns:
+                to_insert = new_df[~new_df["INVOICE_NO"].isin(existing_set)]
+            else:
+                logging.warning("INVOICE_NO missing in new data. Appending all.")
+                to_insert = new_df
+        except Exception as e:
+            logging.warning(f"Could not read INVOICE_NO from DB ({e}). Appending all.")
+            to_insert = new_df
+            
         new_records_count = len(to_insert)
 
         if new_records_count > 0:

@@ -16,6 +16,7 @@ from analytics.advanced import render_pareto, render_heatmap
 from analytics.elasticity import render_elasticity
 from analytics.prediction import render_churn_prediction
 from analytics.reporting import render_reporting
+from analytics.quality import render_quality_dashboard
 from analytics.chatbot import process_query
 from analytics.theme import apply_theme
 from analytics.utils import format_indian_currency
@@ -212,11 +213,12 @@ with st.sidebar:
             "Predictive Churn Risk",
             "Geographic Intelligence",
             "Executive Reporting",
+            "Data Quality Inspector",
             "Data Management", 
             "System Architecture", 
             "User Management"
         ]
-        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "database", "diagram-3", "people-fill"]
+        menu_icons = ["house", "people", "box", "graph-down-arrow", "globe", "file-earmark-text", "shield-check", "database", "diagram-3", "people-fill"]
 
     selected = option_menu(
         "Main Menu", 
@@ -706,6 +708,10 @@ elif selected == "Data Management":
                 st.rerun()
             except Exception as e:
                 st.error(f"Error clearing data: {e}")
+
+# --- E2. Data Quality Inspector ---
+elif selected == "Data Quality Inspector":
+    render_quality_dashboard(df)
 
 # --- F. System Architecture ---
 elif selected == "System Architecture":

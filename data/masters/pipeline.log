@@ -412,3 +412,910 @@
 2026-02-18 13:30:54,334 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
 2026-02-18 17:53:29,869 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
 2026-02-18 17:53:29,869 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-25 12:00:54,424 - INFO - Watching directory: C:\Users\Admin\PycharmProjects\sales_pipeline (EXPERIMENT)\data\raw
+2026-02-25 12:00:54,425 - INFO - Waiting for new Excel files... (Press Ctrl+C to stop)
+2026-02-25 12:58:08,990 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:08,992 - INFO - No new raw files found.
+2026-02-25 12:58:08,992 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:36,577 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:36,579 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:58:36,839 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:58:36,930 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:58:36,994 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:58:37,071 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:58:37,139 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:58:37,216 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:58:37,286 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:58:37,381 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:58:37,454 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:58:37,535 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:58:37,606 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:58:37,694 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:58:37,760 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:58:37,838 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:58:37,911 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:58:37,990 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:58:38,071 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:58:38,176 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:58:38,263 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:58:38,337 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:58:38,414 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:58:38,525 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:58:38,606 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:58:38,847 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:58:39,030 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:58:39,033 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:58:39,191 - INFO - Created new table with 26155 records.
+2026-02-25 12:58:42,452 - INFO - Excel Master updated successfully.
+2026-02-25 12:58:42,454 - INFO - Archived 01. APRIL 2024.xlsx
+2026-02-25 12:58:42,454 - INFO - Archived 01. APRIL 2025.xlsx
+2026-02-25 12:58:42,455 - INFO - Archived 02. MAY 2024.xlsx
+2026-02-25 12:58:42,455 - INFO - Archived 02. MAY 2025.xlsx
+2026-02-25 12:58:42,455 - INFO - Archived 03. JUNE 2024.xlsx
+2026-02-25 12:58:42,456 - INFO - Archived 03. JUNE 2025.xlsx
+2026-02-25 12:58:42,456 - INFO - Archived 04. JULY 2024.xlsx
+2026-02-25 12:58:42,456 - INFO - Archived 04. JULY 2025.xlsx
+2026-02-25 12:58:42,456 - INFO - Archived 05. AUG 2024.xlsx
+2026-02-25 12:58:42,457 - INFO - Archived 05. AUG 2025.xlsx
+2026-02-25 12:58:42,457 - INFO - Archived 06. SEP 2024.xlsx
+2026-02-25 12:58:42,457 - INFO - Archived 06. SEP 2025.xlsx
+2026-02-25 12:58:42,471 - INFO - Archived 07. OCT 2024.xlsx
+2026-02-25 12:58:42,471 - INFO - Archived 07. OCT 2025.xlsx
+2026-02-25 12:58:42,472 - INFO - Archived 08. NOV 2024.xlsx
+2026-02-25 12:58:42,472 - INFO - Archived 08. NOV 2025.xlsx
+2026-02-25 12:58:42,472 - INFO - Archived 09. DEC 2024.xlsx
+2026-02-25 12:58:42,473 - INFO - Archived 09. DEC 2025.xlsx
+2026-02-25 12:58:42,473 - INFO - Archived 10. JAN 2025.xlsx
+2026-02-25 12:58:42,473 - INFO - Archived 11. FEB 2025.xlsx
+2026-02-25 12:58:42,473 - INFO - Archived 12. MARCH 2025.xlsx
+2026-02-25 12:58:42,474 - INFO - Archived JAN2026-SalesReportWithItem.xlsx
+2026-02-25 12:58:42,487 - INFO - Archived SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx
+2026-02-25 12:58:42,487 - INFO - --- Pipeline Completed Successfully ---
+2026-02-25 12:58:44,492 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:44,493 - INFO - No new raw files found.
+2026-02-25 12:58:44,494 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:46,496 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:46,497 - INFO - No new raw files found.
+2026-02-25 12:58:46,498 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:48,407 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:48,408 - INFO - No new raw files found.
+2026-02-25 12:58:48,409 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:48,500 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:48,501 - INFO - No new raw files found.
+2026-02-25 12:58:48,501 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:50,504 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:50,505 - INFO - No new raw files found.
+2026-02-25 12:58:50,506 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:52,508 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:52,509 - INFO - No new raw files found.
+2026-02-25 12:58:52,509 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:54,512 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:54,513 - INFO - No new raw files found.
+2026-02-25 12:58:54,513 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:56,515 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:56,516 - INFO - No new raw files found.
+2026-02-25 12:58:56,516 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:58:58,519 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:58:58,520 - INFO - No new raw files found.
+2026-02-25 12:58:58,521 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:00,524 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:00,526 - INFO - No new raw files found.
+2026-02-25 12:59:00,526 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:02,529 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:02,530 - INFO - No new raw files found.
+2026-02-25 12:59:02,530 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:04,533 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:04,535 - INFO - No new raw files found.
+2026-02-25 12:59:04,535 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:06,538 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:06,539 - INFO - No new raw files found.
+2026-02-25 12:59:06,539 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:08,542 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:08,543 - INFO - No new raw files found.
+2026-02-25 12:59:08,544 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:10,546 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:10,547 - INFO - No new raw files found.
+2026-02-25 12:59:10,548 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:12,551 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:12,552 - INFO - No new raw files found.
+2026-02-25 12:59:12,552 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:14,554 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:14,555 - INFO - No new raw files found.
+2026-02-25 12:59:14,556 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:16,558 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:16,560 - INFO - No new raw files found.
+2026-02-25 12:59:16,560 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:18,563 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:18,564 - INFO - No new raw files found.
+2026-02-25 12:59:18,564 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:20,567 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:20,568 - INFO - No new raw files found.
+2026-02-25 12:59:20,568 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:22,571 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:22,572 - INFO - No new raw files found.
+2026-02-25 12:59:22,572 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:24,575 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:24,576 - INFO - No new raw files found.
+2026-02-25 12:59:24,577 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:26,579 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:26,580 - INFO - No new raw files found.
+2026-02-25 12:59:26,581 - INFO - Pipeline finished: No data to process.
+2026-02-25 12:59:36,276 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:36,277 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:36,322 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:36,399 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:36,455 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:36,520 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:36,582 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:36,653 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:36,710 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:36,808 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:36,878 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:36,955 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:37,031 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:37,124 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:37,190 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:37,266 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:37,338 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:37,449 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:37,521 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:37,619 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:37,686 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:37,747 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:37,812 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:37,902 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:37,961 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:38,158 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:38,296 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:38,299 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:38,313 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 12:59:40,102 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:40,103 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:40,288 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:40,315 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:40,316 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:40,368 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:40,382 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:40,443 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:40,458 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:40,524 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:40,526 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:40,595 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:40,611 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:40,682 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:40,687 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:40,752 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:40,765 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:40,831 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:40,834 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:40,904 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:40,920 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:40,979 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:41,000 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:41,061 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:41,084 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:41,154 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:41,160 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:41,221 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:41,247 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:41,290 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:41,312 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:41,364 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:41,397 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:41,444 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:41,474 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:41,540 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:41,570 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:41,684 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:41,690 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:41,772 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:41,826 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:41,867 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:41,937 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:41,960 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:42,006 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:42,056 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:42,094 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:42,124 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:42,203 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:42,272 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:42,367 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:42,531 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:42,554 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:42,700 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:42,705 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:42,718 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 12:59:42,774 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:42,787 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 12:59:44,720 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:44,721 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:44,763 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:44,843 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:44,897 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:44,963 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:45,021 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:45,092 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:45,149 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:45,225 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:45,287 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:45,355 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:45,415 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:45,493 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:45,554 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:45,630 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:45,693 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:45,766 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:45,838 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:45,933 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:45,999 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:46,063 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:46,131 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:46,223 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:46,284 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:46,477 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:46,613 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:46,615 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:46,625 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 12:59:48,628 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:48,629 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:48,673 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:48,758 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:48,818 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:48,891 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:48,960 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:49,028 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:49,087 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:49,163 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:49,226 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:49,292 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:49,358 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:49,436 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:49,493 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:49,560 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:49,624 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:49,695 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:49,767 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:49,865 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:49,933 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:50,004 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:50,074 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:50,162 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:50,221 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:50,415 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:50,552 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:50,555 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:50,566 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 12:59:52,568 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:52,569 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:52,611 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:52,693 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:52,751 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:52,817 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:52,878 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:52,945 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:53,003 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:53,090 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:53,154 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:53,222 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:53,284 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:53,367 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:53,426 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:53,494 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:53,567 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:53,640 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:53,711 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:53,804 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:53,872 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:53,934 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:54,001 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:54,095 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:54,157 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:54,358 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:54,493 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:54,495 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:54,506 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 12:59:56,508 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 12:59:56,509 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 12:59:56,563 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 12:59:56,649 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 12:59:56,705 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 12:59:56,771 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 12:59:56,829 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 12:59:56,896 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 12:59:56,953 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 12:59:57,031 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 12:59:57,096 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 12:59:57,184 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 12:59:57,249 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 12:59:57,327 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 12:59:57,387 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 12:59:57,456 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 12:59:57,523 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 12:59:57,599 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 12:59:57,676 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 12:59:57,770 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 12:59:57,836 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 12:59:57,910 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 12:59:57,981 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 12:59:58,086 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 12:59:58,152 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 12:59:58,367 - INFO - Rows excluded by keywords: 1693
+2026-02-25 12:59:58,508 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 12:59:58,511 - INFO - Recalculating Financials for all rows.
+2026-02-25 12:59:58,521 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:00,524 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:00,525 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:00,576 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:00,665 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:00,728 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:00,804 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:00,861 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:00,928 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:00,988 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:01,071 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:01,140 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:01,207 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:01,266 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:01,343 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:01,401 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:01,467 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:01,537 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:01,607 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:01,678 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:01,771 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:01,839 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:01,900 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:01,967 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:02,058 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:02,125 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:02,344 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:02,482 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:02,484 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:02,495 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:04,497 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:04,498 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:04,545 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:04,624 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:04,677 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:04,744 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:04,801 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:04,870 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:04,928 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:05,004 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:05,070 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:05,138 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:05,197 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:05,274 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:05,333 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:05,402 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:05,475 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:05,550 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:05,621 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:05,713 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:05,779 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:05,840 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:05,907 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:05,996 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:06,059 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:06,247 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:06,379 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:06,382 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:06,392 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:08,395 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:08,396 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:08,442 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:08,522 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:08,579 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:08,650 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:08,710 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:08,783 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:08,841 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:08,924 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:08,988 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:09,058 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:09,118 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:09,196 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:09,255 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:09,327 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:09,389 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:09,462 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:09,535 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:09,631 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:09,701 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:09,770 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:09,836 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:09,924 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:09,983 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:10,179 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:10,314 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:10,316 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:10,326 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:12,329 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:12,330 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:12,371 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:12,474 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:12,535 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:12,603 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:12,661 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:12,730 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:12,788 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:12,865 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:12,930 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:13,005 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:13,083 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:13,169 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:13,227 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:13,293 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:13,355 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:13,433 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:13,504 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:13,607 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:13,675 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:13,736 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:13,802 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:13,893 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:13,956 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:14,149 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:14,279 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:14,282 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:14,292 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:16,294 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:16,295 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:16,338 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:16,418 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:16,481 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:16,549 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:16,609 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:16,676 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:16,733 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:16,809 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:16,874 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:16,946 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:17,005 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:17,088 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:17,151 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:17,219 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:17,281 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:17,354 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:17,430 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:17,547 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:17,619 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:17,684 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:17,749 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:17,838 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:17,900 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:18,104 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:18,240 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:18,243 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:18,253 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:20,256 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:20,257 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:20,299 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:20,378 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:20,432 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:20,499 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:20,565 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:20,635 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:20,693 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:20,771 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:20,839 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:20,911 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:20,971 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:21,054 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:21,113 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:21,178 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:21,240 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:21,312 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:21,385 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:21,477 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:21,545 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:21,608 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:21,675 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:21,764 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:21,824 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:22,018 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:22,156 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:22,158 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:22,170 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:24,171 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:24,173 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:24,214 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:24,292 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:24,346 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:24,411 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:24,473 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:24,541 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:24,601 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:24,678 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:24,741 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:24,806 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:24,864 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:24,945 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:25,006 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:25,085 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:25,147 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:25,216 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:25,286 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:25,376 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:25,443 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:25,505 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:25,571 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:25,660 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:25,720 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:25,911 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:26,050 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:26,053 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:26,063 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:28,066 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:28,067 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:28,110 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:28,188 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:28,246 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:28,325 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:28,391 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:28,457 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:28,513 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:28,591 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:28,655 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:28,724 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:28,786 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:28,862 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:28,922 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:28,990 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:29,057 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:29,128 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:29,198 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:29,295 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:29,363 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:29,432 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:29,499 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:29,589 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:29,650 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:29,845 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:30,002 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:30,006 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:30,017 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:32,020 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:32,021 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:32,070 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:32,156 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:32,214 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:32,285 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:32,346 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:32,419 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:32,487 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:32,574 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:32,647 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:32,727 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:32,804 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:32,891 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:32,956 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:33,031 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:33,104 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:33,219 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:33,307 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:33,433 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:33,508 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:33,575 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:33,641 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:33,729 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:33,790 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:33,985 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:34,129 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:34,131 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:34,143 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:36,145 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:36,146 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:36,191 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:36,278 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:36,333 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:36,398 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:36,455 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:36,523 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:36,584 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:36,661 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:36,728 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:36,796 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:36,857 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:36,934 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:36,992 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:37,062 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:37,126 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:37,199 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:37,279 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:37,372 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:37,440 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:37,501 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:37,568 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:37,656 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:37,718 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:37,943 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:38,101 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:38,104 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:38,119 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:40,122 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:40,123 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:40,165 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:40,297 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:40,370 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:40,441 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:40,504 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:40,577 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:40,636 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:40,714 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:40,784 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:40,850 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:40,909 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:40,985 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:41,046 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:41,127 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:41,195 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:41,267 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:41,340 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:41,439 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:41,505 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:41,569 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:41,638 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:41,729 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:41,795 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:41,987 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:42,128 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:42,130 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:42,141 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:44,143 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:44,144 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:44,185 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:44,265 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:44,319 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:44,384 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:44,441 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:44,508 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:44,568 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:44,644 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:44,707 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:44,775 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:44,835 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:44,913 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:44,973 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:45,043 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:45,114 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:45,185 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:45,255 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:45,348 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:45,415 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:45,476 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:45,545 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:45,634 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:45,693 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:45,892 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:46,046 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:46,049 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:46,063 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:48,066 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:48,067 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:48,110 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:48,191 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:48,247 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:48,318 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:48,379 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:48,454 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:48,513 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:48,597 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:48,662 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:48,728 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:48,787 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:48,867 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:48,926 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:48,998 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:49,062 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:49,132 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:49,203 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:49,305 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:49,374 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:49,442 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:49,508 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:49,604 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:49,665 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:49,858 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:49,995 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:49,998 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:50,009 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:52,011 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:52,012 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:52,055 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:52,134 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:52,191 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:52,264 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:52,324 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:52,392 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:52,449 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:52,525 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:52,594 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:52,670 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:52,739 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:52,837 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:52,901 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:52,972 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:53,038 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:53,126 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:53,212 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:53,309 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:53,378 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:53,446 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:53,512 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:53,633 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:53,695 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:53,894 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:54,048 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:54,051 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:54,063 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:56,066 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:56,067 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:00:56,110 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:00:56,192 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:00:56,255 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:00:56,321 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:00:56,379 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:00:56,446 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:00:56,504 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:00:56,586 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:00:56,651 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:00:56,717 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:00:56,779 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:00:56,855 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:00:56,913 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:00:56,980 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:00:57,048 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:00:57,121 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:00:57,195 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:00:57,294 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:00:57,362 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:00:57,423 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:00:57,489 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:00:57,580 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:00:57,642 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:00:57,830 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:00:57,963 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:00:57,966 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:00:57,976 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:00:59,978 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:00:59,979 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:01:00,024 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:01:00,106 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:01:00,163 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:01:00,230 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:01:00,289 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:01:00,355 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:01:00,413 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:01:00,491 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:01:00,558 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:01:00,631 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:01:00,691 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:01:00,779 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:01:00,848 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:01:00,929 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:01:01,008 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:01:01,085 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:01:01,172 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:01:01,274 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:01:01,358 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:01:01,433 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:01:01,507 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:01:01,611 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:01:01,682 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:01:01,901 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:01:02,059 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:01:02,063 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:01:02,074 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:01:04,077 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:01:04,078 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:01:04,119 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:01:04,198 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:01:04,254 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:01:04,320 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:01:04,380 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:01:04,446 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:01:04,503 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:01:04,581 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:01:04,644 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:01:04,711 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:01:04,769 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:01:04,849 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:01:04,910 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:01:04,985 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:01:05,052 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:01:05,121 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:01:05,192 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:01:05,285 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:01:05,352 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:01:05,413 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:01:05,480 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:01:05,574 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:01:05,633 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:01:05,831 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:01:05,966 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:01:05,969 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:01:05,980 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:01:46,610 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:01:46,611 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:01:46,803 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:01:46,909 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:01:46,985 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:01:47,076 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:01:47,145 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:01:47,225 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:01:47,292 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:01:47,377 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:01:47,449 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:01:47,521 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:01:47,585 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:01:47,675 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:01:47,737 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:01:47,811 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:01:47,875 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:01:47,960 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:01:48,035 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:01:48,147 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:01:48,229 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:01:48,314 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:01:48,411 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:01:48,526 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:01:48,610 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:01:48,838 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:01:48,989 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:01:49,177 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:01:49,189 - ERROR - Pipeline Failed: Execution failed on sql 'SELECT INVOICE_NO FROM sales_master': no such column: INVOICE_NO
+2026-02-25 13:04:10,915 - INFO - --- Starting ETL Pipeline ---
+2026-02-25 13:04:10,916 - INFO - files detected: ['01. APRIL 2024.xlsx', '01. APRIL 2025.xlsx', '02. MAY 2024.xlsx', '02. MAY 2025.xlsx', '03. JUNE 2024.xlsx', '03. JUNE 2025.xlsx', '04. JULY 2024.xlsx', '04. JULY 2025.xlsx', '05. AUG 2024.xlsx', '05. AUG 2025.xlsx', '06. SEP 2024.xlsx', '06. SEP 2025.xlsx', '07. OCT 2024.xlsx', '07. OCT 2025.xlsx', '08. NOV 2024.xlsx', '08. NOV 2025.xlsx', '09. DEC 2024.xlsx', '09. DEC 2025.xlsx', '10. JAN 2025.xlsx', '11. FEB 2025.xlsx', '12. MARCH 2025.xlsx', 'JAN2026-SalesReportWithItem.xlsx', 'SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx']
+2026-02-25 13:04:11,128 - INFO - Loaded 01. APRIL 2024.xlsx (638 rows)
+2026-02-25 13:04:11,228 - INFO - Loaded 01. APRIL 2025.xlsx (1486 rows)
+2026-02-25 13:04:11,298 - INFO - Loaded 02. MAY 2024.xlsx (982 rows)
+2026-02-25 13:04:11,382 - INFO - Loaded 02. MAY 2025.xlsx (1216 rows)
+2026-02-25 13:04:11,454 - INFO - Loaded 03. JUNE 2024.xlsx (1057 rows)
+2026-02-25 13:04:11,546 - INFO - Loaded 03. JUNE 2025.xlsx (1224 rows)
+2026-02-25 13:04:11,626 - INFO - Loaded 04. JULY 2024.xlsx (1024 rows)
+2026-02-25 13:04:11,718 - INFO - Loaded 04. JULY 2025.xlsx (1416 rows)
+2026-02-25 13:04:11,796 - INFO - Loaded 05. AUG 2024.xlsx (1143 rows)
+2026-02-25 13:04:11,879 - INFO - Loaded 05. AUG 2025.xlsx (1215 rows)
+2026-02-25 13:04:11,953 - INFO - Loaded 06. SEP 2024.xlsx (1064 rows)
+2026-02-25 13:04:12,049 - INFO - Loaded 06. SEP 2025.xlsx (1437 rows)
+2026-02-25 13:04:12,122 - INFO - Loaded 07. OCT 2024.xlsx (1027 rows)
+2026-02-25 13:04:12,204 - INFO - Loaded 07. OCT 2025.xlsx (1222 rows)
+2026-02-25 13:04:12,269 - INFO - Loaded 08. NOV 2024.xlsx (1126 rows)
+2026-02-25 13:04:12,344 - INFO - Loaded 08. NOV 2025.xlsx (1274 rows)
+2026-02-25 13:04:12,446 - INFO - Loaded 09. DEC 2024.xlsx (1300 rows)
+2026-02-25 13:04:12,599 - INFO - Loaded 09. DEC 2025.xlsx (1760 rows)
+2026-02-25 13:04:12,697 - INFO - Loaded 10. JAN 2025.xlsx (1224 rows)
+2026-02-25 13:04:12,778 - INFO - Loaded 11. FEB 2025.xlsx (1125 rows)
+2026-02-25 13:04:12,878 - INFO - Loaded 12. MARCH 2025.xlsx (1182 rows)
+2026-02-25 13:04:12,978 - INFO - Loaded JAN2026-SalesReportWithItem.xlsx (1636 rows)
+2026-02-25 13:04:13,043 - INFO - Loaded SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx (1070 rows)
+2026-02-25 13:04:13,255 - INFO - Rows excluded by keywords: 1693
+2026-02-25 13:04:13,424 - INFO - Customer Master merged and columns cleaned.
+2026-02-25 13:04:13,643 - INFO - Recalculating Financials for all rows.
+2026-02-25 13:04:13,761 - INFO - Created new table with 26155 records.
+2026-02-25 13:04:16,441 - INFO - Excel Master updated successfully.
+2026-02-25 13:04:16,442 - INFO - Archived 01. APRIL 2024.xlsx
+2026-02-25 13:04:16,442 - INFO - Archived 01. APRIL 2025.xlsx
+2026-02-25 13:04:16,442 - INFO - Archived 02. MAY 2024.xlsx
+2026-02-25 13:04:16,443 - INFO - Archived 02. MAY 2025.xlsx
+2026-02-25 13:04:16,443 - INFO - Archived 03. JUNE 2024.xlsx
+2026-02-25 13:04:16,444 - INFO - Archived 03. JUNE 2025.xlsx
+2026-02-25 13:04:16,444 - INFO - Archived 04. JULY 2024.xlsx
+2026-02-25 13:04:16,444 - INFO - Archived 04. JULY 2025.xlsx
+2026-02-25 13:04:16,445 - INFO - Archived 05. AUG 2024.xlsx
+2026-02-25 13:04:16,445 - INFO - Archived 05. AUG 2025.xlsx
+2026-02-25 13:04:16,445 - INFO - Archived 06. SEP 2024.xlsx
+2026-02-25 13:04:16,446 - INFO - Archived 06. SEP 2025.xlsx
+2026-02-25 13:04:16,446 - INFO - Archived 07. OCT 2024.xlsx
+2026-02-25 13:04:16,446 - INFO - Archived 07. OCT 2025.xlsx
+2026-02-25 13:04:16,447 - INFO - Archived 08. NOV 2024.xlsx
+2026-02-25 13:04:16,447 - INFO - Archived 08. NOV 2025.xlsx
+2026-02-25 13:04:16,447 - INFO - Archived 09. DEC 2024.xlsx
+2026-02-25 13:04:16,448 - INFO - Archived 09. DEC 2025.xlsx
+2026-02-25 13:04:16,448 - INFO - Archived 10. JAN 2025.xlsx
+2026-02-25 13:04:16,448 - INFO - Archived 11. FEB 2025.xlsx
+2026-02-25 13:04:16,449 - INFO - Archived 12. MARCH 2025.xlsx
+2026-02-25 13:04:16,449 - INFO - Archived JAN2026-SalesReportWithItem.xlsx
+2026-02-25 13:04:16,449 - INFO - Archived SalesReportWithItem 01.02.2026 to 17.02.2026.xlsx
+2026-02-25 13:04:16,449 - INFO - --- Pipeline Completed Successfully ---

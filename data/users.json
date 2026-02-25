@@ -1,0 +1,20 @@
+{
+    "admin": {
+        "password": "admin123",
+        "role": "Admin",
+        "name": "System Administrator",
+        "status": "Active"
+    },
+    "manager": {
+        "password": "manager123",
+        "role": "Manager",
+        "name": "Sales Manager",
+        "status": "Active"
+    },
+    "user": {
+        "password": "user123",
+        "role": "Viewer",
+        "name": "Sales Representative",
+        "status": "Active"
+    }
+}

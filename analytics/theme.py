@@ -3,42 +3,43 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 # CORPORATE BLACK PALETTE
-# Gold, Dark Gray, Silver, Slate
-CORPORATE_BLACK_PALETTE = ["#FFD700", "#555555", "#aaaaaa", "#333333"]
+# Rich Gold, Titanium, Silver, Deep Red (for contrast), Emerald
+CORPORATE_BLACK_PALETTE = ["#FFD700", "#e0e0e0", "#888888", "#ff4444", "#00CC99", "#A67C00"]
 
 def apply_theme():
-    """Applies the Corporate Black theme to Plotly."""
+    """Applies the Premium Glassmorphism theme to Plotly."""
     try:
         # Template
         pio.templates["corporate_black"] = go.layout.Template(
             layout=go.Layout(
+                # Fully transparent background to let CSS glass show through
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter, sans-serif", color="#e0e0e0"),
-                title=dict(font=dict(size=16, color="#ffffff", family="Inter", weight="bold")),
+                title=dict(font=dict(size=18, color="#ffffff", family="Inter", weight="bold")),
                 colorway=CORPORATE_BLACK_PALETTE,
                 xaxis=dict(
                     showgrid=True, 
-                    gridcolor="#333333", 
-                    zerolinecolor="#444444",
+                    gridcolor="rgba(255, 255, 255, 0.05)", # Faint gridlines
+                    zerolinecolor="rgba(255, 255, 255, 0.1)",
                     showline=True,
-                    linecolor="#444444",
-                    tickfont=dict(size=11, color="#a0a0a0")
+                    linecolor="rgba(255, 255, 255, 0.1)",
+                    tickfont=dict(size=12, color="#a0a0a0")
                 ),
                 yaxis=dict(
                     showgrid=True, 
-                    gridcolor="#333333", 
-                    zerolinecolor="#444444",
-                    tickfont=dict(size=11, color="#a0a0a0")
+                    gridcolor="rgba(255, 255, 255, 0.05)", 
+                    zerolinecolor="rgba(255, 255, 255, 0.1)",
+                    tickfont=dict(size=12, color="#a0a0a0")
                 ),
                 hoverlabel=dict(
-                    bgcolor="#111111",
-                    bordercolor="#FFD700",
-                    font_size=12,
+                    bgcolor="rgba(20, 20, 22, 0.9)",
+                    bordercolor="rgba(255, 215, 0, 0.5)",
+                    font_size=13,
                     font_family="Inter",
                     font_color="#fff"
                 ),
-                margin=dict(t=40, l=10, r=10, b=10)
+                margin=dict(t=50, l=10, r=10, b=20)
             )
         )
         pio.templates.default = "corporate_black"

@@ -2,7 +2,9 @@ import os
 
 # Base Directory (Current Working Directory)
 BASE_DIR = os.getcwd()
-DATA_DIR = os.path.join(BASE_DIR, "data")
+# For Cloud Deployments with persistent storage, we read the DATA_DIR env variable
+# If not set (like local dev), we fallback to the local "data" folder.
+DATA_DIR = os.environ.get("DATA_DIR", os.path.join(BASE_DIR, "data"))
 
 # Folder Paths
 RAW_FOLDER = os.path.join(DATA_DIR, "raw")

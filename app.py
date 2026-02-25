@@ -351,21 +351,21 @@ if selected == "Executive Home":
             target_msg = f"Target Error: {e}"
 
     # Header with Gauge Context
+    # Header with Gauge Context (Premium Glassmorphic Hero)
     st.markdown(f"""
-    <div style="background-color: #111111; padding: 15px; border-radius: 4px; border-left: 4px solid #FFD700; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+    <div class="css-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 30px; margin-bottom: 30px; border-left: 5px solid #FFD700; background: linear-gradient(135deg, rgba(20,20,22,0.8) 0%, rgba(10,10,12,0.4) 100%);">
         <div>
-            <h4 style="margin:0; color: #ffffff; font-weight: 600;">Performance Summary</h4>
-            <p style="margin-top: 5px; color: #aaaaaa; font-size: 0.95rem; margin-bottom: 0;">
+            <h3 style="margin:0; color: #ffffff; font-weight: 700; font-size: 1.6rem; letter-spacing: 0.5px;">Executive Summary</h3>
+            <p style="margin-top: 8px; color: #a0a0a0; font-size: 1.05rem; margin-bottom: 0;">
                 Revenue momentum is positive. 
                 <span style="color: #FFD700; font-weight: 600;">Maharashtra</span> leads regional sales. 
             </p>
         </div>
-        <div style="text-align: right;">
-             <h3 style="margin:0; color: {'#00ff00' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'};">{achievement_pct:.1f}%</h3>
-             <span style="color: #888; font-size: 0.8rem;">Target Achievement</span>
+        <div style="text-align: right; padding-left: 30px; border-left: 1px solid rgba(255,255,255,0.1);">
+             <h2 style="margin:0; font-size: 2.5rem; text-shadow: 0 0 15px {'#00CC99' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'}; color: {'#00CC99' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'};">{achievement_pct:.1f}%</h2>
+             <span style="color: #888; font-size: 0.95rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Target<br>Achievement</span>
         </div>
     </div>
-    <br>
     """, unsafe_allow_html=True)
 
     # 2. Key Metrics

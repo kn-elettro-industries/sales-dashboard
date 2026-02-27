@@ -353,19 +353,18 @@ if selected == "Executive Home":
     # Calculate Target Achievement
     target_msg = "Targets not loaded."
     achievement_pct = 0
+    has_targets = False
     total_target = 0
     
     if not targets_df.empty and "MONTH" in df.columns:
-        # Filter targets for selected months/FY if possible
-        # For now, just sum all matching targets for the current view
         try:
-            # Simple matching: Sum targets for months present in the filtered dataframe
             active_months = df["MONTH"].unique()
             relevant_targets = targets_df[targets_df["MONTH"].isin(active_months)]
             total_target = relevant_targets["TARGET_AMOUNT"].sum()
             
             current_revenue = df["AMOUNT"].sum()
             if total_target > 0:
+                has_targets = True
                 achievement_pct = (current_revenue / total_target) * 100
                 target_msg = f"{achievement_pct:.1f}% of Target Achieved ({format_indian_currency(current_revenue)} / {format_indian_currency(total_target)})"
             else:
@@ -373,8 +372,16 @@ if selected == "Executive Home":
         except Exception as e:
             target_msg = f"Target Error: {e}"
 
-    # Header with Gauge Context
     # Header with Gauge Context (Premium Glassmorphic Hero)
+    if has_targets:
+        achievement_display = f"{achievement_pct:.1f}%"
+        achievement_color = '#00CC99' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'
+        achievement_label = "Target<br>Achievement"
+    else:
+        achievement_display = "--"
+        achievement_color = '#888888'
+        achievement_label = "Set Targets<br>to Track"
+
     st.markdown(f"""
     <div class="css-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 30px; margin-bottom: 30px; border-left: 5px solid #FFD700; background: linear-gradient(135deg, rgba(20,20,22,0.8) 0%, rgba(10,10,12,0.4) 100%);">
         <div>
@@ -385,8 +392,8 @@ if selected == "Executive Home":
             </p>
         </div>
         <div style="text-align: right; padding-left: 30px; border-left: 1px solid rgba(255,255,255,0.1);">
-             <h2 style="margin:0; font-size: 2.5rem; text-shadow: 0 0 15px {'#00CC99' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'}; color: {'#00CC99' if achievement_pct >= 100 else '#FFD700' if achievement_pct >= 80 else '#ff4444'};">{achievement_pct:.1f}%</h2>
-             <span style="color: #888; font-size: 0.95rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Target<br>Achievement</span>
+             <h2 style="margin:0; font-size: 2.5rem; text-shadow: 0 0 15px {achievement_color}; color: {achievement_color};">{achievement_display}</h2>
+             <span style="color: #888; font-size: 0.95rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">{achievement_label}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -420,8 +427,8 @@ if selected == "Executive Home":
     )
     fig_trend.update_traces(line_color="#FFD700", fillcolor="rgba(255, 215, 0, 0.25)", name="Actual Revenue")
     
-    # Add Target Line
-    if "TARGET_AMOUNT" in monthly_sales.columns:
+    # Add Target Line (only if real targets exist)
+    if "TARGET_AMOUNT" in monthly_sales.columns and monthly_sales["TARGET_AMOUNT"].sum() > 0:
         fig_trend.add_scatter(x=monthly_sales["MONTH"], y=monthly_sales["TARGET_AMOUNT"], mode='lines+markers', 
                               name='Target', line=dict(color='white', width=2, dash='dot'))
                               

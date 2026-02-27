@@ -17,9 +17,10 @@ def render_kpi_card(title, value, delta=None, icon="📊"):
         delta_html = f'<p style="color: {color}; font-size: 0.9rem; margin: 0;">{delta}</p>'
 
     html_code = f"""
-<div class="css-card"><div style="display: flex; justify-content: space-between; align-items: start;"><div><p style="color: #a1a1aa; font-size: 0.9rem; margin-bottom: 5px;">{title}</p><h2 style="color: #ffffff; margin: 0; font-size: 1.8rem;">{value}</h2>{delta_html}</div><div style="font-size: 2rem; opacity: 0.8;">{icon}</div></div></div>
+<div class="css-card" style="min-width: 0; overflow: hidden;"><div style="display: flex; justify-content: space-between; align-items: start; gap: 8px;"><div style="min-width: 0; flex: 1;"><p style="color: #a1a1aa; font-size: 0.8rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{title}</p><h2 style="color: #ffffff; margin: 0; font-size: 1.5rem; white-space: nowrap;">{value}</h2>{delta_html}</div><div style="font-size: 1.5rem; opacity: 0.8; flex-shrink: 0;">{icon}</div></div></div>
     """
     st.markdown(html_code, unsafe_allow_html=True)
+
 
 def render_kpis(df):
     total_sales = df["AMOUNT"].sum()

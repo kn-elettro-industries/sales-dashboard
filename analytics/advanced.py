@@ -62,106 +62,241 @@ def render_pareto(df):
 
 def render_heatmap(df):
     """
-    Renders a Sales Density Heatmap using Mapbox.
+    Renders a premium Geographic Sales Intelligence visualization.
     """
-    st.subheader("Sales Density Heatmap")
-    
     if "STATE" not in df.columns:
         st.warning("State data not available.")
         return
 
     # --- 1. State Filter ---
     states = ["All India"] + sorted(df["STATE"].unique().tolist())
-    selected_state = st.selectbox("Select Region to Analyze:", states)
+    selected_state = st.selectbox("Select Region:", states)
 
     if selected_state == "All India":
-        # === A. National Visualization ===
-        heatmap_data = df.groupby("STATE")["AMOUNT"].sum().reset_index()
+        # === NATIONAL VIEW ===
+        state_data = df.groupby("STATE").agg(
+            Revenue=("AMOUNT", "sum"),
+            Invoices=("INVOICE_NO", "nunique"),
+            Quantity=("QTY", "sum")
+        ).reset_index()
         
-        # Map Lat/Lon
-        heatmap_data["lat"] = heatmap_data["STATE"].map(lambda x: geo_data.STATE_COORDS.get(x.title(), [20.5937, 78.9629])[0])
-        heatmap_data["lon"] = heatmap_data["STATE"].map(lambda x: geo_data.STATE_COORDS.get(x.title(), [20.5937, 78.9629])[1])
+        total_revenue = state_data["Revenue"].sum()
+        state_data["Market_Share"] = (state_data["Revenue"] / total_revenue * 100).round(1)
+        state_data["Revenue_Cr"] = (state_data["Revenue"] / 10000000).round(2)
         
-        # 1. Overview Map (Choropleth or Density)
-        st.markdown("#### 🇮🇳 National Sales Overview")
+        # Map coordinates
+        state_data["lat"] = state_data["STATE"].map(lambda x: geo_data.STATE_COORDS.get(x.title(), [20.5937, 78.9629])[0])
+        state_data["lon"] = state_data["STATE"].map(lambda x: geo_data.STATE_COORDS.get(x.title(), [20.5937, 78.9629])[1])
         
-        fig = px.density_mapbox(
-            heatmap_data, 
-            lat='lat', 
-            lon='lon', 
-            z='AMOUNT', 
-            radius=45,  
-            center=dict(lat=22.5937, lon=82.9629), 
+        # --- Quick Stats Row ---
+        top_state = state_data.sort_values("Revenue", ascending=False).iloc[0]
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric("Top State", top_state["STATE"], f"{top_state['Market_Share']}% share")
+        with c2:
+            st.metric("States Active", f"{len(state_data)}", f"of 30+ states")
+        with c3:
+            avg_per_state = total_revenue / len(state_data) / 10000000
+            st.metric("Avg Revenue/State", f"{avg_per_state:.2f} Cr")
+
+        # --- Premium Bubble Map ---
+        st.markdown("#### National Sales Map")
+        
+        fig = px.scatter_mapbox(
+            state_data,
+            lat="lat",
+            lon="lon",
+            size="Revenue",
+            color="Revenue",
+            color_continuous_scale=[
+                [0, "#1a1a2e"],
+                [0.2, "#16213e"],
+                [0.4, "#e2d810"],
+                [0.6, "#d4a600"],
+                [0.8, "#FFD700"],
+                [1, "#ffffff"]
+            ],
+            size_max=55,
             zoom=3.8,
+            center=dict(lat=22.5, lon=80.0),
             mapbox_style="carto-darkmatter",
-            color_continuous_scale="Viridis",
-            opacity=0.7,
-            title="<b>Heatmap Density</b>"
+            hover_name="STATE",
+            hover_data={
+                "lat": False,
+                "lon": False,
+                "Revenue": False,
+                "Revenue_Cr": True,
+                "Invoices": True,
+                "Market_Share": True,
+                "Quantity": False
+            },
+            labels={
+                "Revenue_Cr": "Revenue (Cr)",
+                "Market_Share": "Market Share %",
+                "Invoices": "Total Invoices"
+            }
         )
+        
+        fig.update_layout(
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=500,
+            coloraxis_colorbar=dict(
+                title="Revenue",
+                thickness=12,
+                len=0.6,
+                bgcolor="rgba(0,0,0,0)",
+                tickfont=dict(color="white"),
+                title_font=dict(color="white")
+            ),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)"
+        )
+        
+        fig.update_traces(
+            marker=dict(
+                opacity=0.85,
+                line=dict(width=1, color="#FFD700")
+            )
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
+        
+        # --- State Rankings Bar Chart ---
+        st.markdown("#### State Revenue Rankings")
+        
+        top_states = state_data.sort_values("Revenue", ascending=True).tail(15)
+        
+        fig_bar = px.bar(
+            top_states,
+            x="Revenue",
+            y="STATE",
+            orientation="h",
+            color="Revenue",
+            color_continuous_scale="YlOrBr",
+            text=top_states["Revenue_Cr"].apply(lambda x: f"{x:.1f} Cr"),
+            template="plotly_dark"
+        )
+        
+        fig_bar.update_layout(
+            height=450,
+            xaxis_title="Revenue",
+            yaxis_title=None,
+            showlegend=False,
+            coloraxis_showscale=False,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="white"),
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=False),
+            margin=dict(l=0, r=20, t=10, b=30)
+        )
+        
+        fig_bar.update_traces(
+            textposition="outside",
+            textfont=dict(color="#FFD700", size=12),
+            marker_line_color="#FFD700",
+            marker_line_width=0.5
+        )
+        
+        st.plotly_chart(fig_bar, use_container_width=True)
 
     else:
-        # === B. High-Fidelity Drilldown (Google Earth Style) ===
+        # === STATE DRILLDOWN ===
         state_df = df[df["STATE"] == selected_state]
         
-        # Check for City Column
         city_col = next((col for col in ["CITY", "DISTRICT", "TOWN"] if col in state_df.columns), None)
         
         if city_col:
-            # Aggregate by City
-            city_data = state_df.groupby(city_col)["AMOUNT"].sum().reset_index()
+            city_data = state_df.groupby(city_col).agg(
+                Revenue=("AMOUNT", "sum"),
+                Invoices=("INVOICE_NO", "nunique")
+            ).reset_index()
             
-            # Map Lat/Lon using Expanded Database
+            city_data["Revenue_L"] = (city_data["Revenue"] / 100000).round(1)
+            
+            # Map coordinates
             city_data["lat"] = city_data[city_col].map(lambda x: geo_data.CITY_COORDS.get(str(x).upper(), [None, None])[0])
             city_data["lon"] = city_data[city_col].map(lambda x: geo_data.CITY_COORDS.get(str(x).upper(), [None, None])[1])
             
-            # Filter valid coordinates
             map_data = city_data.dropna(subset=["lat", "lon"])
             
+            # Quick Stats
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                st.metric("Total Cities", f"{len(city_data)}")
+            with c2:
+                st.metric("State Revenue", f"{state_df['AMOUNT'].sum()/10000000:.2f} Cr")
+            with c3:
+                top_city = city_data.sort_values("Revenue", ascending=False).iloc[0]
+                st.metric("Top City", top_city[city_col])
+            
             if not map_data.empty:
-                # Dynamic Center & Zoom
                 state_center = geo_data.STATE_COORDS.get(selected_state, [20.59, 78.96])
                 
-                # Detailed Satellite-Like View (using OpenStreetMap/Positron for detail)
-                st.markdown(f"#### 🛰️ {selected_state} Detail Map")
+                st.markdown(f"#### {selected_state} City Map")
                 
                 fig_map = px.scatter_mapbox(
                     map_data,
                     lat="lat",
                     lon="lon",
-                    size="AMOUNT",
-                    color="AMOUNT",
-                    color_continuous_scale="Plasma",
+                    size="Revenue",
+                    color="Revenue",
+                    color_continuous_scale="YlOrBr",
                     size_max=40,
-                    zoom=6.5,
+                    zoom=6.2,
                     center=dict(lat=state_center[0], lon=state_center[1]),
-                    mapbox_style="carto-positron", # High detail light map
-                    title=f"<b>{selected_state} Sales Network</b>",
+                    mapbox_style="carto-darkmatter",
                     hover_name=city_col,
-                    hover_data={"lat": False, "lon": False, "AMOUNT": ":.2f"}
+                    hover_data={
+                        "lat": False, "lon": False,
+                        "Revenue_L": True,
+                        "Invoices": True,
+                        "Revenue": False
+                    },
+                    labels={"Revenue_L": "Revenue (L)", "Invoices": "Invoices"}
                 )
                 
                 fig_map.update_layout(
-                    margin={"r":0,"t":40,"l":0,"b":0},
-                    coloraxis_colorbar=dict(title="Revenue")
+                    margin=dict(r=0, t=0, l=0, b=0),
+                    height=450,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    coloraxis_colorbar=dict(title="Revenue", thickness=12, tickfont=dict(color="white"), title_font=dict(color="white"))
                 )
+                
+                fig_map.update_traces(marker=dict(opacity=0.85, line=dict(width=1, color="#FFD700")))
+                
                 st.plotly_chart(fig_map, use_container_width=True)
             else:
-                st.warning(f"📍 No coordinate data found for cities in {selected_state}. Please check spelling or update `geo_data.py`.")
+                st.info(f"No coordinate data for cities in {selected_state}. Showing table only.")
 
-            # Bar Chart Detail
-            st.markdown(f"#### 📊 Top Performing Cities")
-            city_bar = px.bar(
-                city_data.sort_values("AMOUNT", ascending=False).head(15),
-                x="AMOUNT", 
+            # City Bar Chart
+            st.markdown(f"#### Top Cities in {selected_state}")
+            top_cities = city_data.sort_values("Revenue", ascending=True).tail(15)
+            
+            fig_city = px.bar(
+                top_cities,
+                x="Revenue",
                 y=city_col,
-                orientation='h',
-                color="AMOUNT",
-                template="corporate_black",
-                color_continuous_scale="Plasma"
+                orientation="h",
+                color="Revenue",
+                color_continuous_scale="YlOrBr",
+                text=top_cities["Revenue_L"].apply(lambda x: f"{x:.0f} L"),
+                template="plotly_dark"
             )
-            city_bar.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Revenue", yaxis_title=None)
-            st.plotly_chart(city_bar, use_container_width=True)
+            
+            fig_city.update_layout(
+                height=400,
+                xaxis_title="Revenue", yaxis_title=None,
+                showlegend=False, coloraxis_showscale=False,
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="white"),
+                xaxis=dict(showgrid=False), yaxis=dict(showgrid=False),
+                margin=dict(l=0, r=20, t=10, b=30)
+            )
+            fig_city.update_traces(textposition="outside", textfont=dict(color="#FFD700", size=11), marker_line_color="#FFD700", marker_line_width=0.5)
+            
+            st.plotly_chart(fig_city, use_container_width=True)
             
         else:
-            st.error("⚠️ City/District column missing in dataset.")
+            st.error("City/District column missing in dataset.")
+

@@ -1,7 +1,6 @@
 import streamlit as st
-import os
 import pandas as pd
-from etl_pipeline import run_pipeline
+import requests
 import config
 
 def render_cloud_uploader():
@@ -10,7 +9,7 @@ def render_cloud_uploader():
     Replaces the local 'Watcher' functionality.
     """
     with st.sidebar.expander("☁️ Cloud Data Upload", expanded=False):
-        st.caption("Upload new Excel files here to update the dashboard.")
+        st.caption("Upload new Excel files here to update the dashboard via API.")
         
         uploaded_files = st.file_uploader(
             "Drop Sales Excel Here", 
@@ -23,35 +22,42 @@ def render_cloud_uploader():
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
-                # 1. Save Files
-                saved_count = 0
-                for uploaded_file in uploaded_files:
-                    try:
-                        save_path = os.path.join(config.RAW_FOLDER, uploaded_file.name)
-                        with open(save_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-                        saved_count += 1
-                    except Exception as e:
-                        st.error(f"Failed to save {uploaded_file.name}: {e}")
+                current_tenant = st.session_state.get("tenant_id", "default_elettro")
                 
-                if saved_count > 0:
-                    status_text.text(f"Saved {saved_count} files. Starting Pipeline...")
-                    progress_bar.progress(30)
+                success_count = 0
+                
+                status_text.text(f"Uploading {len(uploaded_files)} files to Backend...")
+                
+                # Prepare Multipart Form Data for multiple files
+                files = [
+                    ("files", (f.name, f.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) 
+                    for f in uploaded_files
+                ]
+                data = {"tenant_id": current_tenant}
+                
+                try:
+                    # Send to FastAPI Batch Endpoint
+                    response = requests.post(
+                        f"{config.API_URL}/api/v1/upload_batch", 
+                        data=data, 
+                        files=files,
+                        timeout=300 # 5 minute timeout for large bulk pipeline execution
+                    )
                     
-                    # 2. Run ETL Pipeline
-                    try:
-                        # We run the pipeline function directly
-                        # Capture logs or return value if possible, but for now just run it
-                        run_pipeline()
-                        progress_bar.progress(100)
-                        status_text.success("✅ Data Updated Successfully!")
-                        
-                        # 3. Clear Cache to show new data
-                        st.cache_data.clear()
-                        if st.button("Refresh Dashboard"):
-                            st.rerun()
-                            
-                    except Exception as e:
-                        status_text.error(f"Pipeline Failed: {e}")
+                    if response.status_code == 200:
+                        success_count = len(uploaded_files)
+                    else:
+                        st.error(f"Failed to process files: {response.text}")
+                except Exception as e:
+                    st.error(f"Backend Integration Error: {e}")
+                
+                if success_count > 0:
+                    progress_bar.progress(100)
+                    status_text.success(f"✅ Successfully processed {success_count} files via Data API!")
+                    
+                    # Clear Cache to show new data fetched from DB
+                    st.cache_data.clear()
+                    if st.button("Refresh Dashboard"):
+                        st.rerun()
                 else:
-                    st.warning("No valid files to process.")
+                    st.warning("No files were successfully processed.")

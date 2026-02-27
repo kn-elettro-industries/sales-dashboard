@@ -7,8 +7,15 @@ numpy
 watchdog
 streamlit-option-menu
 statsmodels
-
 mlxtend
 fpdf
-openpyxl
 matplotlib
+prophet
+SQLAlchemy>=2.0.30
+psycopg2-binary
+python-dotenv==1.0.0
+fastapi==0.109.2
+uvicorn==0.27.0.post1
+python-multipart
+requests
+pytest

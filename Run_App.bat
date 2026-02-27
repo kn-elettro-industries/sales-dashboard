@@ -18,13 +18,16 @@ if not exist ".venv\Scripts\python.exe" (
     exit /b
 )
 
-:: 1. Start the Watcher in background
-echo [INFO] Starting Automation Service (Watcher)...
-start /B .venv\Scripts\python.exe watcher.py > nul 2>&1
+:: 1. Start the FastAPI Backend Service (in background)
+echo [INFO] Starting Backend API Service (FastAPI) on port 8000...
+start /B .venv\Scripts\python.exe -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --log-level warning
+
+:: Wait for API to warm up
+ping 127.0.0.1 -n 4 > nul
 
 :: 2. Start the Dashboard
 echo [INFO] Launching Dashboard Interface...
 echo.
-.venv\Scripts\python.exe -m streamlit run app.py --server.address 0.0.0.0 --server.headless true
+.venv\Scripts\python.exe -m streamlit run app.py --server.address 0.0.0.0
 
 pause

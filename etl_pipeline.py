@@ -1,7 +1,8 @@
 import pandas as pd
 import os
-import sqlite3
+import database
 import logging
+from sqlalchemy import text
 from datetime import datetime
 import config
 import pipeline_monitor
@@ -287,64 +288,60 @@ def merge_customer_master(sales_df):
 
     return sales_df
 
-def update_database(new_df):
-    """Updates the SQLite database with new records only."""
-    pipeline_monitor.update_status("Load", "Running", "Updating Database...", 75)
+def update_database(new_df, tenant_id="default_elettro"):
+    """Updates the PostgreSQL database with new records for the specific tenant."""
+    pipeline_monitor.update_status("Load", "Running", "Updating Postgres Database...", 75)
     
     if new_df is None or new_df.empty:
         return 0
 
-    conn = sqlite3.connect(config.DB_PATH)
-    cursor = conn.cursor()
+    if database.engine is None:
+        logging.error("Database engine not initialized. Cannot update.")
+        return 0
 
-    # Check if table exists
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sales_master'")
-    table_exists = cursor.fetchone()
+    # Inject multi-tenant ID
+    new_df["tenant_id"] = tenant_id
 
-    if table_exists:
-        # Schema Evolution: Check if CITY column exists
-        cursor.execute("PRAGMA table_info(sales_master)")
-        columns = [info[1] for info in cursor.fetchall()]
-        
-        if "CITY" not in columns:
-            logging.info("Adding missing CITY column to sales_master")
-            try:
-                cursor.execute("ALTER TABLE sales_master ADD COLUMN CITY TEXT DEFAULT 'City Not Found'")
-                conn.commit()
-            except Exception as e:
-                logging.error(f"Failed to add CITY column: {e}")
+    try:
+        with database.engine.connect() as conn:
+            # Check if table exists
+            has_table = conn.execute(text(
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'sales_master')"
+            )).scalar()
 
-    new_records_count = 0
+            new_records_count = 0
 
-    if not table_exists:
-        new_df.to_sql("sales_master", conn, index=False)
-        new_records_count = len(new_df)
-        logging.info(f"Created new table with {new_records_count} records.")
-    else:
-        # Get existing invoices to avoid duplicates, fallback if column missing
-        try:
-            existing_invoices = pd.read_sql("SELECT INVOICE_NO FROM sales_master", conn)
-            existing_set = set(existing_invoices["INVOICE_NO"])
-            
-            if "INVOICE_NO" in new_df.columns:
-                to_insert = new_df[~new_df["INVOICE_NO"].isin(existing_set)]
+            if not has_table:
+                # First time creation
+                new_df.to_sql("sales_master", database.engine, if_exists="replace", index=False)
+                new_records_count = len(new_df)
+                logging.info(f"Created new Postgres table with {new_records_count} records for tenant {tenant_id}.")
             else:
-                logging.warning("INVOICE_NO missing in new data. Appending all.")
-                to_insert = new_df
-        except Exception as e:
-            logging.warning(f"Could not read INVOICE_NO from DB ({e}). Appending all.")
-            to_insert = new_df
-            
-        new_records_count = len(to_insert)
+                # Deduplication logic per tenant
+                existing_invoices = pd.read_sql(
+                    text("SELECT \"INVOICE_NO\" FROM sales_master WHERE tenant_id = :tid"), 
+                    conn, params={"tid": tenant_id}
+                )
+                existing_set = set(existing_invoices["INVOICE_NO"])
+                
+                if "INVOICE_NO" in new_df.columns:
+                    to_insert = new_df[~new_df["INVOICE_NO"].isin(existing_set)]
+                else:
+                    logging.warning("INVOICE_NO missing in new data. Appending all.")
+                    to_insert = new_df
 
-        if new_records_count > 0:
-            to_insert.to_sql("sales_master", conn, if_exists="append", index=False)
-            logging.info(f"Appended {new_records_count} new records.")
-        else:
-            logging.info("No new records to append to DB.")
+                new_records_count = len(to_insert)
 
-    conn.close()
-    return new_records_count
+                if new_records_count > 0:
+                    to_insert.to_sql("sales_master", database.engine, if_exists="append", index=False)
+                    logging.info(f"Appended {new_records_count} new records to Postgres for tenant {tenant_id}.")
+                else:
+                    logging.info("No new records to append to Postgres DB.")
+
+            return new_records_count
+    except Exception as e:
+        logging.error(f"Failed to update Postgres database: {e}")
+        return 0
 
 def archive_files():
     """Moves processed files to the archive folder."""
@@ -360,8 +357,8 @@ def archive_files():
         except Exception as e:
             logging.error(f"Failed to archive {file}: {e}")
 
-def run_pipeline():
-    logging.info("--- Starting ETL Pipeline ---")
+def run_pipeline(tenant_id="default_elettro"):
+    logging.info(f"--- Starting ETL Pipeline for Tenant: {tenant_id} ---")
     pipeline_monitor.update_status("Start", "Running", "Initializing pipeline...", 0)
     
     try:
@@ -381,8 +378,8 @@ def run_pipeline():
         # 3.5 Recalculate Taxes (After Merge to get correct State)
         final_df = calculate_taxes(final_df)
 
-        # 4. Update Database
-        added_count = update_database(final_df)
+        # 4. Update Database (Multi-Tenant Postgres)
+        added_count = update_database(final_df, tenant_id)
 
         # 5. Update Excel Master (Optional, for backward compatibility)
         try:

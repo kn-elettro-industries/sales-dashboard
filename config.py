@@ -16,10 +16,13 @@ PROCESSED_FOLDER = os.path.join(DATA_DIR, "processed")
 for folder in [RAW_FOLDER, MASTER_FOLDER, OUTPUT_FOLDER, PROCESSED_FOLDER]:
     os.makedirs(folder, exist_ok=True)
 
-# Database
-DB_NAME = "sales_v2.db"
-DB_PATH = os.path.join(DATA_DIR, DB_NAME)
-    
+# Database Connection (Supabase Cloud PostgreSQL via psycopg2)
+# Note: Using IPv4 Transaction Pooler Host for Windows routing compatibility.
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.shpkzdnfcgxzqradrmku:Elettro%40123@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require")
+
+# FastAPI Backend URL
+API_URL = os.environ.get("API_URL", "http://localhost:8000")
+
 # Files
 CUSTOMER_MASTER_FILE = os.path.join(MASTER_FOLDER, "customer_master.xlsx")
 TARGETS_FILE = os.path.join(MASTER_FOLDER, "targets.xlsx")

@@ -51,14 +51,14 @@ def render_quality_dashboard(df):
     st.markdown("---")
     
     # Detailed Breakdown Tab
-    t1, t2 = st.tabs(["⚠️ Anomaly Report", "📊 Column Completeness"])
+    t1, t2 = st.tabs(["Anomaly Report", "Column Completeness"])
     
     with t1:
         st.markdown("### Detected Anomalies")
         anomaly_df = df[df["Anomaly_Flag"] != "Clean"].copy()
         
         if anomaly_df.empty:
-            st.success("🎉 No anomalies detected based on current business rules! The data is clean.")
+            st.success("No anomalies detected based on current business rules. The data is clean.")
         else:
             # Breakdown of anomaly types
             anomaly_counts = anomaly_df["Anomaly_Flag"].value_counts().reset_index()
@@ -67,7 +67,11 @@ def render_quality_dashboard(df):
             col_a, col_b = st.columns([1, 2])
             with col_a:
                 fig = px.pie(anomaly_counts, names="Issue Type", values="Count", hole=0.5, title="Issue Breakdown", template="corporate_black")
-                fig.update_layout(margin=dict(t=30, b=0, l=0, r=0))
+                fig.update_layout(
+                    margin=dict(t=30, b=0, l=0, r=0),
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5, font=dict(color="white", size=11)),
+                    height=300
+                )
                 st.plotly_chart(fig, use_container_width=True)
                 
             with col_b:

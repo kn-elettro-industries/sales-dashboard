@@ -81,51 +81,59 @@ with st.sidebar:
 # ---------------------------------------------------------
 @st.cache_data(ttl=300) # Cache for 5 mins
 def get_data(tenant_id="default_elettro"):
+    df = pd.DataFrame()
+    
+    # Strategy 1: Direct database connection (fastest)
     try:
-        # V3 OLAP Architecture: Streamlit frontend queries PostgreSQL database directly 
-        # using the high-performance binary pg8000 protocol, skipping the heavy JSON serialization
         import database
         df = database.load_data(tenant_id)
-        
-        if df is None or df.empty:
-            return pd.DataFrame()
-            
-        return df
-
     except Exception as e:
-        st.error(f"Database Error: {str(e)}")
+        st.warning(f"Direct DB connection failed: {e}")
+    
+    # Strategy 2: Fallback to API if direct DB failed
+    if df is None or df.empty:
+        try:
+            import requests
+            resp = requests.get(f"{config.API_URL}/api/v1/data", params={"tenant_id": tenant_id}, timeout=30)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data:
+                    df = pd.DataFrame(data)
+        except Exception as e:
+            st.warning(f"API fallback also failed: {e}")
+    
+    if df is None or df.empty:
         return pd.DataFrame()
-        # Fix NULL states
-        # Fix NULL states
-        # Fix NULL states
-        if "STATE" in df.columns:
-            df["STATE"] = df["STATE"].fillna("State Not Found ⚠️")
-            
-        # Ensure CITY column exists (Safety Net)
-        if "CITY" not in df.columns:
-            df["CITY"] = "City Not Found ⚠️"
-        else:
-            df["CITY"] = df["CITY"].fillna("City Not Found ⚠️")
-
-        # Determine Financial Year if missing
-        if "FINANCIAL_YEAR" not in df.columns and "DATE" in df.columns:
-            df["DATE"] = pd.to_datetime(df["DATE"])
-            # Simple FY calc fallback
-            df["FINANCIAL_YEAR"] = df["DATE"].apply(lambda x: f"FY{x.year}" if x.month < 4 else f"FY{x.year+1}")
+    
+    # --- Data Cleanup ---
+    # Fix NULL states
+    if "STATE" in df.columns:
+        df["STATE"] = df["STATE"].fillna("State Not Found")
         
-        # Ensure Month column exists
-        if "MONTH" not in df.columns and "DATE" in df.columns:
-            df["MONTH"] = pd.to_datetime(df["DATE"]).dt.to_period("M").astype(str)
-            
-        # Ensure INVOICE_NO for KPIs
-        if "INVOICE_NO" not in df.columns:
-            # Create dummy index if missing so KPIs don't crash
-            df["INVOICE_NO"] = df.index.astype(str)
+    # Ensure CITY column exists
+    if "CITY" not in df.columns:
+        df["CITY"] = "City Not Found"
+    else:
+        df["CITY"] = df["CITY"].fillna("City Not Found")
 
-        return df
-    except Exception as e:
-        st.error(f"Error loading data: {e}")
-        return pd.DataFrame() 
+    # Ensure DATE is datetime
+    if "DATE" in df.columns:
+        df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+
+    # Determine Financial Year if missing
+    if "FINANCIAL_YEAR" not in df.columns and "DATE" in df.columns:
+        df["FINANCIAL_YEAR"] = df["DATE"].apply(lambda x: f"FY{x.year}" if pd.notna(x) and x.month < 4 else f"FY{x.year+1}" if pd.notna(x) else "Unknown")
+    
+    # Ensure Month column exists
+    if "MONTH" not in df.columns and "DATE" in df.columns:
+        df["MONTH"] = pd.to_datetime(df["DATE"]).dt.to_period("M").astype(str)
+        
+    # Ensure INVOICE_NO for KPIs
+    if "INVOICE_NO" not in df.columns:
+        df["INVOICE_NO"] = df.index.astype(str)
+
+    return df
+
 
 @st.cache_data
 def get_targets():

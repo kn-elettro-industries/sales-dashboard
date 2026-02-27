@@ -8,14 +8,18 @@ import config
 import pipeline_monitor
 
 # Configure Logging
+log_handlers = [logging.StreamHandler()]
+try:
+    log_handlers.append(logging.FileHandler(os.path.join(config.MASTER_FOLDER, "pipeline.log")))
+except Exception:
+    pass  # On cloud deployments, log file may not be writable
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(os.path.join(config.MASTER_FOLDER, "pipeline.log")),
-        logging.StreamHandler()
-    ]
+    handlers=log_handlers
 )
+
 
 def standardize(df):
     """

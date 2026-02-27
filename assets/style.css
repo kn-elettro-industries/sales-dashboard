@@ -1,176 +1,158 @@
 /* ------------------------------------------------ */
-/* ELETTRO ENTERPRISE - ULTIMATE GLASSMORPHISM THEME */
+/* ELETTRO ENTERPRISE - INDUSTRIAL DASHBOARD THEME  */
+/* Clean. Fast. Professional. Like Retool/Metabase. */
 /* ------------------------------------------------ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* =========================================
-   1. Master Layout & Background
+   1. Core Layout
 ========================================= */
 .stApp {
-    font-family: 'Inter', sans-serif;
-    /* Deep rich mesh background */
-    background-color: #050505;
-    background-image: 
-        radial-gradient(ellipse at 15% 50%, rgba(200, 160, 0, 0.08), transparent 50%),
-        radial-gradient(ellipse at 85% 30%, rgba(30, 40, 60, 0.4), transparent 50%),
-        radial-gradient(circle at 50% 100%, #0a0a0a, #000 60%);
-    background-attachment: fixed;
-    color: #f0f0f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #0e1117;
+    color: #e6eaf0;
 }
 
 /* =========================================
-   2. Typography & Headers
+   2. Typography
 ========================================= */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Inter', sans-serif;
-    color: #ffffff;
+    color: #f0f2f5;
     font-weight: 600;
-    letter-spacing: 0.3px;
 }
 
 .main-header {
-    font-size: 2.8rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    color: #ffffff;
-    margin-bottom: 0.8rem;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    background: linear-gradient(135deg, #FFD700 0%, #FFFFFF 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0px 4px 20px rgba(255, 215, 0, 0.2);
-    animation: fadeInDown 0.8s ease-out;
+    color: #FFD700;
+    margin-bottom: 0.5rem;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #1e2330;
 }
 
 /* =========================================
-   3. Premium Glassmorphic Cards
+   3. Cards — Clean, Flat, Fast
 ========================================= */
 div[data-testid="stMetric"],
 .css-card {
-    /* The Glass Effect */
-    background: rgba(20, 20, 22, 0.45);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    
-    /* Borders and Shadows */
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-top: 1px solid rgba(255, 215, 0, 0.3); /* Subtle gold rim */
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    
-    /* Smooth interactions */
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    overflow: hidden;
-}
-
-/* Internal Glow Effect on Cards */
-.css-card::before,
-div[data-testid="stMetric"]::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(180deg, rgba(255, 215, 0, 0.03) 0%, transparent 100%);
-    z-index: 0;
-    pointer-events: none;
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 16px;
+    transition: border-color 0.2s ease;
 }
 
 div[data-testid="stMetric"]:hover,
 .css-card:hover {
-    border-color: rgba(255, 215, 0, 0.5);
-    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.12), 0 0 20px rgba(255, 215, 0, 0.05);
-    transform: translateY(-4px) scale(1.01);
+    border-color: #30363d;
 }
 
 /* =========================================
-   4. Refined Metric Styling
+   4. Metrics — Clean Numbers
 ========================================= */
 label[data-testid="stMetricLabel"] {
-    font-size: 0.85rem;
-    color: #9ea3ac;
+    font-size: 0.75rem;
+    color: #8b949e;
     text-transform: uppercase;
     font-weight: 500;
-    letter-spacing: 1.2px;
-    margin-bottom: 8px;
-    position: relative;
-    z-index: 1;
+    letter-spacing: 0.8px;
 }
 
 div[data-testid="stMetricValue"] {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 700;
-    color: #FFD700;
-    text-shadow: 0 2px 15px rgba(255, 215, 0, 0.3);
-    position: relative;
-    z-index: 1;
+    color: #f0f6fc;
     font-variant-numeric: tabular-nums;
 }
 
 div[data-testid="stMetricDelta"] {
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(4px);
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #21262d;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
     font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    position: relative;
-    z-index: 1;
 }
 
 /* =========================================
-   5. Sleek Sidebar Restyling
+   5. Sidebar — Clean Dark Panel
 ========================================= */
 section[data-testid="stSidebar"] {
-    background: rgba(10, 10, 12, 0.85) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: #0d1117 !important;
+    border-right: 1px solid #21262d !important;
 }
 
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3 {
-    color: #ffffff;
+    color: #f0f2f5;
     font-weight: 600;
 }
 
-/* Sidebar Option Menu Hover */
 .nav-link {
-    transition: all 0.3s ease !important;
+    transition: background 0.15s ease !important;
     border-radius: 6px !important;
 }
+
 .nav-link:hover {
-    background: rgba(255, 215, 0, 0.1) !important;
-    transform: translateX(4px);
+    background: rgba(255, 215, 0, 0.08) !important;
 }
 
 /* =========================================
-   6. Chat Interface (Krishiv)
+   6. Buttons — Professional
 ========================================= */
-div[data-testid="stChatMessage"] {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    color: #e0e0e0;
-    padding: 15px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+.stButton>button {
+    background: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #f0f6fc !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
 }
 
-div[data-testid="stChatMessage"][data-testid="user"] {
-    background: linear-gradient(135deg, rgba(20, 20, 20, 0.6) 0%, rgba(30, 30, 30, 0.8) 100%);
-    border-color: rgba(255, 215, 0, 0.3);
-    border-right: 3px solid #FFD700;
+.stButton>button:hover {
+    background: #30363d !important;
+    border-color: #FFD700 !important;
+    color: #FFD700 !important;
 }
 
 /* =========================================
-   7. Premium Scrollbars
+   7. Inputs — Subtle
+========================================= */
+div[data-baseweb="select"]>div,
+input,
+textarea {
+    background-color: #0d1117 !important;
+    border: 1px solid #21262d !important;
+    border-radius: 6px !important;
+    color: #f0f6fc !important;
+}
+
+div[data-baseweb="select"]>div:hover,
+input:hover,
+input:focus,
+textarea:focus {
+    border-color: #58a6ff !important;
+}
+
+/* =========================================
+   8. Tables — Clean Grid
+========================================= */
+.stDataFrame {
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* =========================================
+   9. Scrollbar — Minimal
 ========================================= */
 ::-webkit-scrollbar {
     width: 6px;
@@ -182,72 +164,50 @@ div[data-testid="stChatMessage"][data-testid="user"] {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    background: #30363d;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 215, 0, 0.6);
+    background: #484f58;
 }
 
 /* =========================================
-   8. Inputs and Buttons
+   10. Chat — Clean
 ========================================= */
-.stButton>button {
-    background: linear-gradient(135deg, #111 0%, #222 100%) !important;
-    border: 1px solid rgba(255, 215, 0, 0.3) !important;
-    color: #FFD700 !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.5px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-}
-
-.stButton>button:hover {
-    background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%) !important;
-    color: #000 !important;
-    border-color: #FFF !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3) !important;
-}
-
-/* Select boxes and text inputs */
-div[data-baseweb="select"] > div,
-input, textarea {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 6px !important;
-    color: white !important;
-    transition: all 0.3s ease;
-}
-
-div[data-baseweb="select"] > div:hover,
-input:hover, input:focus, textarea:focus {
-    border-color: #FFD700 !important;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-/* =========================================
-   9. Tables
-========================================= */
-.stDataFrame {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+div[data-testid="stChatMessage"] {
+    background: #161b22;
+    border: 1px solid #21262d;
     border-radius: 8px;
-    overflow: hidden;
-    background: rgba(10, 10, 12, 0.6);
+    color: #e6eaf0;
+    padding: 12px;
+    margin-bottom: 8px;
 }
 
 /* =========================================
-   10. Animations
+   11. Tabs — Industrial
 ========================================= */
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translate3d(0, -20px, 0);
-    }
-    to {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0;
+    border-bottom: 2px solid #21262d;
+}
+
+.stTabs [data-baseweb="tab"] {
+    padding: 8px 16px;
+    color: #8b949e;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+}
+
+.stTabs [aria-selected="true"] {
+    color: #FFD700 !important;
+    border-bottom: 2px solid #FFD700 !important;
+}
+
+/* =========================================
+   12. Dividers
+========================================= */
+hr {
+    border-color: #21262d;
+    opacity: 0.5;
 }

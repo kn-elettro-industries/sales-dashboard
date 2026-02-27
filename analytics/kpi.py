@@ -17,7 +17,7 @@ def render_kpi_card(title, value, delta=None, icon="📊"):
         delta_html = f'<p style="color: {color}; font-size: 0.9rem; margin: 0;">{delta}</p>'
 
     html_code = f"""
-<div class="css-card" style="min-width: 0; overflow: hidden;"><div style="display: flex; justify-content: space-between; align-items: start; gap: 8px;"><div style="min-width: 0; flex: 1;"><p style="color: #a1a1aa; font-size: 0.8rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{title}</p><h2 style="color: #ffffff; margin: 0; font-size: 1.5rem; white-space: nowrap;">{value}</h2>{delta_html}</div><div style="font-size: 1.5rem; opacity: 0.8; flex-shrink: 0;">{icon}</div></div></div>
+<div style="background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; min-width: 0; overflow: hidden;"><div style="display: flex; justify-content: space-between; align-items: start; gap: 8px;"><div style="min-width: 0; flex: 1;"><p style="color: #8b949e; font-size: 0.75rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">{title}</p><h2 style="color: #f0f6fc; margin: 0; font-size: 1.5rem; white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums;">{value}</h2>{delta_html}</div><div style="font-size: 1.2rem; color: #FFD700; flex-shrink: 0; font-weight: 700; opacity: 0.4;">{icon}</div></div></div>
     """
     st.markdown(html_code, unsafe_allow_html=True)
 

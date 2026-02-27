@@ -79,7 +79,7 @@ with st.sidebar:
 # ---------------------------------------------------------
 # 3. Data Loading
 # ---------------------------------------------------------
-@st.cache_data(ttl=300) # Cache for 5 mins
+@st.cache_data(ttl=900) # Cache for 15 mins — faster loads
 def get_data(tenant_id="default_elettro"):
     df = pd.DataFrame()
     
@@ -383,17 +383,17 @@ if selected == "Executive Home":
         achievement_label = "Set Targets<br>to Track"
 
     st.markdown(f"""
-    <div class="css-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 30px; margin-bottom: 30px; border-left: 5px solid #FFD700; background: linear-gradient(135deg, rgba(20,20,22,0.8) 0%, rgba(10,10,12,0.4) 100%);">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; margin-bottom: 20px; border-left: 3px solid #FFD700; background: #161b22; border-radius: 8px; border: 1px solid #21262d;">
         <div>
-            <h3 style="margin:0; color: #ffffff; font-weight: 700; font-size: 1.6rem; letter-spacing: 0.5px;">Executive Summary</h3>
-            <p style="margin-top: 8px; color: #a0a0a0; font-size: 1.05rem; margin-bottom: 0;">
+            <h3 style="margin:0; color: #f0f6fc; font-weight: 600; font-size: 1.3rem;">Executive Summary</h3>
+            <p style="margin-top: 6px; color: #8b949e; font-size: 0.95rem; margin-bottom: 0;">
                 Revenue momentum is positive. 
                 <span style="color: #FFD700; font-weight: 600;">Maharashtra</span> leads regional sales. 
             </p>
         </div>
-        <div style="text-align: right; padding-left: 30px; border-left: 1px solid rgba(255,255,255,0.1);">
-             <h2 style="margin:0; font-size: 2.5rem; text-shadow: 0 0 15px {achievement_color}; color: {achievement_color};">{achievement_display}</h2>
-             <span style="color: #888; font-size: 0.95rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">{achievement_label}</span>
+        <div style="text-align: right; padding-left: 24px; border-left: 1px solid #21262d;">
+             <h2 style="margin:0; font-size: 2rem; color: {achievement_color};">{achievement_display}</h2>
+             <span style="color: #8b949e; font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">{achievement_label}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)

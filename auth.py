@@ -47,7 +47,7 @@ def register_user(username, password, name):
     return True, "Request sent! Please wait for Admin approval."
 
 def update_user_details(username, role, status):
-    """Updates user role/status locally."""
+    """Updates user role/status locally.""" 
     users = load_users()
     if username in users:
         users[username]["role"] = role
@@ -101,7 +101,7 @@ def check_password():
                     elif user_data.get("status") == "Blocked":
                         st.error("🚫 Account has been blocked.")
                     else:
-                        # Success
+                        # Success - Status is Active or implicitly good
                         st.session_state["authenticated"] = True
                         st.session_state["username"] = username
                         st.session_state["role"] = user_data["role"]

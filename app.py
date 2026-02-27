@@ -5,9 +5,9 @@ import time
 import os
 import config
 import pipeline_monitor
+import requests
 from streamlit_option_menu import option_menu
 
-from database import load_data
 from analytics.kpi import render_kpis
 from analytics.forecasting import render_forecast
 from analytics.segmentation import render_rfm
@@ -79,10 +79,22 @@ with st.sidebar:
 # ---------------------------------------------------------
 # 3. Data Loading
 # ---------------------------------------------------------
-@st.cache_data
-def get_data():
+@st.cache_data(ttl=300) # Cache for 5 mins
+def get_data(tenant_id="default_elettro"):
     try:
-        df = load_data()
+        # V3 OLAP Architecture: Streamlit frontend queries PostgreSQL database directly 
+        # using the high-performance binary pg8000 protocol, skipping the heavy JSON serialization
+        import database
+        df = database.load_data(tenant_id)
+        
+        if df is None or df.empty:
+            return pd.DataFrame()
+            
+        return df
+
+    except Exception as e:
+        st.error(f"Database Error: {str(e)}")
+        return pd.DataFrame()
         # Fix NULL states
         # Fix NULL states
         # Fix NULL states
@@ -138,7 +150,8 @@ def get_targets():
     except:
         return pd.DataFrame()
 
-df = get_data()
+current_tenant = st.session_state.get("tenant_id", "default_elettro")
+df = get_data(current_tenant)
 targets_df = get_targets()
 
 # ---------------------------------------------------------
@@ -172,7 +185,7 @@ with st.sidebar:
                 st.session_state.messages.append({"role": "assistant", "content": bot_response})
                 st.rerun()
 
-if df.empty:
+if df is None or df.empty:
     st.warning("⚠️ Application Ready! Upload data in the Sidebar found on the left 👈")
     st.stop()
 

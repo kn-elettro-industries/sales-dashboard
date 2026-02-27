@@ -106,6 +106,7 @@ def check_password():
                         st.session_state["username"] = username
                         st.session_state["role"] = user_data["role"]
                         st.session_state["user_name"] = user_data["name"]
+                        st.session_state["tenant_id"] = user_data.get("tenant_id", "default_elettro")
                         st.rerun()
                 else:
                     st.error("Invalid Username or Password")

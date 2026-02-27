@@ -1,30 +1,94 @@
-# Sales Pipeline (Experiment)
+# K.N. Elettro — Sales Intelligence Platform
 
-## Overview
-This repository contains the sales dashboard and ETL pipeline for K.N. Elettro.
-The project is structured to separate core application logic, data processing, and analytical modules.
+A cloud-deployed sales analytics platform built for Indian manufacturers. Upload invoices, get instant dashboards with GST breakdowns, customer analytics, and revenue forecasting.
+
+## Live URLs
+
+| Service | URL |
+|---|---|
+| **Dashboard** | [elettro-dashboard.onrender.com](https://elettro-dashboard.onrender.com) |
+| **API** | [sales-dashboard-wfay.onrender.com](https://sales-dashboard-wfay.onrender.com) |
+
+## Architecture
+
+```
+Browser (Anywhere)
+    ↓
+Render: Streamlit Dashboard  ←→  Render: FastAPI API
+                                        ↓
+                               Supabase (PostgreSQL)
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Streamlit |
+| Backend API | FastAPI + Uvicorn |
+| Database | Supabase (PostgreSQL) |
+| ETL | Pandas + Custom Pipeline |
+| Analytics | Prophet, Scikit-learn, Plotly |
+| Hosting | Render.com (Free Tier) |
 
 ## Project Structure
 
-### Core Application
-*   `app.py`: Main entry point for the Streamlit dashboard.
-*   `auth.py`: Authentication and RBAC implementation.
-*   `config.py`: Configuration settings (paths, constants).
-*   `etl_pipeline.py`: Data ingestion and transformation logic.
-*   `watcher.py`: Background service to monitor input folders.
+```
+├── app.py                    # Streamlit dashboard (main entry)
+├── config.py                 # Configuration & environment vars
+├── database.py               # SQLAlchemy + Supabase connection
+├── auth.py                   # User authentication
+├── etl_pipeline.py           # Extract, Transform, Load pipeline
+├── pipeline_monitor.py       # Pipeline status tracking
+├── cloud_data_wrapper.py     # Cloud file upload widget
+├── watcher.py                # Local file watcher (dev mode)
+├── requirements.txt          # Python dependencies
+├── Dockerfile                # Frontend container
+├── docker-compose.yml        # Local dev with Docker
+│
+├── analytics/                # Analytics & visualization modules
+│   ├── kpi.py                # Key Performance Indicators
+│   ├── reporting.py          # Charts & report generation
+│   ├── forecasting.py        # Revenue forecasting (Prophet)
+│   ├── segmentation.py       # Customer segmentation
+│   ├── chatbot.py            # AI assistant (Krishiv)
+│   └── theme.py              # ELETTRO brand theme
+│
+├── backend/                  # FastAPI REST API
+│   ├── main.py               # API endpoints (health, data, upload)
+│   └── Dockerfile            # Backend container
+│
+├── data/                     # Data files (gitignored)
+│   ├── raw/                  # Original Excel uploads
+│   ├── masters/              # Customer master, targets
+│   ├── output/               # Processed outputs
+│   └── processed/            # Archive
+│
+├── scripts/                  # Utility & setup scripts
+├── reports/                  # Report templates
+├── assets/                   # Logo & brand assets
+└── tests/                    # Test files
+```
 
-### Modules
-*   `analytics/`: Contains business logic for data visualization and reporting.
-    *   `reporting.py`: PDF generation and daily archival.
-    *   `chatbot.py`: Natural Language Processing (NLP) engine for "Krishiv".
-    *   `advanced.py`: Map visualizations and scatter plots.
-*   `assets/`: Static assets (CSS, Images, GeoJSON data).
-*   `data/`: Storage for processed data (Parquet/Excel) and raw inputs.
-*   `scripts/`: Utility scripts for maintenance (Database checks, Debugging).
+## Local Development
 
-### Documentation
-*   `engineering_journal/`: Daily logs of technical implementation decisions.
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-## Setup
-1.  Install dependencies: `pip install -r requirements.txt`
-2.  Run the application: `streamlit run app.py`
+# Run Streamlit
+streamlit run app.py
+
+# Run FastAPI
+cd backend && uvicorn main:app --reload
+```
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Supabase PostgreSQL connection string |
+| `API_URL` | FastAPI backend URL |
+
+## License
+
+Proprietary — K.N. Elettro Industries

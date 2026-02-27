@@ -4,13 +4,18 @@ from fastapi.responses import JSONResponse
 import pandas as pd
 import os
 import sys
+import io
+import logging
 
 # Link parent directories for v2 compatibility during transition
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import database
-import etl_pipeline
 import config
+
+# Ensure data directories exist (for local dev; on Render these are ephemeral)
+for folder in [config.RAW_FOLDER, config.MASTER_FOLDER, config.OUTPUT_FOLDER, config.PROCESSED_FOLDER]:
+    os.makedirs(folder, exist_ok=True)
 
 app = FastAPI(title="ELETTRO Intelligence API", version="3.0")
 
@@ -42,45 +47,70 @@ def get_tenant_data(tenant_id: str):
     json_str = df.to_json(orient="records", date_format="iso")
     return Response(content=json_str, media_type="application/json")
 
+
+def process_dataframe_in_memory(df, tenant_id):
+    """Runs the ETL pipeline steps in-memory (no disk I/O needed)."""
+    import etl_pipeline
+    
+    # 1. Standardize
+    df = etl_pipeline.standardize(df)
+    
+    # 2. Clean and Transform
+    df = etl_pipeline.clean_and_transform(df)
+    
+    # 3. Merge Customer Master (if available)
+    df = etl_pipeline.merge_customer_master(df)
+    
+    # 4. Calculate Taxes
+    df = etl_pipeline.calculate_taxes(df)
+    
+    # 5. Write to Database
+    count = etl_pipeline.update_database(df, tenant_id=tenant_id)
+    
+    return count
+
+
 @app.post("/api/v1/upload")
 async def upload_data(tenant_id: str = Form(...), file: UploadFile = File(...)):
-    """Accepts an Excel file from the UI, saves it, and triggers the Pipeline."""
-    save_path = os.path.join(config.RAW_FOLDER, file.filename)
-    
+    """Accepts an Excel file, processes it in-memory, and writes to Supabase."""
     try:
         contents = await file.read()
-        with open(save_path, "wb") as f:
-            f.write(contents)
+        df = pd.read_excel(io.BytesIO(contents))
+        logging.info(f"Read {len(df)} rows from uploaded file: {file.filename}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Could not save file: {e}")
+        raise HTTPException(status_code=400, detail=f"Could not read Excel file: {e}")
         
-    # Trigger isolated ETL Pipeline for this tenant
     try:
-        etl_pipeline.run_pipeline(tenant_id)
-        return {"status": "success", "message": f"Data ingested and processed for {tenant_id}"}
+        count = process_dataframe_in_memory(df, tenant_id)
+        return {"status": "success", "message": f"Processed {count} records for {tenant_id}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/upload_batch")
 async def upload_batch(tenant_id: str = Form(...), files: List[UploadFile] = File(...)):
-    """Accepts multiple Excel files from the UI, saves them all, and triggers the Pipeline ONCE."""
-    saved_count = 0
+    """Accepts multiple Excel files, combines them in-memory, processes, and writes to Supabase."""
+    all_dfs = []
+    
     for file in files:
-        save_path = os.path.join(config.RAW_FOLDER, file.filename)
         try:
             contents = await file.read()
-            with open(save_path, "wb") as f:
-                f.write(contents)
-            saved_count += 1
-        except Exception:
+            df = pd.read_excel(io.BytesIO(contents))
+            all_dfs.append(df)
+            logging.info(f"Read {len(df)} rows from: {file.filename}")
+        except Exception as e:
+            logging.warning(f"Skipped {file.filename}: {e}")
             continue
             
-    if saved_count == 0:
-        raise HTTPException(status_code=400, detail="No files could be saved.")
-        
-    # Trigger isolated ETL Pipeline ONCE for this tenant
+    if not all_dfs:
+        raise HTTPException(status_code=400, detail="No valid Excel files could be read.")
+    
+    # Combine all uploaded files into one DataFrame
+    combined_df = pd.concat(all_dfs, ignore_index=True)
+    logging.info(f"Combined {len(combined_df)} total rows from {len(all_dfs)} files")
+    
     try:
-        etl_pipeline.run_pipeline(tenant_id)
-        return {"status": "success", "message": f"Ingested {saved_count} files and processed data for {tenant_id}"}
+        count = process_dataframe_in_memory(combined_df, tenant_id)
+        return {"status": "success", "message": f"Ingested {len(all_dfs)} files, processed {count} records for {tenant_id}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

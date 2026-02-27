@@ -69,15 +69,15 @@ def render_kpis(df):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        render_kpi_card("Total Revenue", format_indian_currency(total_sales), delta_label, "💰")
+        render_kpi_card("Total Revenue", format_indian_currency(total_sales), delta_label, "R")
     
     with col2:
-        render_kpi_card("Total Invoices", f"{total_invoices:,}", icon="🧾")
+        render_kpi_card("Total Invoices", f"{total_invoices:,}", icon="#")
         
     with col3:
         # Format Qty with K/L/Cr but no symbol
-        render_kpi_card("Total Quantity", format_indian_currency(total_qty, ""), icon="📦")
+        render_kpi_card("Total Quantity", format_indian_currency(total_qty, ""), icon="Q")
         
     with col4:
         avg_val = (total_sales / total_invoices) if total_invoices else 0
-        render_kpi_card("Avg Order Value", format_indian_currency(avg_val), icon="💎")
+        render_kpi_card("Avg Order Value", format_indian_currency(avg_val), icon="A")

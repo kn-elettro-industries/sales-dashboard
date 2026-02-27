@@ -256,30 +256,30 @@ with st.sidebar:
     )
     st.markdown("---")
     
-    # Pipeline Monitor
-    st.markdown("### System Status")
-    status_placeholder = st.empty()
-    def check_pipeline_status():
-        try:
-            status = pipeline_monitor.get_status()
-            with status_placeholder.container():
-                if status["status"] == "Running":
-                    st.info(f"Processing: {status['step']}")
-                    st.progress(status["progress"] / 100)
-                    time.sleep(1)
-                    st.rerun()
-                elif status["status"] == "Completed":
-                    st.caption(f"Last Update: {status['details']}")
-                elif status["status"] == "Failed":
-                    st.error(f"Error: {status['details']}")
-                    if st.button("Reset Status"):
-                        pipeline_monitor.reset_status()
+    # Pipeline Monitor (collapsed by default to save space)
+    with st.expander("System Status", expanded=False):
+        status_placeholder = st.empty()
+        def check_pipeline_status():
+            try:
+                status = pipeline_monitor.get_status()
+                with status_placeholder.container():
+                    if status["status"] == "Running":
+                        st.info(f"Processing: {status['step']}")
+                        st.progress(status["progress"] / 100)
+                        time.sleep(1)
                         st.rerun()
-                else:
-                    st.caption("Auto-Watcher: Idle")
-        except:
-            st.caption("Status unavailable")
-    check_pipeline_status()
+                    elif status["status"] == "Completed":
+                        st.caption(f"Last: {status['details']}")
+                    elif status["status"] == "Failed":
+                        st.error(f"Error: {status['details']}")
+                        if st.button("Reset"):
+                            pipeline_monitor.reset_status()
+                            st.rerun()
+                    else:
+                        st.caption("Idle")
+            except:
+                st.caption("Status unavailable")
+        check_pipeline_status()
     st.markdown("---")
 
     # --- Filters ---

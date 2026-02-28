@@ -18,46 +18,61 @@ def render_cloud_uploader():
         )
         
         if uploaded_files:
-            if st.button("Process Files"):
+            if st.button("Process Files", use_container_width=True):
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
                 current_tenant = st.session_state.get("tenant_id", "default_elettro")
                 
                 success_count = 0
+                total_files = len(uploaded_files)
                 
-                status_text.text(f"Uploading {len(uploaded_files)} files to Backend...")
+                status_text.text(f"Preparing to upload {total_files} files...")
                 
-                # Prepare Multipart Form Data for multiple files
-                files = [
-                    ("files", (f.name, f.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) 
-                    for f in uploaded_files
-                ]
-                data = {"tenant_id": current_tenant}
+                # Chunk files into batches of 3 to avoid timeouts
+                chunk_size = 3
+                file_chunks = [uploaded_files[i:i + chunk_size] for i in range(0, total_files, chunk_size)]
                 
-                try:
-                    # Send to FastAPI Batch Endpoint
-                    response = requests.post(
-                        f"{config.API_URL}/api/v1/upload_batch", 
-                        data=data, 
-                        files=files,
-                        timeout=300 # 5 minute timeout for large bulk pipeline execution
-                    )
+                for idx, chunk in enumerate(file_chunks):
+                    status_text.text(f"Uploading batch {idx + 1} of {len(file_chunks)} ({len(chunk)} files)...")
                     
-                    if response.status_code == 200:
-                        success_count = len(uploaded_files)
-                    else:
-                        st.error(f"Failed to process files: {response.text}")
-                except Exception as e:
-                    st.error(f"Backend Integration Error: {e}")
+                    # Prepare Multipart Form Data for this chunk
+                    files = [
+                        ("files", (f.name, f.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) 
+                        for f in chunk
+                    ]
+                    data = {"tenant_id": current_tenant}
+                    
+                    try:
+                        # Send to FastAPI Batch Endpoint
+                        response = requests.post(
+                            f"{config.API_URL}/api/v1/upload_batch", 
+                            data=data, 
+                            files=files,
+                            timeout=90 # Prevent Render 100s drops
+                        )
+                        
+                        if response.status_code == 200:
+                            success_count += len(chunk)
+                        else:
+                            st.error(f"Failed on batch {idx + 1}: {response.text}")
+                            break # Stop on error
+                    except Exception as e:
+                        st.error(f"Backend Integration Error on batch {idx + 1}: {e}")
+                        break # Stop on error
+                        
+                    # Update progress
+                    progress = min(1.0, (idx + 1) / len(file_chunks))
+                    progress_bar.progress(progress)
                 
-                if success_count > 0:
+                if success_count == total_files:
                     progress_bar.progress(100)
-                    status_text.success(f"✅ Successfully processed {success_count} files via Data API!")
-                    
-                    # Clear Cache to show new data fetched from DB
+                    status_text.success(f"✅ Successfully processed all {success_count} files!")
                     st.cache_data.clear()
-                    if st.button("Refresh Dashboard"):
-                        st.rerun()
+                    time.sleep(1) # Give user time to see success
+                    st.rerun()
+                elif success_count > 0:
+                    status_text.warning(f"⚠️ Partially processed {success_count} out of {total_files} files.")
+                    st.cache_data.clear()
                 else:
-                    st.warning("No files were successfully processed.")
+                    status_text.error("No files were successfully processed.")

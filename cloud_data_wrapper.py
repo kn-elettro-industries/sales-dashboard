@@ -29,14 +29,16 @@ def render_cloud_uploader():
                 
                 status_text.text(f"Preparing to upload {total_files} files...")
                 
-                # Chunk files into batches of 3 to avoid timeouts
-                chunk_size = 3
+                # Process files 1 by 1 to avoid Cloudflare/Render payload rate-limiting (429 Too Many Requests)
+                chunk_size = 1
                 file_chunks = [uploaded_files[i:i + chunk_size] for i in range(0, total_files, chunk_size)]
                 
+                import time
+                
                 for idx, chunk in enumerate(file_chunks):
-                    status_text.text(f"Uploading batch {idx + 1} of {len(file_chunks)} ({len(chunk)} files)...")
+                    status_text.text(f"Uploading file {idx + 1} of {total_files}: {chunk[0].name}...")
                     
-                    # Prepare Multipart Form Data for this chunk
+                    # Prepare Multipart Form Data
                     files = [
                         ("files", (f.name, f.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) 
                         for f in chunk
@@ -54,8 +56,9 @@ def render_cloud_uploader():
                         
                         if response.status_code == 200:
                             success_count += len(chunk)
+                            time.sleep(1.5) # Stagger requests so we don't hit cloud WAF limits
                         else:
-                            st.error(f"Failed on batch {idx + 1}: {response.text}")
+                            st.error(f"Failed on file {idx + 1} ({response.status_code}): {response.text}")
                             break # Stop on error
                     except Exception as e:
                         st.error(f"Backend Integration Error on batch {idx + 1}: {e}")

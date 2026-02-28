@@ -85,23 +85,25 @@ def check_password():
         st.image("assets/logo_white_text.png", width=200)
         st.markdown("### Secure Intelligence Hub")
         
-        tab1, tab2 = st.tabs(["🔒 Login", "📝 Request Access"])
+        tab1, tab2 = st.tabs(["Login", "Request Access"])
         
         with tab1:
-            username = st.text_input("Username", key="login_user")
-            password = st.text_input("Password", type="password", key="login_pass")
+            with st.form("login_form"):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                submitted = st.form_submit_button("Login", use_container_width=True)
             
-            if st.button("Login", use_container_width=True):
+            if submitted:
+                username = username.strip()
                 users = load_users()
                 if username in users and users[username]["password"] == password:
                     user_data = users[username]
                     
                     if user_data.get("status") == "Pending":
-                        st.warning("⏳ Account is pending confirmation from Admin.")
+                        st.warning("Account is pending confirmation from Admin.")
                     elif user_data.get("status") == "Blocked":
-                        st.error("🚫 Account has been blocked.")
+                        st.error("Account has been blocked.")
                     else:
-                        # Success - Status is Active or implicitly good
                         st.session_state["authenticated"] = True
                         st.session_state["username"] = username
                         st.session_state["role"] = user_data["role"]

@@ -275,7 +275,13 @@ def merge_customer_master(sales_df):
         "LUCKNOW": "UTTAR PRADESH",
         "KANPUR": "UTTAR PRADESH",
         "INDORE": "MADHYA PRADESH",
-        "BHOPAL": "MADHYA PRADESH"
+        "BHOPAL": "MADHYA PRADESH",
+        "VAPI": "GUJARAT",
+        "CHANDIGARH": "CHANDIGARH",
+        "SECUNDERABAD": "TELANGANA",
+        "PANVEL": "MAHARASHTRA",
+        "BHIWANDI": "MAHARASHTRA",
+        "VASAI": "MAHARASHTRA"
     }
 
     if "CITY" in sales_df.columns:

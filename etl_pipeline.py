@@ -281,7 +281,10 @@ def merge_customer_master(sales_df):
         "SECUNDERABAD": "TELANGANA",
         "PANVEL": "MAHARASHTRA",
         "BHIWANDI": "MAHARASHTRA",
-        "VASAI": "MAHARASHTRA"
+        "VASAI": "MAHARASHTRA",
+        "RAJKOT": "GUJARAT",
+        "HOSUR": "TAMIL NADU",
+        "BANGALORE": "KARNATAKA"
     }
 
     if "CITY" in sales_df.columns:

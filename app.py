@@ -79,28 +79,38 @@ with st.sidebar:
 # ---------------------------------------------------------
 # 3. Data Loading
 # ---------------------------------------------------------
-@st.cache_data(ttl=900) # Cache for 15 mins — faster loads
+@st.cache_data(ttl=900, show_spinner="Loading data from cloud...")
 def get_data(tenant_id="default_elettro"):
     df = pd.DataFrame()
+    db_error = None
+    api_error = None
     
     # Strategy 1: Direct database connection (fastest)
     try:
         import database
         df = database.load_data(tenant_id)
     except Exception as e:
-        st.warning(f"Direct DB connection failed: {e}")
+        db_error = str(e)
     
     # Strategy 2: Fallback to API if direct DB failed
     if df is None or df.empty:
         try:
             import requests
-            resp = requests.get(f"{config.API_URL}/api/v1/data", params={"tenant_id": tenant_id}, timeout=30)
+            api_url = config.API_URL
+            resp = requests.get(f"{api_url}/api/v1/data", params={"tenant_id": tenant_id}, timeout=30)
             if resp.status_code == 200:
                 data = resp.json()
                 if data:
                     df = pd.DataFrame(data)
         except Exception as e:
-            st.warning(f"API fallback also failed: {e}")
+            api_error = str(e)
+    
+    # Show errors if both strategies failed
+    if (df is None or df.empty) and (db_error or api_error):
+        if db_error:
+            st.error(f"Database connection failed: {db_error}")
+        if api_error:
+            st.error(f"API fallback failed: {api_error}")
     
     if df is None or df.empty:
         return pd.DataFrame()

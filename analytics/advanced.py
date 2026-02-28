@@ -154,8 +154,7 @@ def render_heatmap(df):
         
         fig.update_traces(
             marker=dict(
-                opacity=0.85,
-                line=dict(width=1, color="#FFD700")
+                opacity=0.85
             )
         )
         
@@ -263,7 +262,7 @@ def render_heatmap(df):
                     coloraxis_colorbar=dict(title="Revenue", thickness=12, tickfont=dict(color="white"), title_font=dict(color="white"))
                 )
                 
-                fig_map.update_traces(marker=dict(opacity=0.85, line=dict(width=1, color="#FFD700")))
+                fig_map.update_traces(marker=dict(opacity=0.85))
                 
                 st.plotly_chart(fig_map, use_container_width=True)
             else:

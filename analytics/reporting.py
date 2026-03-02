@@ -122,14 +122,6 @@ class PDF(FPDF):
         self.set_fill_color(22, 27, 34)
         self.rect(140, 0, 70, 297, 'F')
         
-        # Gold vertical accent
-        self.set_fill_color(218, 165, 32)
-        self.rect(138, 0, 2, 297, 'F')
-        
-        # Top gold bar
-        self.set_fill_color(218, 165, 32)
-        self.rect(0, 0, 138, 4, 'F')
-        
         # Logo on cover (large, in dark strip)
         if self.logo_dark_bg:
             try:
@@ -142,10 +134,6 @@ class PDF(FPDF):
         self.set_font("Arial", 'B', 36)
         self.set_text_color(22, 27, 34)
         self.multi_cell(120, 15, "DISTRIBUTOR\nSTRATEGY\nREPORT", 0, 'L')
-        
-        # Gold divider
-        self.set_fill_color(218, 165, 32)
-        self.rect(10, self.get_y() + 5, 60, 2, 'F')
         
         # Subtitle
         self.set_xy(10, self.get_y() + 15)

@@ -74,9 +74,9 @@ def format_currency_pdf(value):
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
-        # Logo for dark backgrounds (header, cover strip)
+        # Logo for dark backgrounds (header, cover strip) — needs transparent bg
         self.logo_dark_bg = None
-        for path in ["assets/logo_white_text.png", "assets/logo_transparent.png", "assets/logo.png"]:
+        for path in ["assets/logo_dark_bg.png", "assets/logo_white_text.png", "assets/logo.png"]:
             if os.path.exists(path):
                 self.logo_dark_bg = path
                 break

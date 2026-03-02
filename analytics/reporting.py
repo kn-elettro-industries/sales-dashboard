@@ -74,11 +74,17 @@ def format_currency_pdf(value):
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
-        # Find logo path
-        self.logo_path = None
+        # Logo for dark backgrounds (header, cover strip)
+        self.logo_dark_bg = None
+        for path in ["assets/logo_white_text.png", "assets/logo_transparent.png", "assets/logo.png"]:
+            if os.path.exists(path):
+                self.logo_dark_bg = path
+                break
+        # Logo for light backgrounds (content area)
+        self.logo_light_bg = None
         for path in ["assets/logo.png", "assets/logo_transparent.png"]:
             if os.path.exists(path):
-                self.logo_path = path
+                self.logo_light_bg = path
                 break
     
     def header(self):
@@ -93,9 +99,9 @@ class PDF(FPDF):
         self.rect(0, 18, 210, 0.6, 'F')
         
         # Logo (left side — fits inside 18mm strip)
-        if self.logo_path:
+        if self.logo_dark_bg:
             try:
-                self.image(self.logo_path, x=8, y=2.5, h=13)
+                self.image(self.logo_dark_bg, x=8, y=2.5, h=13)
             except:
                 self.set_font('Arial', 'B', 11)
                 self.set_text_color(218, 165, 32)
@@ -143,9 +149,9 @@ class PDF(FPDF):
         self.rect(0, 0, 138, 4, 'F')
         
         # Logo on cover (large, in dark strip)
-        if self.logo_path:
+        if self.logo_dark_bg:
             try:
-                self.image(self.logo_path, x=148, y=25, w=50)
+                self.image(self.logo_dark_bg, x=148, y=25, w=50)
             except:
                 pass
         

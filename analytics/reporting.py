@@ -739,9 +739,9 @@ def generate_pdf(df, report_type, specific_entity=None):
     # Order value analysis
     if avg_order > 0:
         if avg_order < 50000:
-            insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} — consider bundling strategies to increase order size.")
+            insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} - consider bundling strategies to increase order size.")
         else:
-            insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} — strong per-order commitment.")
+            insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} - strong per-order commitment.")
     
     # Geographic insight
     if "STATE" in df.columns:

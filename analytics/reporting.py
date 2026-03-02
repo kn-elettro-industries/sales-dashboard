@@ -122,10 +122,10 @@ class PDF(FPDF):
         self.set_fill_color(22, 27, 34)
         self.rect(140, 0, 70, 297, 'F')
         
-        # Logo on cover (large, in dark strip)
-        if self.logo_dark_bg:
+        # Logo on cover (original logo)
+        if self.logo_light_bg:
             try:
-                self.image(self.logo_dark_bg, x=148, y=25, w=50)
+                self.image(self.logo_light_bg, x=148, y=25, w=50)
             except:
                 pass
         
@@ -1425,5 +1425,90 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
     
     # --- 4. Consolidation & Efficiency Page ---
     create_consolidation_page(pdf, cust_df, grp_col)
+
+    # --- 5. SUMMARY ANALYSIS PAGE ---
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 18)
+    pdf.set_text_color(33, 37, 41)
+    pdf.cell(0, 10, "EXECUTIVE SUMMARY & ANALYSIS", 0, 1, 'L')
+    pdf.set_draw_color(218, 165, 32)
+    pdf.set_line_width(0.5)
+    pdf.line(10, pdf.get_y(), 80, pdf.get_y())
+    pdf.ln(8)
+    
+    # Key Metrics
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_fill_color(33, 37, 41)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 8, "  KEY PERFORMANCE INDICATORS", 0, 1, 'L', 1)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(3)
+    
+    avg_order = total_rev / max(total_orders, 1)
+    unique_items = cust_df["ITEMNAME"].nunique() if "ITEMNAME" in cust_df.columns else 0
+    num_groups = cust_df[grp_col].nunique() if grp_col in cust_df.columns else 0
+    
+    kpi_data = [
+        ("Total Revenue", format_currency_pdf(total_rev)),
+        ("Total Orders", f"{total_orders:,}"),
+        ("Average Order Value", format_currency_pdf(avg_order)),
+        ("Unique Products", f"{unique_items:,}"),
+        ("Material Groups", f"{num_groups:,}"),
+    ]
+    
+    pdf.set_fill_color(248, 249, 250)
+    for label, value in kpi_data:
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(80, 8, f"  {label}", 0, 0, 'L', 1)
+        pdf.set_font("Arial", '', 10)
+        pdf.cell(100, 8, value, 0, 1, 'R', 1)
+    pdf.ln(5)
+    
+    # Top Material Groups
+    if grp_col in cust_df.columns:
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_fill_color(33, 37, 41)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(0, 8, "  TOP MATERIAL GROUPS", 0, 1, 'L', 1)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", '', 10)
+        pdf.ln(2)
+        
+        top5_grp = cust_df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(5)
+        fill = False
+        for i, (grp, amt) in enumerate(top5_grp.items(), 1):
+            share = (amt / total_rev * 100) if total_rev > 0 else 0
+            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+            pdf.cell(10, 7, f"{i}.", 0, 0, 'C', fill)
+            pdf.cell(100, 7, str(grp)[:50], 0, 0, 'L', fill)
+            pdf.cell(40, 7, format_currency_pdf(amt), 0, 0, 'R', fill)
+            pdf.cell(30, 7, f"{share:.1f}%", 0, 1, 'R', fill)
+            fill = not fill
+        pdf.ln(5)
+    
+    # Auto-Generated Insights
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_fill_color(33, 37, 41)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 8, "  KEY INSIGHTS & RECOMMENDATIONS", 0, 1, 'L', 1)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(3)
+    
+    s_insights = []
+    s_insights.append(f"REVENUE: {customer_name} generated {format_currency_pdf(total_rev)} across {total_orders} orders.")
+    s_insights.append(f"PORTFOLIO: {high_val_count} high-value categories drive the core business across {num_groups} total groups.")
+    s_insights.append(f"TOP CATEGORY: {top_cat} is the primary revenue driver.")
+    if avg_order > 0:
+        if avg_order < 50000:
+            s_insights.append(f"ORDER SIZE: Avg order value {format_currency_pdf(avg_order)} - consider bundling to increase.")
+        else:
+            s_insights.append(f"ORDER SIZE: Avg order value {format_currency_pdf(avg_order)} - strong per-order commitment.")
+    s_insights.append(f"OPPORTUNITY: {opp_txt}")
+    s_insights.append(f"Generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
+    
+    for s_insight in s_insights:
+        pdf.set_font("Arial", 'B', 9)
+        pdf.cell(5, 7, "", 0, 0)
+        pdf.cell(0, 7, s_insight, 0, 1, 'L')
 
     return pdf

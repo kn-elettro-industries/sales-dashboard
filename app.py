@@ -15,7 +15,7 @@ from analytics.risk import render_risk
 from analytics.advanced import render_pareto, render_heatmap
 from analytics.elasticity import render_elasticity
 from analytics.prediction import render_churn_prediction
-from analytics.reporting import render_reporting
+from analytics.reporting import render_reporting, render_interactive_reports
 from analytics.quality import render_quality_dashboard
 from analytics.chatbot import process_query
 from analytics.theme import apply_theme
@@ -572,6 +572,7 @@ elif selected == "Geographic Intelligence":
 
 # --- F. Executive Reporting ---
 elif selected == "Executive Reporting":
+    render_interactive_reports(df)
     render_reporting(df)
 
 # --- G. Data Management ---

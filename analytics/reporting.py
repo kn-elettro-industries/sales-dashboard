@@ -595,6 +595,174 @@ def generate_pdf(df, report_type, specific_entity=None):
 
     return pdf
 
+def render_interactive_reports(df):
+    """Interactive tabular reports — Month-Wise, City-Wise, State-Wise."""
+    
+    tab_month, tab_city, tab_state = st.tabs(["Month-Wise", "City-Wise", "State-Wise"])
+    
+    # ── MONTH-WISE ──
+    with tab_month:
+        if "MONTH" not in df.columns:
+            st.warning("Month data not available.")
+        else:
+            c1, c2 = st.columns(2)
+            with c1:
+                months = sorted(df["MONTH"].dropna().unique().tolist())
+                sel_month = st.selectbox("Select Month:", ["All Months"] + months, key="rpt_month")
+            with c2:
+                customers = sorted(df["CUSTOMER_NAME"].dropna().unique().tolist()) if "CUSTOMER_NAME" in df.columns else []
+                sel_cust = st.selectbox("Filter by Customer:", ["All Customers"] + customers, key="rpt_month_cust")
+            
+            filtered = df.copy()
+            if sel_month != "All Months":
+                filtered = filtered[filtered["MONTH"] == sel_month]
+            if sel_cust != "All Customers":
+                filtered = filtered[filtered["CUSTOMER_NAME"] == sel_cust]
+            
+            if filtered.empty:
+                st.info("No data for this selection.")
+            else:
+                # KPI summary
+                k1, k2, k3, k4 = st.columns(4)
+                k1.metric("Revenue", format_indian_currency(filtered["AMOUNT"].sum()))
+                k2.metric("Orders", f"{filtered['INVOICE_NO'].nunique():,}")
+                k3.metric("Customers", f"{filtered['CUSTOMER_NAME'].nunique():,}" if "CUSTOMER_NAME" in filtered.columns else "--")
+                k4.metric("Avg Order", format_indian_currency(filtered["AMOUNT"].sum() / max(filtered["INVOICE_NO"].nunique(), 1)))
+                
+                st.markdown("---")
+                
+                # Material group breakdown
+                grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in filtered.columns else "MATERIALGROUP"
+                if grp_col in filtered.columns:
+                    st.markdown("#### Material Group Breakdown")
+                    mg = filtered.groupby(grp_col).agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Quantity=("QTY", "sum") if "QTY" in filtered.columns else ("AMOUNT", "count"),
+                        Orders=("INVOICE_NO", "nunique")
+                    ).sort_values("Revenue", ascending=False).reset_index()
+                    
+                    mg["Revenue"] = mg["Revenue"].apply(lambda x: format_indian_currency(x))
+                    mg.index = range(1, len(mg) + 1)
+                    st.dataframe(mg, use_container_width=True, height=400)
+                
+                # If customer selected, show item-level detail
+                if sel_cust != "All Customers" and "ITEMNAME" in filtered.columns:
+                    st.markdown(f"#### Item Detail for {sel_cust}")
+                    items = filtered.groupby("ITEMNAME").agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Quantity=("QTY", "sum") if "QTY" in filtered.columns else ("AMOUNT", "count"),
+                    ).sort_values("Revenue", ascending=False).reset_index()
+                    items["Revenue"] = items["Revenue"].apply(lambda x: format_indian_currency(x))
+                    items.index = range(1, len(items) + 1)
+                    st.dataframe(items, use_container_width=True, height=300)
+    
+    # ── CITY-WISE ──
+    with tab_city:
+        if "CITY" not in df.columns:
+            st.warning("City data not available.")
+        else:
+            cities = sorted(df["CITY"].dropna().unique().tolist())
+            sel_city = st.selectbox("Select City:", ["All Cities"] + cities, key="rpt_city")
+            
+            filtered = df.copy()
+            if sel_city != "All Cities":
+                filtered = filtered[filtered["CITY"] == sel_city]
+            
+            if filtered.empty:
+                st.info("No data for this city.")
+            else:
+                # KPI summary
+                k1, k2, k3 = st.columns(3)
+                k1.metric("City Revenue", format_indian_currency(filtered["AMOUNT"].sum()))
+                k2.metric("Customers", f"{filtered['CUSTOMER_NAME'].nunique():,}" if "CUSTOMER_NAME" in filtered.columns else "--")
+                k3.metric("Orders", f"{filtered['INVOICE_NO'].nunique():,}")
+                
+                st.markdown("---")
+                
+                # Top 30 customers
+                if "CUSTOMER_NAME" in filtered.columns:
+                    st.markdown("#### Top 30 Customers")
+                    top_cust = filtered.groupby("CUSTOMER_NAME").agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Orders=("INVOICE_NO", "nunique")
+                    ).sort_values("Revenue", ascending=False).head(30).reset_index()
+                    top_cust["Revenue"] = top_cust["Revenue"].apply(lambda x: format_indian_currency(x))
+                    top_cust.index = range(1, len(top_cust) + 1)
+                    st.dataframe(top_cust, use_container_width=True, height=400)
+                
+                # Material group breakdown
+                grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in filtered.columns else "MATERIALGROUP"
+                if grp_col in filtered.columns:
+                    st.markdown("#### Material Group Breakdown")
+                    mg = filtered.groupby(grp_col).agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Orders=("INVOICE_NO", "nunique")
+                    ).sort_values("Revenue", ascending=False).reset_index()
+                    mg["Revenue"] = mg["Revenue"].apply(lambda x: format_indian_currency(x))
+                    mg.index = range(1, len(mg) + 1)
+                    st.dataframe(mg, use_container_width=True, height=300)
+    
+    # ── STATE-WISE ──
+    with tab_state:
+        if "STATE" not in df.columns:
+            st.warning("State data not available.")
+        else:
+            states = sorted(df["STATE"].dropna().unique().tolist())
+            sel_state = st.selectbox("Select State:", ["All States"] + states, key="rpt_state")
+            
+            filtered = df.copy()
+            if sel_state != "All States":
+                filtered = filtered[filtered["STATE"] == sel_state]
+            
+            if filtered.empty:
+                st.info("No data for this state.")
+            else:
+                # KPI summary
+                k1, k2, k3, k4 = st.columns(4)
+                k1.metric("State Revenue", format_indian_currency(filtered["AMOUNT"].sum()))
+                k2.metric("Cities", f"{filtered['CITY'].nunique():,}" if "CITY" in filtered.columns else "--")
+                k3.metric("Customers", f"{filtered['CUSTOMER_NAME'].nunique():,}" if "CUSTOMER_NAME" in filtered.columns else "--")
+                k4.metric("Orders", f"{filtered['INVOICE_NO'].nunique():,}")
+                
+                st.markdown("---")
+                
+                # City breakdown within state
+                if "CITY" in filtered.columns:
+                    st.markdown("#### Revenue by City")
+                    city_rev = filtered.groupby("CITY").agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Customers=("CUSTOMER_NAME", "nunique") if "CUSTOMER_NAME" in filtered.columns else ("AMOUNT", "count"),
+                        Orders=("INVOICE_NO", "nunique")
+                    ).sort_values("Revenue", ascending=False).reset_index()
+                    city_rev["Revenue"] = city_rev["Revenue"].apply(lambda x: format_indian_currency(x))
+                    city_rev.index = range(1, len(city_rev) + 1)
+                    st.dataframe(city_rev, use_container_width=True)
+                
+                # Top 30 customers
+                if "CUSTOMER_NAME" in filtered.columns:
+                    st.markdown("#### Top 30 Customers")
+                    top_cust = filtered.groupby("CUSTOMER_NAME").agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Orders=("INVOICE_NO", "nunique")
+                    ).sort_values("Revenue", ascending=False).head(30).reset_index()
+                    top_cust["Revenue"] = top_cust["Revenue"].apply(lambda x: format_indian_currency(x))
+                    top_cust.index = range(1, len(top_cust) + 1)
+                    st.dataframe(top_cust, use_container_width=True, height=400)
+                
+                # Material group breakdown
+                grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in filtered.columns else "MATERIALGROUP"
+                if grp_col in filtered.columns:
+                    st.markdown("#### Material Group Breakdown")
+                    mg = filtered.groupby(grp_col).agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Orders=("INVOICE_NO", "nunique")
+                    ).sort_values("Revenue", ascending=False).reset_index()
+                    mg["Revenue"] = mg["Revenue"].apply(lambda x: format_indian_currency(x))
+                    mg.index = range(1, len(mg) + 1)
+                    st.dataframe(mg, use_container_width=True, height=300)
+    
+    st.markdown("---")
+
 def render_reporting(df):
     st.subheader("📄 Industrial Executive Reporting")
     st.caption("Generate premium industrial-grade sales reports with Fiscal Year context.")

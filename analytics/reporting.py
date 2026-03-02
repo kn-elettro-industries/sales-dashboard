@@ -82,36 +82,38 @@ class PDF(FPDF):
                 break
     
     def header(self):
+        # Skip custom header on cover page (page 1 of strategy reports)
+        
         # Dark header strip
-        self.set_fill_color(22, 27, 34)  # #161b22
-        self.rect(0, 0, 210, 22, 'F')
+        self.set_fill_color(22, 27, 34)
+        self.rect(0, 0, 210, 18, 'F')
         
         # Gold accent line
-        self.set_fill_color(218, 165, 32)  # Dark Gold
-        self.rect(0, 22, 210, 0.8, 'F')
+        self.set_fill_color(218, 165, 32)
+        self.rect(0, 18, 210, 0.6, 'F')
         
-        # Logo (left side)
+        # Logo (left side — fits inside 18mm strip)
         if self.logo_path:
             try:
-                self.image(self.logo_path, x=8, y=3, h=16)
+                self.image(self.logo_path, x=8, y=2.5, h=13)
             except:
-                self.set_font('Arial', 'B', 13)
+                self.set_font('Arial', 'B', 11)
                 self.set_text_color(218, 165, 32)
-                self.set_xy(10, 5)
+                self.set_xy(10, 4)
                 self.cell(0, 10, 'ELETTRO', 0, 0, 'L')
         else:
-            self.set_font('Arial', 'B', 13)
+            self.set_font('Arial', 'B', 11)
             self.set_text_color(218, 165, 32)
-            self.set_xy(10, 5)
+            self.set_xy(10, 4)
             self.cell(0, 10, 'ELETTRO', 0, 0, 'L')
         
         # Report label (right side)
-        self.set_font('Arial', '', 9)
+        self.set_font('Arial', '', 8)
         self.set_text_color(180, 180, 180)
-        self.set_xy(0, 6)
+        self.set_xy(0, 4)
         self.cell(200, 10, 'Executive Sales Report', 0, 0, 'R')
         
-        self.ln(28)
+        self.ln(22)
 
     def footer(self):
         self.set_y(-15)

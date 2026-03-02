@@ -206,6 +206,12 @@ def generate_pdf(df, report_type, specific_entity=None):
         elif report_type == "Material Group Wise":
             col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
             df = df[df[col] == specific_entity]
+        elif report_type == "Month Wise":
+            if "MONTH" in df.columns:
+                df = df[df["MONTH"] == specific_entity]
+        elif report_type == "State Wise":
+            if "STATE" in df.columns:
+                df = df[df["STATE"] == specific_entity]
         title_text = f"Profile: {str(specific_entity)[:50]}"
         sub_title = f"{report_type} Deep Dive"
     
@@ -617,6 +623,145 @@ def generate_pdf(df, report_type, specific_entity=None):
             pdf.cell(50, 8, format_currency_pdf(amt), 0, 1, 'R', fill)
             fill = not fill
 
+    # ── SUMMARY ANALYSIS PAGE (All Report Types) ──
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 18)
+    pdf.set_text_color(33, 37, 41)
+    pdf.cell(0, 10, "EXECUTIVE SUMMARY & ANALYSIS", 0, 1, 'L')
+    pdf.set_draw_color(218, 165, 32)
+    pdf.set_line_width(0.5)
+    pdf.line(10, pdf.get_y(), 80, pdf.get_y())
+    pdf.ln(8)
+    
+    # Key Metrics Box
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_fill_color(33, 37, 41)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 8, "  KEY PERFORMANCE INDICATORS", 0, 1, 'L', 1)
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", '', 10)
+    pdf.ln(3)
+    
+    total_rev = df["AMOUNT"].sum() if "AMOUNT" in df.columns else 0
+    total_orders = df["INVOICE_NO"].nunique() if "INVOICE_NO" in df.columns else 0
+    avg_order = total_rev / max(total_orders, 1)
+    unique_cust = df["CUSTOMER_NAME"].nunique() if "CUSTOMER_NAME" in df.columns else 0
+    unique_items = df["ITEMNAME"].nunique() if "ITEMNAME" in df.columns else 0
+    
+    kpi_data = [
+        ("Total Revenue", format_currency_pdf(total_rev)),
+        ("Total Orders", f"{total_orders:,}"),
+        ("Average Order Value", format_currency_pdf(avg_order)),
+        ("Unique Customers", f"{unique_cust:,}"),
+        ("Unique Products", f"{unique_items:,}"),
+    ]
+    
+    pdf.set_fill_color(248, 249, 250)
+    for label, value in kpi_data:
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(80, 8, f"  {label}", 0, 0, 'L', 1)
+        pdf.set_font("Arial", '', 10)
+        pdf.cell(100, 8, value, 0, 1, 'R', 1)
+    pdf.ln(5)
+    
+    # Top 5 Customers
+    if "CUSTOMER_NAME" in df.columns:
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_fill_color(33, 37, 41)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(0, 8, "  TOP 5 CUSTOMERS", 0, 1, 'L', 1)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", '', 10)
+        pdf.ln(2)
+        
+        top5_cust = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(5)
+        fill = False
+        for i, (cust, amt) in enumerate(top5_cust.items(), 1):
+            share = (amt / total_rev * 100) if total_rev > 0 else 0
+            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+            pdf.cell(10, 7, f"{i}.", 0, 0, 'C', fill)
+            pdf.cell(100, 7, str(cust)[:50], 0, 0, 'L', fill)
+            pdf.cell(40, 7, format_currency_pdf(amt), 0, 0, 'R', fill)
+            pdf.cell(30, 7, f"{share:.1f}%", 0, 1, 'R', fill)
+            fill = not fill
+        pdf.ln(5)
+    
+    # Top 5 Material Groups
+    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
+    if grp_col in df.columns:
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_fill_color(33, 37, 41)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(0, 8, "  TOP 5 MATERIAL GROUPS", 0, 1, 'L', 1)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", '', 10)
+        pdf.ln(2)
+        
+        top5_grp = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(5)
+        fill = False
+        for i, (grp, amt) in enumerate(top5_grp.items(), 1):
+            share = (amt / total_rev * 100) if total_rev > 0 else 0
+            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+            pdf.cell(10, 7, f"{i}.", 0, 0, 'C', fill)
+            pdf.cell(100, 7, str(grp)[:50], 0, 0, 'L', fill)
+            pdf.cell(40, 7, format_currency_pdf(amt), 0, 0, 'R', fill)
+            pdf.cell(30, 7, f"{share:.1f}%", 0, 1, 'R', fill)
+            fill = not fill
+        pdf.ln(5)
+    
+    # Auto-Generated Insights
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_fill_color(33, 37, 41)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 8, "  KEY INSIGHTS & RECOMMENDATIONS", 0, 1, 'L', 1)
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", '', 10)
+    pdf.ln(3)
+    
+    insights = []
+    
+    # Revenue concentration
+    if "CUSTOMER_NAME" in df.columns and total_rev > 0:
+        top3_rev = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(3).sum()
+        top3_pct = top3_rev / total_rev * 100
+        if top3_pct > 60:
+            insights.append(f"HIGH CONCENTRATION: Top 3 customers account for {top3_pct:.1f}% of revenue. Consider diversifying the customer base.")
+        else:
+            insights.append(f"HEALTHY MIX: Top 3 customers account for {top3_pct:.1f}% of revenue, indicating a well-diversified portfolio.")
+    
+    # Category insights
+    if grp_col in df.columns:
+        num_cats = df[grp_col].nunique()
+        top_cat = df.groupby(grp_col)["AMOUNT"].sum().idxmax()
+        top_cat_share = df.groupby(grp_col)["AMOUNT"].sum().max() / total_rev * 100 if total_rev > 0 else 0
+        insights.append(f"PORTFOLIO: {num_cats} material groups active. '{str(top_cat)[:30]}' leads with {top_cat_share:.1f}% share.")
+    
+    # Order value analysis
+    if avg_order > 0:
+        if avg_order < 50000:
+            insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} — consider bundling strategies to increase order size.")
+        else:
+            insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} — strong per-order commitment.")
+    
+    # Geographic insight
+    if "STATE" in df.columns:
+        num_states = df["STATE"].nunique()
+        top_state = df.groupby("STATE")["AMOUNT"].sum().idxmax() if not df.empty else "N/A"
+        insights.append(f"GEOGRAPHY: Active across {num_states} states. Top state: {top_state}.")
+    
+    insights.append(f"Generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
+    
+    for insight in insights:
+        pdf.set_font("Arial", '', 9)
+        marker = insight.split(":")[0] if ":" in insight else ""
+        pdf.set_font("Arial", 'B', 9)
+        pdf.cell(5, 7, "", 0, 0)
+        if ":" in insight:
+            pdf.cell(0, 7, insight, 0, 1, 'L')
+        else:
+            pdf.set_font("Arial", '', 9)
+            pdf.cell(0, 7, insight, 0, 1, 'L')
+    
     return pdf
 
 def render_interactive_reports(df):
@@ -793,7 +938,7 @@ def render_reporting(df):
     
     c1, c2 = st.columns(2)
     with c1:
-        report_type = st.selectbox("Report Type:", ["Distributor Strategy Report", "Customer Wise", "City Wise", "Material Wise", "Material Group Wise"])
+        report_type = st.selectbox("Report Type:", ["Distributor Strategy Report", "Month Wise", "Customer Wise", "City Wise", "State Wise", "Material Wise", "Material Group Wise"])
     with c2:
         # Dynamic Filter
         options = ["All"]
@@ -808,11 +953,17 @@ def render_reporting(df):
             else:
                 st.info("Financial Year data missing.")
                 
+        elif report_type == "Month Wise":
+            if "MONTH" in df.columns:
+                options += sorted(df["MONTH"].dropna().unique().tolist())
         elif report_type == "Customer Wise":
             options += sorted(df["CUSTOMER_NAME"].unique().tolist())
         elif report_type == "City Wise":
             col = "CITY" if "CITY" in df.columns else "STATE"
             options += sorted(df[col].dropna().unique().tolist())
+        elif report_type == "State Wise":
+            if "STATE" in df.columns:
+                options += sorted(df["STATE"].dropna().unique().tolist())
         elif report_type == "Material Wise":
             col = "ITEMNAME" if "ITEMNAME" in df.columns else "MATERIALGROUP"
             options += sorted(df[col].dropna().unique().tolist())

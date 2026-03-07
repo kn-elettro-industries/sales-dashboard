@@ -13,7 +13,7 @@ import { formatAmount } from "@/lib/format";
 
 export default function DashboardPage() {
     const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
-    const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [] });
+    const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
     const [anomalies, setAnomalies] = useState<{ entity: string; change_pct: number; current_revenue: number }[]>([]);
     const [loading, setLoading] = useState(true);
     const [showTargets, setShowTargets] = useState(false);
@@ -46,29 +46,42 @@ export default function DashboardPage() {
                 goalOrders: goalOrders ?? undefined,
             };
 
+            const anomalyParams = {
+                tenant,
+                startDate: p.startDate,
+                endDate: p.endDate,
+                states: selectedStates.length > 0 ? selectedStates.join(",") : undefined,
+                customers: selectedCustomers.length > 0 ? selectedCustomers.join(",") : undefined,
+                materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(",") : undefined,
+                fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(",") : undefined,
+                months: selectedMonths.length > 0 ? selectedMonths.join(",") : undefined,
+                dropThresholdPct: 20,
+            };
+
             try {
-                const res = await fetchDashboardSummary(p);
+                const summaryPromise = (async () => {
+                    const r = await fetchDashboardSummary(p);
+                    if (r) return r;
+                    await new Promise((resolve) => setTimeout(resolve, 1500));
+                    return fetchDashboardSummary(p);
+                })();
+                const [res, anom] = await Promise.all([
+                    summaryPromise,
+                    fetchAnomalies(anomalyParams),
+                ]);
+
                 if (!res) {
-                    setData({ summary: null, trend: [], materials: [], customers: [] });
+                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
                 } else {
                     setData({
                         summary: res.summary ?? null,
                         trend: res.trend ?? [],
                         materials: res.material_groups ?? [],
                         customers: res.top_customers ?? [],
+                        comparison: res.comparison ?? null,
+                        goals: res.goals ?? null,
                     });
                 }
-                const anom = await fetchAnomalies({
-                    tenant,
-                    startDate: p.startDate,
-                    endDate: p.endDate,
-                    states: selectedStates.length > 0 ? selectedStates.join(",") : undefined,
-                    customers: selectedCustomers.length > 0 ? selectedCustomers.join(",") : undefined,
-                    materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(",") : undefined,
-                    fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(",") : undefined,
-                    months: selectedMonths.length > 0 ? selectedMonths.join(",") : undefined,
-                    dropThresholdPct: 20,
-                });
                 setAnomalies(anom?.anomalies ?? []);
             } catch (e) {
                 console.error("Failed to fetch dashboard data", e);

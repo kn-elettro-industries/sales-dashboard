@@ -3,19 +3,35 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").trim().replace(/\/+$/, "");
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
-    return proxy(request, context, "GET");
+    try {
+        return await proxy(request, context, "GET");
+    } catch (e) {
+        return NextResponse.json({ error: "Proxy error", message: String(e) }, { status: 500 });
+    }
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
-    return proxy(request, context, "POST");
+    try {
+        return await proxy(request, context, "POST");
+    } catch (e) {
+        return NextResponse.json({ error: "Proxy error", message: String(e) }, { status: 500 });
+    }
 }
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
-    return proxy(request, context, "PUT");
+    try {
+        return await proxy(request, context, "PUT");
+    } catch (e) {
+        return NextResponse.json({ error: "Proxy error", message: String(e) }, { status: 500 });
+    }
 }
 
 export async function DELETE(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
-    return proxy(request, context, "DELETE");
+    try {
+        return await proxy(request, context, "DELETE");
+    } catch (e) {
+        return NextResponse.json({ error: "Proxy error", message: String(e) }, { status: 500 });
+    }
 }
 
 export async function OPTIONS() {
@@ -26,13 +42,17 @@ async function proxy(
     request: NextRequest,
     context: { params: Promise<{ path?: string[] }> },
     method: string
-) {
-    const { path = [] } = await context.params;
-    const pathStr = path.length ? path.join("/") : "";
-    const search = request.nextUrl.searchParams.toString();
-    const url = `${BACKEND}/${pathStr}${search ? `?${search}` : ""}`;
-
+): Promise<NextResponse> {
     try {
+        const { path = [] } = await context.params;
+        const pathStr = path.length ? path.join("/") : "";
+        const search = request.nextUrl.searchParams.toString();
+        const url = `${BACKEND}/${pathStr}${search ? `?${search}` : ""}`;
+
+        if (!BACKEND || BACKEND.startsWith("/")) {
+            return NextResponse.json({ error: "Backend URL not configured (set NEXT_PUBLIC_API_URL)" }, { status: 502 });
+        }
+
         const headers = new Headers();
         request.headers.forEach((v, k) => {
             if (k.toLowerCase() === "host" || k.toLowerCase() === "connection") return;
@@ -58,10 +78,12 @@ async function proxy(
             resHeaders.set(k, v);
         });
         resHeaders.set("Access-Control-Allow-Origin", "*");
-        const body = res.body ?? (res.status === 204 || res.status === 304 ? null : undefined);
+
+        const body = res.status === 204 || res.status === 304 ? null : await res.text();
         return new NextResponse(body, { status: res.status, statusText: res.statusText, headers: resHeaders });
     } catch (e) {
-        console.error("[proxy]", url, e);
-        return NextResponse.json({ error: "Backend unreachable", url }, { status: 502 });
+        const message = e instanceof Error ? e.message : String(e);
+        console.error("[proxy]", message, e);
+        return NextResponse.json({ error: "Backend unreachable", message }, { status: 502 });
     }
 }

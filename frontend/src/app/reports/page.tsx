@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Download, FileText, ChevronRight, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
-import { fetchAllCustomers, fetchStateData, fetchMonthlySales, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails } from "@/lib/api";
+import { fetchAllCustomers, fetchStateData, fetchMonthlySales, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, API_BASE_URL } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatAmount, formatCr } from "@/lib/format";
@@ -226,8 +226,7 @@ export default function ReportsPage() {
             if (dateRange?.from) queryParams.append("start_date", format(dateRange.from, "yyyy-MM-dd"));
             if (dateRange?.to) queryParams.append("end_date", format(dateRange.to, "yyyy-MM-dd"));
 
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-            const url = `${baseUrl}/reports/download?${queryParams.toString()}`;
+            const url = `${API_BASE_URL}/reports/download?${queryParams.toString()}`;
 
             const res = await fetch(url, { cache: "no-store" });
             if (!res.ok) {
@@ -257,7 +256,6 @@ export default function ReportsPage() {
     const handleDynamicDownload = async () => {
         setDynDownloading(true);
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
             const payload = {
                 tenant_id: tenant,
                 start_date: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
@@ -280,7 +278,7 @@ export default function ReportsPage() {
                 }
             };
 
-            const res = await fetch(`${baseUrl}/reports/dynamic`, {
+            const res = await fetch(`${API_BASE_URL}/reports/dynamic`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

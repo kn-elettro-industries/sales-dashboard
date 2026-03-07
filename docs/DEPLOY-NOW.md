@@ -40,26 +40,17 @@ Use this after code is pushed to GitHub. You need: **GitHub repo**, **Supabase**
 2. Import the same GitHub repo.
 3. **Root Directory:** set to `frontend` (Override).
 4. **Environment Variables:** Add:
-   - Name: `NEXT_PUBLIC_API_URL`  
-   - Value: `https://YOUR-RENDER-URL/api`  
-   (e.g. `https://elettro-api-xxxx.onrender.com/api` — use the URL from step 1, add `/api`.)
+   - `NEXT_PUBLIC_API_URL` = `https://YOUR-RENDER-URL/api` (e.g. `https://sales-dashboard-wfay.onrender.com/api` — no trailing space.)
+   - **To avoid CORS issues:** set `NEXT_PUBLIC_USE_API_PROXY` = `true`. The app will call your own `/api/proxy`, which forwards to the Render backend server-side (no cross-origin requests from the browser).
 5. Deploy. Copy your frontend URL, e.g. `https://sales-dashboard-xxx.vercel.app`.
 
 ---
 
-## 3. CORS (so frontend can call backend)
+## 3. CORS (or use the proxy)
 
-1. In the repo, open `backend/main.py`.
-2. In the `origins` list, add your Vercel URL (and remove `"*"` for production if you want):
-   ```python
-   origins = [
-       "http://localhost:3000",
-       "https://dashboard.elettro.in",
-       "https://sales-dashboard-xxx.vercel.app",  # your Vercel URL
-       "*"   # or remove this and keep only the URLs above
-   ]
-   ```
-3. Commit and push. Render will auto-redeploy the backend.
+**Recommended:** On Vercel, set `NEXT_PUBLIC_USE_API_PROXY=true`. The frontend then calls same-origin `/api/proxy`, which forwards to Render server-side — **no CORS** from the browser.
+
+If you call the backend directly (no proxy), ensure the backend allows your origin (see `backend/main.py` CORS config). The repo already uses permissive CORS; if you still see "blocked by CORS policy", use the proxy above.
 
 ---
 
@@ -76,6 +67,26 @@ Use this after code is pushed to GitHub. You need: **GitHub repo**, **Supabase**
 - Open your **Vercel** URL. Dashboard should load.
 - Try filters, Geographic map, Reports, Data upload. All requests go to your Render backend.
 - If you see "Failed to fetch", check: (1) `NEXT_PUBLIC_API_URL` has `/api` at the end, (2) CORS includes your Vercel URL, (3) Render service is not sleeping (free tier sleeps after inactivity).
+
+---
+
+## 6. No data on the dashboard?
+
+**Two common causes:**
+
+1. **Frontend not talking to the API**
+   - In **Vercel** → your project → **Settings** → **Environment Variables**, add (or fix):
+     - `NEXT_PUBLIC_API_URL` = `https://YOUR-RENDER-URL/api` (e.g. `https://sales-dashboard-wfay.onrender.com/api`).
+   - **Redeploy** the frontend after changing env vars (NEXT_PUBLIC_* are baked in at build time).
+   - In the browser, open DevTools → **Network** tab, refresh the dashboard. You should see requests to `https://...onrender.com/api/dashboard/summary`. If you see requests to `localhost`, the env is wrong or missing.
+
+2. **Database has no rows**
+   - The app reads from the **sales_master** table (tenant `default_elettro`). If the table is empty, you get zeros and empty charts.
+   - **Fix:** Open the **Data** page in the app → upload an Excel/CSV with columns like DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT, etc. The backend will insert into Supabase. Then refresh the dashboard.
+
+**Quick checks:**
+- Open `https://YOUR-RENDER-URL/` in a browser. You should see `{"status":"ok",...}`. If that fails, the backend is down or sleeping (free tier wakes in ~30–60 s).
+- Open `https://YOUR-RENDER-URL/api/dashboard/summary` in a browser. You should get JSON (summary, trend, etc.). If you get CORS or 404, fix the URL or CORS in `backend/main.py`.
 
 ---
 

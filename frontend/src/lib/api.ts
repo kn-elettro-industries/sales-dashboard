@@ -1,4 +1,10 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+/** When true, browser calls same-origin /api/proxy so CORS is never an issue. Set on Vercel if you hit CORS. */
+const USE_PROXY = process.env.NEXT_PUBLIC_USE_API_PROXY === "true" || process.env.NEXT_PUBLIC_USE_API_PROXY === "1";
+
+/** Base URL for the API (trimmed; no trailing slash). Use proxy when NEXT_PUBLIC_USE_API_PROXY=true to avoid CORS. */
+export const API_BASE_URL = USE_PROXY
+    ? "/api/proxy"
+    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").trim().replace(/\/+$/, "");
 
 type FilterParams = {
     tenant?: string;

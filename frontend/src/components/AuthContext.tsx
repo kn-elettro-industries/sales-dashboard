@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { API_BASE_URL } from "@/lib/api";
 
 const AUTH_KEY = "elettro_auth";
 
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const login = async (username: string, password: string): Promise<boolean> => {
-        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+        const base = API_BASE_URL;
         try {
             const res = await fetch(`${base}/auth/login`, {
                 method: "POST",

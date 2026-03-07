@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useFilter } from "@/components/FilterContext";
 import { DataTable } from "@/components/ui/DataTable";
 import { format } from "date-fns";
@@ -113,6 +114,17 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
                 <button type="button" onClick={() => setShowTargets((s) => !s)} className="text-sm text-[#daa520] hover:underline">{showTargets ? "Hide targets" : "Set revenue/order targets"}</button>
             </div>
+            {!loading && (!data.summary || (sum.revenue === 0 && sum.orders === 0)) && validTrend.length === 0 && (
+                <div className="p-4 bg-amber-900/20 border border-amber-700 rounded-xl">
+                    <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4" /> No data yet
+                    </h3>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                        <li>Set <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> to your Render API (e.g. <code className="bg-[#0d1117] px-1 rounded">https://xxx.onrender.com/api</code>) in Vercel → Settings → Environment Variables, then <strong>redeploy</strong>.</li>
+                        <li>If the API is correct, upload data from the <strong><Link href="/data" className="text-[#daa520] hover:underline">Data</Link></strong> page (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT, etc.).</li>
+                    </ul>
+                </div>
+            )}
             {anomalies.length > 0 && (
                 <div className="p-4 bg-red-900/20 border border-red-800 rounded-xl">
                     <h3 className="text-sm font-semibold text-red-400 flex items-center gap-2 mb-2">

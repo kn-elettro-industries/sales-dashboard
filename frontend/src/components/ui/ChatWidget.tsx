@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Loader2 } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function ChatWidget() {
     const { tenant, dateRange } = useFilter();
@@ -26,7 +27,7 @@ export default function ChatWidget() {
         setIsLoading(true);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/chat`, {
+            const res = await fetch(`${API_BASE_URL}/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

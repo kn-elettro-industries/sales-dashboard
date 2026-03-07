@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, Activity } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
-import { fetchDataHealth } from "@/lib/api";
+import { fetchDataHealth, API_BASE_URL } from "@/lib/api";
 
 export default function DataUploadPage() {
     const { tenant } = useFilter();
@@ -51,7 +51,7 @@ export default function DataUploadPage() {
         formData.append("tenant_id", tenant);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/upload`, {
+            const response = await fetch(`${API_BASE_URL}/upload`, {
                 method: "POST",
                 body: formData,
             });

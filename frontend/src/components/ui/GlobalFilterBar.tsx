@@ -6,7 +6,8 @@ import { Calendar as CalendarIcon, Filter, Building2, Download, ChevronDown, X, 
 import { format, subDays, startOfYear } from "date-fns";
 import * as Popover from "@radix-ui/react-popover";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+import { API_BASE_URL } from "@/lib/api";
+const API_BASE = API_BASE_URL;
 
 const datePresets = [
     { label: "All Time", getRange: () => ({ from: undefined, to: undefined }) },

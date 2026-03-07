@@ -17,18 +17,18 @@ Use this after code is pushed to GitHub. You need: **GitHub repo**, **Supabase**
    - **Root Directory:** leave **empty** (repo root)
    - **Build Command:** `cd backend && pip install -r requirements.txt`
    - **Start Command:** `sh start-backend.sh`
-   - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11`
+   - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11.9`
 
    **Option B (root = backend):**
    - **Root Directory:** `backend`
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-   - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11`
+   - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11.9` (must be full version e.g. 3.11.9, not just 3.11)
 
 5. Click **Create Web Service**. Wait for deploy.
 6. Copy the service URL, e.g. `https://elettro-api-xxxx.onrender.com`.
 
-**If deploy exits with status 1:** In Render → **Logs**, scroll to the line just before “Exited with status 1” to see the Python traceback. Set **PYTHON_VERSION** to **3.11** in Environment to avoid Python 3.14 issues.
+**If deploy exits with status 1:** In Render → **Logs**, scroll to the line just before “Exited with status 1” to see the Python traceback. Set **PYTHON_VERSION** to **3.11.9** (full version) in Environment to avoid Python 3.14 issues.
 
 ---
 

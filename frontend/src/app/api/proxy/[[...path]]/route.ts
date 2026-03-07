@@ -51,11 +51,17 @@ async function proxy(
         }
 
         const res = await fetch(url, init);
-        const resHeaders = new Headers(res.headers);
+        const resHeaders = new Headers();
+        res.headers.forEach((v, k) => {
+            const lower = k.toLowerCase();
+            if (lower === "content-encoding" || lower === "transfer-encoding") return;
+            resHeaders.set(k, v);
+        });
         resHeaders.set("Access-Control-Allow-Origin", "*");
-        return new NextResponse(res.body, { status: res.status, statusText: res.statusText, headers: resHeaders });
+        const body = res.body ?? (res.status === 204 || res.status === 304 ? null : undefined);
+        return new NextResponse(body, { status: res.status, statusText: res.statusText, headers: resHeaders });
     } catch (e) {
         console.error("[proxy]", url, e);
-        return NextResponse.json({ error: "Backend unreachable" }, { status: 502 });
+        return NextResponse.json({ error: "Backend unreachable", url }, { status: 502 });
     }
 }

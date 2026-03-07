@@ -126,7 +126,7 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                             </Pie>
                             <Tooltip
                                 contentStyle={{ backgroundColor: "#161b22", border: "1px solid #30363d", color: "#fff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.4)", fontSize: 13 }}
-                                formatter={(value: any, name: string) => [`${formatTooltipAmount(Number(value || 0))} · ${((Number(value || 0) / total) * 100).toFixed(1)}%`, name]}
+                                formatter={(value: any, name: string | undefined) => [`${formatTooltipAmount(Number(value || 0))} · ${((Number(value || 0) / total) * 100).toFixed(1)}%`, name ?? ""]}
                             />
                         </RechartsPieChart>
                     </ResponsiveContainer>

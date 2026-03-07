@@ -19,11 +19,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow CORS for local Next.js dev server and Vercel domains
+# Allow CORS for local Next.js dev server and Vercel/Render frontends.
+# With allow_credentials=True, wildcard "*" is not valid — list origins explicitly.
 origins = [
     "http://localhost:3000",
     "https://dashboard.elettro.in",
-    "*"  # Allows all origins for testing. In prod, restrict this!
+    "https://sales-dashboard-eight-xi.vercel.app",
 ]
 
 

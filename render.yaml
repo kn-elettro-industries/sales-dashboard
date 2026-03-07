@@ -6,9 +6,9 @@ services:
   - type: web
     name: elettro-api
     runtime: python
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    # No rootDir: run from repo root so start script can cd into backend
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: sh start-backend.sh
     envVars:
       - key: DATABASE_URL
         sync: false

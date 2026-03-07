@@ -22,8 +22,10 @@ Use this after code is pushed to GitHub. You need: **GitHub repo**, **Supabase**
    **Option B (root = backend):**
    - **Root Directory:** `backend`
    - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `sh run.sh` (uses `backend/run.sh` so PORT is set correctly)
-   - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11.9` (must be full version e.g. 3.11.9, not just 3.11)
+   - **Start Command:** `sh run.sh`
+   - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11.9`
+
+   **If you get "cannot open run.sh":** Render may be running the start command from repo root. Then use: **Root Directory** = *(leave empty)*, **Build** = `cd backend && pip install -r requirements.txt`, **Start** = `sh backend/run.sh`.
 
 5. Click **Create Web Service**. Wait for deploy.
 6. Copy the service URL, e.g. `https://elettro-api-xxxx.onrender.com`.

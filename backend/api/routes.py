@@ -594,10 +594,23 @@ def get_dashboard_summary(
         df_t = df.copy()
         df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
         df_t = df_t.dropna(subset=[date_col])
-        t = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
-        t = t.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
-        t["DATE"] = t["DATE"].dt.strftime("%Y-%m")
-        trend = serialize_df(t.tail(trend_limit))
+        if not df_t.empty:
+            t = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+            t = t.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
+            t["DATE"] = t["DATE"].dt.strftime("%Y-%m")
+            trend = serialize_df(t.tail(trend_limit))
+    if not trend and amount_col and "MONTH" in df.columns:
+        try:
+            by_month = df.groupby("MONTH")[amount_col].sum().reset_index()
+            by_month = by_month.rename(columns={amount_col: "AMOUNT"})
+            month_str = by_month["MONTH"].astype(str).str.strip()
+            month_str = month_str.str[:3].str.title() + "-" + month_str.str[-2:]
+            by_month["DATE"] = pd.to_datetime(month_str, format="%b-%y", errors="coerce")
+            by_month = by_month.dropna(subset=["DATE"]).sort_values("DATE")
+            by_month["DATE"] = by_month["DATE"].dt.strftime("%Y-%m")
+            trend = serialize_df(by_month[["DATE", "AMOUNT"]].tail(trend_limit))
+        except Exception:
+            pass
 
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
     material_groups_list = []
@@ -643,16 +656,33 @@ def get_kpi_summary(tenant_id: str = "default_elettro", start_date: Optional[str
 def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
-    date_col, amount_col = _date_amount_columns(df)
-    if not date_col or not amount_col:
+    amount_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+    date_col, _ = _date_amount_columns(df)
+    if not amount_col:
         return []
-    df_t = df.copy()
-    df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
-    df_t = df_t.dropna(subset=[date_col])
-    trend = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
-    trend = trend.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
-    trend["DATE"] = trend["DATE"].dt.strftime("%Y-%m")
-    return serialize_df(trend)
+    out = []
+    if date_col:
+        df_t = df.copy()
+        df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
+        df_t = df_t.dropna(subset=[date_col])
+        if not df_t.empty:
+            trend = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+            trend = trend.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
+            trend["DATE"] = trend["DATE"].dt.strftime("%Y-%m")
+            return serialize_df(trend)
+    if "MONTH" in df.columns:
+        try:
+            by_month = df.groupby("MONTH")[amount_col].sum().reset_index()
+            by_month = by_month.rename(columns={amount_col: "AMOUNT"})
+            month_str = by_month["MONTH"].astype(str).str.strip()
+            month_str = month_str.str[:3].str.title() + "-" + month_str.str[-2:]
+            by_month["DATE"] = pd.to_datetime(month_str, format="%b-%y", errors="coerce")
+            by_month = by_month.dropna(subset=["DATE"]).sort_values("DATE")
+            by_month["DATE"] = by_month["DATE"].dt.strftime("%Y-%m")
+            return serialize_df(by_month[["DATE", "AMOUNT"]])
+        except Exception:
+            pass
+    return []
 
 @router.get("/charts/material-groups")
 def get_material_groups(tenant_id: str = "default_elettro", limit: int = 10, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):

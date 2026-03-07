@@ -252,9 +252,9 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                         >
                             <Tooltip
                                 contentStyle={{ backgroundColor: "#161b22", border: "1px solid #30363d", color: "#fff", borderRadius: "8px", fontSize: 13 }}
-                                formatter={(value: any, name: string) => {
+                                formatter={(value: any, name: string | undefined) => {
                                     const pct = total > 0 ? ((Number(value || 0) / total) * 100).toFixed(1) : "0";
-                                    return [`${formatTooltipAmount(Number(value || 0))} · ${pct}%`, name];
+                                    return [`${formatTooltipAmount(Number(value || 0))} · ${pct}%`, name ?? ""];
                                 }}
                             />
                         </Treemap>

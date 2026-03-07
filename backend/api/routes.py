@@ -56,6 +56,14 @@ def serialize_df(df: pd.DataFrame) -> list:
     """Helper to cleanly serialize pandas dataframes to JSON."""
     return json.loads(df.to_json(orient="records", date_format="iso"))
 
+def _date_amount_columns(df: pd.DataFrame):
+    """Return (date_col, amount_col) with case-insensitive match so trend works when DB returns lowercase."""
+    if df is None or df.empty:
+        return None, None
+    date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
+    amount_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+    return date_col, amount_col
+
 def _material_group_column(df: pd.DataFrame):
     """Return the material group column name if present (any common casing)."""
     candidates = [
@@ -581,8 +589,13 @@ def get_dashboard_summary(
         goals["orders_achievement_pct"] = round(orders / goal_orders * 100, 1)
 
     trend = []
-    if "DATE" in df.columns and "AMOUNT" in df.columns:
-        t = df.groupby(pd.Grouper(key="DATE", freq="M"))["AMOUNT"].sum().reset_index()
+    date_col, amount_col = _date_amount_columns(df)
+    if date_col and amount_col:
+        df_t = df.copy()
+        df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
+        df_t = df_t.dropna(subset=[date_col])
+        t = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+        t = t.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
         t["DATE"] = t["DATE"].dt.strftime("%Y-%m")
         trend = serialize_df(t.tail(trend_limit))
 
@@ -630,9 +643,14 @@ def get_kpi_summary(tenant_id: str = "default_elettro", start_date: Optional[str
 def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
-    if df.empty or "DATE" not in df.columns or "AMOUNT" not in df.columns:
+    date_col, amount_col = _date_amount_columns(df)
+    if not date_col or not amount_col:
         return []
-    trend = df.groupby(pd.Grouper(key="DATE", freq="M"))["AMOUNT"].sum().reset_index()
+    df_t = df.copy()
+    df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
+    df_t = df_t.dropna(subset=[date_col])
+    trend = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+    trend = trend.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
     trend["DATE"] = trend["DATE"].dt.strftime("%Y-%m")
     return serialize_df(trend)
 

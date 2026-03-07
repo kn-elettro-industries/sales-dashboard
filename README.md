@@ -11,23 +11,27 @@ A cloud-deployed sales analytics platform built for Indian manufacturers. Upload
 
 ## Architecture
 
+**Current (default):** Next.js dashboard + FastAPI API.
+
 ```
-Browser (Anywhere)
-    ↓
-Render: Streamlit Dashboard  ←→  Render: FastAPI API
-                                        ↓
-                               Supabase (PostgreSQL)
+Browser
+   ↓
+Next.js (port 3000)  ←→  FastAPI (port 8000)
+                                ↓
+                       Supabase (PostgreSQL)
 ```
+
+**Legacy (optional):** Streamlit dashboard can run alongside; it uses the same FastAPI backend and DB.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | Streamlit |
-| Backend API | FastAPI + Uvicorn |
+| Frontend | **Next.js** (primary); Streamlit (legacy, optional) |
+| Backend API | FastAPI + Uvicorn (port 8000) |
 | Database | Supabase (PostgreSQL) |
-| ETL | Pandas + Custom Pipeline |
-| Analytics | Prophet, Scikit-learn, Plotly |
+| ETL | Pandas + Custom Pipeline (backend upload + legacy script) |
+| Analytics | Prophet, Scikit-learn, Plotly (legacy); Recharts (Next.js) |
 | Hosting | Render.com (Free Tier) |
 
 ## Project Structure
@@ -51,25 +55,37 @@ See **STRUCTURE.md** for the full layout. Summary:
 **Current stack (Next.js + FastAPI):**
 
 ```bash
-# Backend
-cd backend && pip install -r requirements.txt && uvicorn main:app --reload
+# 1. Backend (port 8000)
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
-# Frontend (another terminal)
-cd frontend && npm install && npm run dev
+# 2. Frontend (port 3000) — in another terminal
+cd frontend
+npm install
+npm run dev
 ```
 
-**Legacy Streamlit app (optional):**
+- Dashboard: **http://localhost:3000**
+- API docs: **http://localhost:8000/docs**
+
+**Legacy Streamlit app (optional):** runs on port 8501. Use the same FastAPI backend (8000); do not start a second backend.
 
 ```bash
-cd legacy && pip install -r requirements.txt && streamlit run app.py
+cd legacy
+pip install -r requirements.txt
+streamlit run app.py
 ```
+
+Or from repo root: `streamlit run legacy/app.py`
 
 ## Environment Variables
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | Supabase PostgreSQL connection string |
-| `API_URL` | FastAPI backend URL |
+| `DATABASE_URL` | Supabase PostgreSQL connection string (backend + legacy ETL) |
+| `API_URL` | FastAPI base URL (legacy Streamlit, e.g. `http://localhost:8000`) |
+| `NEXT_PUBLIC_API_URL` | Full API base for Next.js (e.g. `http://localhost:8000/api`). Defaults to `http://localhost:8000/api` if unset. |
 
 ## License
 

@@ -22,7 +22,7 @@ Use this after code is pushed to GitHub. You need: **GitHub repo**, **Supabase**
    **Option B (root = backend):**
    - **Root Directory:** `backend`
    - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Start Command:** `sh run.sh` (uses `backend/run.sh` so PORT is set correctly)
    - **Environment:** `DATABASE_URL` = Supabase URL; `PYTHON_VERSION` = `3.11.9` (must be full version e.g. 3.11.9, not just 3.11)
 
 5. Click **Create Web Service**. Wait for deploy.

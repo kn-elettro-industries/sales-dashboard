@@ -1,11 +1,17 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 import os
-import asyncio
+import sys
 
-from starlette.middleware.base import BaseHTTPMiddleware
-
-from api.routes import router as api_router
+# Surface startup errors so Render logs show the traceback
+try:
+    from fastapi import FastAPI, Request, HTTPException
+    from fastapi.middleware.cors import CORSMiddleware
+    import asyncio
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from api.routes import router as api_router
+except Exception as e:
+    print(f"Startup error: {e}", file=sys.stderr)
+    sys.stderr.flush()
+    raise
 
 app = FastAPI(
     title="ELETTRO Intelligence API",

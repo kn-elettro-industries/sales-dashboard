@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useFilter } from "@/components/FilterContext";
 import { DataTable } from "@/components/ui/DataTable";
 import { format } from "date-fns";
-import { fetchDashboardSummary, fetchAnomalies } from "@/lib/api";
+import { fetchDashboardSummary, fetchAnomalies, fetchKpiSummary, fetchSalesTrend, fetchMaterialGroups, fetchTopCustomers } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { GradientAreaChart, InteractiveDonutChart, CategoryHorizontalBarChart } from "@/components/ui/Charts";
 import { IndianRupee, ShoppingCart, Users, TrendingUp, AlertTriangle } from "lucide-react";
@@ -71,7 +71,24 @@ export default function DashboardPage() {
                 ]);
 
                 if (!res) {
-                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
+                    const [kpi, trend, materials, customers] = await Promise.all([
+                        fetchKpiSummary(p),
+                        fetchSalesTrend(p),
+                        fetchMaterialGroups(p),
+                        fetchTopCustomers(p),
+                    ]);
+                    if (kpi || (Array.isArray(trend) && trend.length) || (Array.isArray(materials) && materials.length) || (Array.isArray(customers) && customers.length)) {
+                        setData({
+                            summary: kpi ? { revenue: kpi.revenue ?? 0, orders: kpi.orders ?? 0, customers: kpi.customers ?? 0, average_order_value: kpi.average_order_value ?? 0 } : null,
+                            trend: Array.isArray(trend) ? trend : [],
+                            materials: Array.isArray(materials) ? materials : [],
+                            customers: Array.isArray(customers) ? customers : [],
+                            comparison: null,
+                            goals: null,
+                        });
+                    } else {
+                        setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
+                    }
                 } else {
                     setData({
                         summary: res.summary ?? null,

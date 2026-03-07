@@ -1,0 +1,16 @@
+# Render Blueprint: ELETTRO Sales Intelligence API
+# Deploy: Connect this repo at render.com → New → Blueprint → select this repo
+# Then add DATABASE_URL in the service Environment tab.
+
+services:
+  - type: web
+    name: elettro-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11"

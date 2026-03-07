@@ -9,3 +9,5 @@ python-dotenv
 cachetools
 sqlalchemy
 openpyxl
+fpdf2
+matplotlib

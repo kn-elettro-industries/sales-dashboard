@@ -19,15 +19,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow CORS for local Next.js dev server and Vercel/Render frontends.
-# With allow_credentials=True, wildcard "*" is not valid — list origins explicitly.
-origins = [
-    "http://localhost:3000",
-    "https://dashboard.elettro.in",
-    "https://sales-dashboard-eight-xi.vercel.app",
-]
-
-
+# CORS: allow any origin (frontend doesn't send credentials to API).
+# allow_credentials=False allows wildcard; avoids CORS issues for any Vercel URL.
 REQUEST_TIMEOUT_SECONDS = 60
 
 
@@ -43,8 +36,8 @@ app.add_middleware(TimeoutMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],

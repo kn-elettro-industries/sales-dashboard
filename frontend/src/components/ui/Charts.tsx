@@ -13,7 +13,6 @@ import {
     PieChart as RechartsPieChart,
     Pie,
     Cell,
-    Sector,
     ScatterChart,
     Scatter,
     ZAxis,
@@ -85,13 +84,6 @@ export function GradientAreaChart({ data, xKey, yKey, formatCurrency = true }: {
 }
 
 // 2. Top Material Groups Donut — clear segments, legend below with name + %
-const renderActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
-    return (
-        <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 4} startAngle={startAngle} endAngle={endAngle} fill={fill} stroke="#0d1117" strokeWidth={2} />
-    );
-};
-
 export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]; nameKey: string; valueKey: string }) {
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const hasData = Array.isArray(data) && data.length > 0;
@@ -125,10 +117,6 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                                 outerRadius={100}
                                 dataKey={valueKey}
                                 nameKey={nameKey}
-                                activeIndex={activeIndex ?? undefined}
-                                activeShape={renderActiveShape}
-                                onMouseEnter={(_, index) => setActiveIndex(index)}
-                                onMouseLeave={() => setActiveIndex(null)}
                                 stroke="#0d1117"
                                 strokeWidth={2}
                             >

@@ -20,6 +20,7 @@ export default function DashboardPage() {
     const [materialChartView, setMaterialChartView] = useState<"donut" | "bar">("donut");
     const [goalRevenue, setGoalRevenue] = useState<number | null>(null);
     const [goalOrders, setGoalOrders] = useState<number | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         const r = localStorage.getItem("elettro_goal_revenue");
@@ -59,37 +60,16 @@ export default function DashboardPage() {
             };
 
             try {
-                const summaryPromise = (async () => {
-                    const r = await fetchDashboardSummary(p);
-                    if (r) return r;
-                    await new Promise((resolve) => setTimeout(resolve, 1500));
-                    return fetchDashboardSummary(p);
-                })();
-                const [res, anom] = await Promise.all([
-                    summaryPromise,
+                const [res, kpi, trend, materials, customers, anom] = await Promise.all([
+                    fetchDashboardSummary(p),
+                    fetchKpiSummary(p),
+                    fetchSalesTrend(p),
+                    fetchMaterialGroups(p),
+                    fetchTopCustomers(p),
                     fetchAnomalies(anomalyParams),
                 ]);
 
-                if (!res) {
-                    const [kpi, trend, materials, customers] = await Promise.all([
-                        fetchKpiSummary(p),
-                        fetchSalesTrend(p),
-                        fetchMaterialGroups(p),
-                        fetchTopCustomers(p),
-                    ]);
-                    if (kpi || (Array.isArray(trend) && trend.length) || (Array.isArray(materials) && materials.length) || (Array.isArray(customers) && customers.length)) {
-                        setData({
-                            summary: kpi ? { revenue: kpi.revenue ?? 0, orders: kpi.orders ?? 0, customers: kpi.customers ?? 0, average_order_value: kpi.average_order_value ?? 0 } : null,
-                            trend: Array.isArray(trend) ? trend : [],
-                            materials: Array.isArray(materials) ? materials : [],
-                            customers: Array.isArray(customers) ? customers : [],
-                            comparison: null,
-                            goals: null,
-                        });
-                    } else {
-                        setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
-                    }
-                } else {
+                if (res) {
                     setData({
                         summary: res.summary ?? null,
                         trend: res.trend ?? [],
@@ -97,6 +77,16 @@ export default function DashboardPage() {
                         customers: res.top_customers ?? [],
                         comparison: res.comparison ?? null,
                         goals: res.goals ?? null,
+                    });
+                } else {
+                    const hasAny = kpi || (Array.isArray(trend) && trend.length) || (Array.isArray(materials) && materials.length) || (Array.isArray(customers) && customers.length);
+                    setData({
+                        summary: kpi ? { revenue: kpi.revenue ?? 0, orders: kpi.orders ?? 0, customers: kpi.customers ?? 0, average_order_value: kpi.average_order_value ?? 0 } : null,
+                        trend: Array.isArray(trend) ? trend : [],
+                        materials: Array.isArray(materials) ? materials : [],
+                        customers: Array.isArray(customers) ? customers : [],
+                        comparison: null,
+                        goals: null,
                     });
                 }
                 setAnomalies(anom?.anomalies ?? []);
@@ -108,7 +98,7 @@ export default function DashboardPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, goalRevenue, goalOrders]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, goalRevenue, goalOrders, refreshKey]);
 
     const fmt = formatAmount;
     const sum = data.summary || { revenue: 0, orders: 0, customers: 0, average_order_value: 0 };
@@ -144,15 +134,16 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
                 <button type="button" onClick={() => setShowTargets((s) => !s)} className="text-sm text-[#daa520] hover:underline">{showTargets ? "Hide targets" : "Set revenue/order targets"}</button>
             </div>
-            {!loading && (!data.summary || (sum.revenue === 0 && sum.orders === 0)) && validTrend.length === 0 && (
+            {!loading && !data.summary && validTrend.length === 0 && validMat.length === 0 && validCust.length === 0 && (
                 <div className="p-4 bg-amber-900/20 border border-amber-700 rounded-xl">
                     <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-4 w-4" /> No data yet
                     </h3>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside mb-3">
                         <li>Set <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> to your Render API (e.g. <code className="bg-[#0d1117] px-1 rounded">https://xxx.onrender.com/api</code>) in Vercel → Settings → Environment Variables, then <strong>redeploy</strong>.</li>
                         <li>If the API is correct, upload data from the <strong><Link href="/data" className="text-[#daa520] hover:underline">Data</Link></strong> page (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT, etc.).</li>
                     </ul>
+                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry loading</button>
                 </div>
             )}
             {anomalies.length > 0 && (

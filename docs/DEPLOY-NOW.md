@@ -41,7 +41,7 @@ Use this after code is pushed to GitHub. You need: **GitHub repo**, **Supabase**
 3. **Root Directory:** set to `frontend` (Override).
 4. **Environment Variables:** Add:
    - `NEXT_PUBLIC_API_URL` = `https://YOUR-RENDER-URL/api` (e.g. `https://sales-dashboard-wfay.onrender.com/api` — no trailing space.)
-   - **To avoid CORS issues:** set `NEXT_PUBLIC_USE_API_PROXY` = `true`. The app will call your own `/api/proxy`, which forwards to the Render backend server-side (no cross-origin requests from the browser).
+   - **To avoid CORS issues:** set `NEXT_PUBLIC_USE_API_PROXY` = `true`. The app will call your own `/api/proxy`, which forwards to the Render backend server-side (no cross-origin requests from the browser). **Apply to Production, Preview, and Development** so branch/preview URLs (e.g. `*-commanderadis-projects.vercel.app`) also use the proxy.
 5. Deploy. Copy your frontend URL, e.g. `https://sales-dashboard-xxx.vercel.app`.
 
 ---
@@ -87,6 +87,31 @@ If you call the backend directly (no proxy), ensure the backend allows your orig
 **Quick checks:**
 - Open `https://YOUR-RENDER-URL/` in a browser. You should see `{"status":"ok",...}`. If that fails, the backend is down or sleeping (free tier wakes in ~30–60 s).
 - Open `https://YOUR-RENDER-URL/api/dashboard/summary` in a browser. You should get JSON (summary, trend, etc.). If you get CORS or 404, fix the URL or CORS in `backend/main.py`.
+
+---
+
+## 7. Production-grade (demos, MD, team)
+
+To make the app **fast and reliable** for showing to leadership and team:
+
+1. **Avoid cold starts**
+   - **Render free tier** spins down after ~15 min inactivity; the first request can take 30–60 s. For demos or daily use, upgrade to **Render paid** (e.g. Starter $7/mo) so the service stays **always on** and responds in &lt;2 s.
+   - Optional: use a free cron (e.g. [cron-job.org](https://cron-job.org)) to hit `https://YOUR-RENDER-URL/` every 10–14 min so the free tier does not spin down during work hours.
+
+2. **Use the proxy**
+   - Keep `NEXT_PUBLIC_USE_API_PROXY=true` on Vercel (all environments). This avoids CORS and keeps a single, stable way to call the API.
+
+3. **Client cache (already in the app)**
+   - API responses are cached in the browser for **90 seconds**. When you switch sections (e.g. Dashboard → Sales → back to Dashboard), the second load uses cache and feels instant. Refresh the page or wait 90 s to get fresh data.
+
+4. **Before a demo**
+   - Open the **Render** service URL in a tab once so it’s awake.
+   - Open the **Vercel** app; use filters and click through each section once so cache is warm.
+   - Then present: navigation and repeat views will be fast.
+
+5. **Monitoring (optional)**
+   - In Render: **Metrics** and **Logs** to spot errors or slowness.
+   - In Vercel: **Analytics** and **Logs** for frontend and proxy.
 
 ---
 

@@ -6,6 +6,20 @@ export const API_BASE_URL = USE_PROXY
     ? "/api/proxy"
     : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").trim().replace(/\/+$/, "");
 
+/** Client cache: 90s TTL so back-navigation feels instant for demos and team use. */
+const CACHE_TTL_MS = 90 * 1000;
+const apiCache = new Map<string, { data: unknown; expiresAt: number }>();
+
+function getCached<T>(key: string): T | null {
+    const entry = apiCache.get(key);
+    if (!entry || Date.now() > entry.expiresAt) return null;
+    return entry.data as T;
+}
+
+function setCached(key: string, data: unknown) {
+    apiCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
 type FilterParams = {
     tenant?: string;
     startDate?: string;
@@ -42,9 +56,14 @@ function buildQueryString(params: FilterParams = {}) {
 
 async function apiFetch(path: string, params?: FilterParams) {
     const qs = buildQueryString(params);
-    const res = await fetch(`${API_BASE_URL}${path}${qs}`, { cache: 'no-store' });
+    const key = `${path}${qs}`;
+    const cached = getCached(key);
+    if (cached !== null) return cached;
+    const res = await fetch(`${API_BASE_URL}${path}${qs}`, { cache: "no-store" });
     if (!res.ok) return null;
-    return res.json();
+    const data = await res.json();
+    setCached(key, data);
+    return data;
 }
 
 // Executive Summary

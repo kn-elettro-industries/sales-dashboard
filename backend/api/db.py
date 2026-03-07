@@ -1,13 +1,14 @@
 import os
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 import logging
+from typing import Optional
+from cachetools import TTLCache, cached
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# We can read from environment variables or fallback to the same string used in config.py
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", 
     "postgresql://postgres.shpkzdnfcgxzqradrmku:Elettro%40123@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require"
@@ -25,21 +26,101 @@ except Exception as e:
     logging.error(f"Failed to initialize PostgreSQL engine in Backend: {e}")
     engine = None
 
-def get_tenant_data(tenant_id: str = "default_elettro") -> pd.DataFrame:
-    """
-    Fetches the sales_master data for a specific SaaS tenant.
-    """
+# Cache up to 10 tenants' full DataFrames for 1 hour
+tenant_cache = TTLCache(maxsize=10, ttl=3600)
+
+@cached(cache=tenant_cache)
+def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
+    """Internal cached helper to fetch full tenant dataset from DB."""
     if engine is None:
         return pd.DataFrame()
-        
     try:
         query = f"SELECT * FROM sales_master WHERE tenant_id = '{tenant_id}'"
         df = pd.read_sql(query, engine)
-        
         if "DATE" in df.columns:
             df["DATE"] = pd.to_datetime(df["DATE"], errors='coerce')
-            
         return df
     except Exception as e:
         logging.error(f"Error fetching data from DB: {e}")
         return pd.DataFrame()
+
+def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Fetches the sales_master data for a specific SaaS tenant, with optional date filtering.
+    Leverages in-memory caching to avoid hitting Supabase on every API request.
+    """
+    df = get_cached_tenant_df(tenant_id).copy()
+    
+    if not df.empty and "DATE" in df.columns:
+        if start_date:
+            start_dt = pd.to_datetime(start_date)
+            if getattr(start_dt, "tz", None) is not None:
+                start_dt = start_dt.tz_localize(None)
+            df = df[df["DATE"] >= start_dt]
+        if end_date:
+            end_dt = pd.to_datetime(end_date)
+            if getattr(end_dt, "tz", None) is not None:
+                end_dt = end_dt.tz_localize(None)
+            # Date-only (e.g. "2025-03-05") → include full end day
+            if len(str(end_date).strip()) <= 10:
+                end_dt = end_dt + pd.Timedelta(days=1)
+                df = df[df["DATE"] < end_dt]
+            else:
+                df = df[df["DATE"] <= end_dt]
+    return df
+
+from sqlalchemy import text
+
+def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") -> int:
+    """Updates the PostgreSQL database with new records for the specific tenant."""
+    if new_df is None or new_df.empty:
+        return 0
+
+    if engine is None:
+        logging.error("Database engine not initialized. Cannot update.")
+        return 0
+
+    # Inject multi-tenant ID
+    new_df["tenant_id"] = tenant_id
+
+    try:
+        with engine.connect() as conn:
+            # Check if table exists
+            has_table = conn.execute(text(
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'sales_master')"
+            )).scalar()
+
+            new_records_count = 0
+
+            if not has_table:
+                # First time creation
+                new_df.to_sql("sales_master", engine, if_exists="replace", index=False)
+                new_records_count = len(new_df)
+                logging.info(f"Created new Postgres table with {new_records_count} records for tenant {tenant_id}.")
+            else:
+                # Deduplication logic per tenant
+                existing_invoices = pd.read_sql(
+                    text("SELECT \"INVOICE_NO\" FROM sales_master WHERE tenant_id = :tid"), 
+                    conn, params={"tid": tenant_id}
+                )
+                existing_set = set(existing_invoices["INVOICE_NO"])
+                
+                if "INVOICE_NO" in new_df.columns:
+                    to_insert = new_df[~new_df["INVOICE_NO"].isin(existing_set)]
+                else:
+                    logging.warning("INVOICE_NO missing in new data. Appending all.")
+                    to_insert = new_df
+
+                new_records_count = len(to_insert)
+
+                if new_records_count > 0:
+                    to_insert.to_sql("sales_master", engine, if_exists="append", index=False)
+                    logging.info(f"Appended {new_records_count} new records to Postgres for tenant {tenant_id}.")
+                else:
+                    logging.info("No new records to append to Postgres DB.")
+
+            return new_records_count
+    except Exception as e:
+        logging.error(f"Failed to update Postgres database: {e}")
+        return 0
+

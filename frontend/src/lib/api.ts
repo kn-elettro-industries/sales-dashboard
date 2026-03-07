@@ -1,25 +1,91 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
-export async function fetchKpiSummary(tenantId = "default_elettro") {
-    const res = await fetch(`${API_BASE_URL}/metrics/summary?tenant_id=${tenantId}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error("Failed to fetch KPIs");
+type FilterParams = {
+    tenant?: string;
+    startDate?: string;
+    endDate?: string;
+    days?: string;
+    states?: string;
+    cities?: string;
+    customers?: string;
+    materialGroups?: string;
+    fiscalYears?: string;
+    months?: string;
+    goalRevenue?: number;
+    goalOrders?: number;
+};
+
+function buildQueryString(params: FilterParams = {}) {
+    const query = new URLSearchParams();
+    if (params.tenant) query.append("tenant_id", params.tenant);
+    if (params.startDate) query.append("start_date", params.startDate);
+    if (params.endDate) query.append("end_date", params.endDate);
+    if (params.days) query.append("days", params.days);
+    if (params.states) query.append("states", params.states);
+    if (params.cities) query.append("cities", params.cities);
+    if (params.customers) query.append("customers", params.customers);
+    if (params.materialGroups) query.append("material_groups", params.materialGroups);
+    if (params.fiscalYears) query.append("fiscal_years", params.fiscalYears);
+    if (params.months) query.append("months", params.months);
+    if (params.goalRevenue != null && params.goalRevenue > 0) query.append("goal_revenue", String(params.goalRevenue));
+    if (params.goalOrders != null && params.goalOrders > 0) query.append("goal_orders", String(params.goalOrders));
+
+    const str = query.toString();
+    return str ? `?${str}` : "";
+}
+
+async function apiFetch(path: string, params?: FilterParams) {
+    const qs = buildQueryString(params);
+    const res = await fetch(`${API_BASE_URL}${path}${qs}`, { cache: 'no-store' });
+    if (!res.ok) return null;
     return res.json();
 }
 
-export async function fetchSalesTrend(tenantId = "default_elettro") {
-    const res = await fetch(`${API_BASE_URL}/charts/trend?tenant_id=${tenantId}`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    return res.json();
-}
+// Executive Summary
+export const fetchKpiSummary = (p?: FilterParams) => apiFetch("/metrics/summary", p);
+export const fetchSalesTrend = (p?: FilterParams) => apiFetch("/charts/trend", p).then(d => d || []);
+export const fetchMaterialGroups = (p?: FilterParams) => apiFetch("/charts/material-groups", p).then(d => d || []);
+export const fetchTopCustomers = (p?: FilterParams) => apiFetch("/charts/top-customers", p).then(d => d || []);
 
-export async function fetchMaterialGroups(tenantId = "default_elettro") {
-    const res = await fetch(`${API_BASE_URL}/charts/material-groups?tenant_id=${tenantId}`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    return res.json();
-}
+// Single dashboard payload (faster: one request instead of four)
+export const fetchDashboardSummary = (p?: FilterParams) => apiFetch("/dashboard/summary", p);
 
-export async function fetchTopCustomers(tenantId = "default_elettro") {
-    const res = await fetch(`${API_BASE_URL}/charts/top-customers?tenant_id=${tenantId}`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    return res.json();
-}
+// Sales & Growth
+export const fetchMonthlySales = (p?: FilterParams) => apiFetch("/sales/monthly", p).then(d => d || []);
+export const fetchDailySales = (days = 30, p?: FilterParams) => apiFetch(`/sales/daily${buildQueryString({ ...p, days: days.toString() })}`).then(d => d || []);
+export const fetchGrowthMetrics = (p?: FilterParams) => apiFetch("/sales/growth", p);
+
+// Customer Intelligence
+export const fetchAllCustomers = (p?: FilterParams) => apiFetch("/customers/all", p).then(d => d || []);
+export const fetchRfmSegments = (p?: FilterParams) => apiFetch("/customers/rfm", p).then(d => d || []);
+
+// Geographic
+export const fetchStateData = (p?: FilterParams) => apiFetch("/geographic/states", p).then(d => d || []);
+export const fetchCityData = (p?: FilterParams) => apiFetch("/geographic/cities", p).then(d => d || []);
+
+// Material Performance
+export const fetchMaterialPerformance = (p?: FilterParams) => apiFetch("/materials/performance", p).then(d => d || []);
+export const fetchParetoData = (p?: FilterParams) => apiFetch("/materials/pareto", p).then(d => d || []);
+
+// Reports
+export const fetchItemDetails = (p?: FilterParams) => apiFetch("/reports/item-details", p).then(d => d || []);
+
+// Data quality
+export const fetchDataHealth = (tenant?: string) =>
+    fetch(`${API_BASE_URL}/data/health?tenant_id=${tenant || "default_elettro"}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null));
+
+// Anomalies (alerts)
+export const fetchAnomalies = (p?: FilterParams & { dropThresholdPct?: number }) => {
+    const params = new URLSearchParams();
+    if (p?.tenant) params.append("tenant_id", p.tenant);
+    if (p?.startDate) params.append("start_date", p.startDate);
+    if (p?.endDate) params.append("end_date", p.endDate);
+    if (p?.states) params.append("states", p.states);
+    if (p?.customers) params.append("customers", p.customers);
+    if (p?.materialGroups) params.append("material_groups", p.materialGroups);
+    if (p?.fiscalYears) params.append("fiscal_years", p.fiscalYears);
+    if (p?.months) params.append("months", p.months);
+    if (p?.dropThresholdPct != null) params.append("drop_threshold_pct", String(p.dropThresholdPct));
+    return fetch(`${API_BASE_URL}/analytics/anomalies?${params.toString()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : { anomalies: [] }));
+};

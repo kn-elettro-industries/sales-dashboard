@@ -6,7 +6,7 @@ echo   (Type Ctrl+C to Stop)
 echo ========================================================
 echo.
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
 :: 0. Check Environment
 if not exist ".venv\Scripts\python.exe" (
@@ -28,6 +28,6 @@ ping 127.0.0.1 -n 4 > nul
 :: 2. Start the Dashboard
 echo [INFO] Launching Dashboard Interface...
 echo.
-.venv\Scripts\python.exe -m streamlit run app.py --server.address 0.0.0.0
+.venv\Scripts\python.exe -m streamlit run legacy/app.py --server.address 0.0.0.0
 
 pause

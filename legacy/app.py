@@ -3,6 +3,12 @@ import pandas as pd
 import plotly.express as px
 import time
 import os
+import pathlib
+
+# Assets: in repo run from legacy/ we use ../assets; in Docker /app has /app/assets
+_APP_DIR = pathlib.Path(__file__).resolve().parent
+_ASSETS_DIR = _APP_DIR / "assets" if (_APP_DIR / "assets").exists() else _APP_DIR.parent / "assets"
+
 import config
 import pipeline_monitor
 import requests
@@ -34,7 +40,8 @@ st.set_page_config(
 # Load Custom CSS & Theme
 def load_css():
     try:
-        with open("assets/style.css") as f:
+        path = _ASSETS_DIR / "style.css"
+        with open(path, encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     except FileNotFoundError:
         st.warning("CSS file not found. UI might look unstyled.")
@@ -61,8 +68,8 @@ with st.sidebar:
 
     # Logo
     try:
-        st.image("assets/logo_white_text.png", width=None, use_container_width=True)
-    except:
+        st.image(str(_ASSETS_DIR / "logo_white_text.png"), width=None, use_container_width=True)
+    except Exception:
         st.markdown('<h2 style="text-align: center; color: #ffffff; margin-bottom: 20px; font-weight: 700; letter-spacing: 1px;">ELETTRO</h2>', unsafe_allow_html=True)
     
     st.markdown("---")

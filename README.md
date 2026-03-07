@@ -32,54 +32,36 @@ Render: Streamlit Dashboard  ←→  Render: FastAPI API
 
 ## Project Structure
 
+See **STRUCTURE.md** for the full layout. Summary:
+
 ```
-├── app.py                    # Streamlit dashboard (main entry)
-├── config.py                 # Configuration & environment vars
-├── database.py               # SQLAlchemy + Supabase connection
-├── auth.py                   # User authentication
-├── etl_pipeline.py           # Extract, Transform, Load pipeline
-├── pipeline_monitor.py       # Pipeline status tracking
-├── cloud_data_wrapper.py     # Cloud file upload widget
-├── watcher.py                # Local file watcher (dev mode)
-├── requirements.txt          # Python dependencies
-├── Dockerfile                # Frontend container
-├── docker-compose.yml        # Local dev with Docker
-│
-├── analytics/                # Analytics & visualization modules
-│   ├── kpi.py                # Key Performance Indicators
-│   ├── reporting.py          # Charts & report generation
-│   ├── forecasting.py        # Revenue forecasting (Prophet)
-│   ├── segmentation.py       # Customer segmentation
-│   ├── chatbot.py            # AI assistant (Krishiv)
-│   └── theme.py              # ELETTRO brand theme
-│
-├── backend/                  # FastAPI REST API
-│   ├── main.py               # API endpoints (health, data, upload)
-│   └── Dockerfile            # Backend container
-│
-├── data/                     # Data files (gitignored)
-│   ├── raw/                  # Original Excel uploads
-│   ├── masters/              # Customer master, targets
-│   ├── output/               # Processed outputs
-│   └── processed/            # Archive
-│
-├── scripts/                  # Utility & setup scripts
-├── reports/                  # Report templates
-├── assets/                   # Logo & brand assets
-└── tests/                    # Test files
+├── frontend/             # Next.js dashboard (current UI)
+├── backend/              # FastAPI API (current backend)
+├── legacy/               # Old Streamlit app (app.py, analytics/, …)
+├── docs/                 # DEPLOYMENT.md, DEPLOY-TOMORROW.md, PDF, engineering_journal
+├── assets/               # Logos, CSS
+├── data/                 # Data files (gitignored)
+├── scripts/              # Utility scripts
+├── docker-compose.yml    # Postgres (optional local)
+└── README.md
 ```
 
 ## Local Development
 
+**Current stack (Next.js + FastAPI):**
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Backend
+cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 
-# Run Streamlit
-streamlit run app.py
+# Frontend (another terminal)
+cd frontend && npm install && npm run dev
+```
 
-# Run FastAPI
-cd backend && uvicorn main:app --reload
+**Legacy Streamlit app (optional):**
+
+```bash
+cd legacy && pip install -r requirements.txt && streamlit run app.py
 ```
 
 ## Environment Variables

@@ -126,17 +126,21 @@ def clean_and_transform(df):
 
     initial_count = len(df)
 
-    # 2. Exclude Keywords
-    for keyword in config.EXCLUDE_KEYWORDS:
-        if "MATERIALGROUP" in df.columns:
-            df = df[~df["MATERIALGROUP"].str.contains(keyword, case=False, na=False)]
-    
+    # 2. Exclude Keywords (use any column that holds material group, same idea as backend)
+    grp_col = None
+    for c in ["ITEM_NAME_GROUP", "MATERIALGROUP", "MATERIAL_GROUP", "PRODUCT_CATEGORY", "CATEGORY"]:
+        if c in df.columns:
+            grp_col = c
+            break
+    if grp_col:
+        for keyword in config.EXCLUDE_KEYWORDS:
+            df = df[~df[grp_col].astype(str).str.contains(keyword, case=False, na=False)]
     logging.info(f"Rows excluded by keywords: {initial_count - len(df)}")
 
-    # 3. Apply Mappings
-    if "MATERIALGROUP" in df.columns:
+    # 3. Apply Mappings (same column as exclusion)
+    if grp_col:
         for pattern, replacement in config.MATERIAL_GROUP_MAPPINGS.items():
-            df.loc[df["MATERIALGROUP"].str.contains(pattern, case=False, na=False), "MATERIALGROUP"] = replacement
+            df.loc[df[grp_col].astype(str).str.contains(pattern, case=False, na=False), grp_col] = replacement
 
     # 4. Add Financial Year
     if "DATE" in df.columns:
@@ -187,7 +191,7 @@ def calculate_taxes(df):
     tax_rate = 0.18
         
     # Logic: If State is Company State OR Unknown -> CGST/SGST (Intra)
-    intra_state = calc_state_series.isin([company_state, "UNKNOWN", "MAHARASHTRA", "STATE NOT FOUND ⚠️"])
+    intra_state = calc_state_series.isin([company_state, "UNKNOWN", "MAHARASHTRA", "STATE NOT FOUND", "State Not Found"])
     inter_state = ~intra_state
         
     # IGST
@@ -219,7 +223,7 @@ def merge_customer_master(sales_df):
         logging.warning("Customer Master file not found. Skipping merge.")
         # Ensure STATE exists even if master is missing
         if "STATE" not in sales_df.columns:
-            sales_df["STATE"] = "STATE NOT FOUND ⚠️"
+            sales_df["STATE"] = "State Not Found"
         return sales_df
 
     master_df = pd.read_excel(config.CUSTOMER_MASTER_FILE)
@@ -292,12 +296,12 @@ def merge_customer_master(sales_df):
         def guess_state(row):
             if pd.isna(row.get("STATE")) or str(row.get("STATE")).strip() == "" or "NOT FOUND" in str(row.get("STATE")).upper():
                 city = str(row.get("CITY", "")).upper().strip()
-                return CITY_STATE_MAP.get(city, "STATE NOT FOUND ⚠️")
+                return CITY_STATE_MAP.get(city, "State Not Found")
             return row["STATE"]
             
         sales_df["STATE"] = sales_df.apply(guess_state, axis=1)
     else:
-        sales_df["STATE"] = sales_df["STATE"].fillna("STATE NOT FOUND ⚠️")
+        sales_df["STATE"] = sales_df["STATE"].fillna("State Not Found")
 
     return sales_df
 

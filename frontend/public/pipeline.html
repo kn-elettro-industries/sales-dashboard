@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELETTRO Intelligence — Platform Pipeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #161b22 0%, #1a1f2e 100%);
+            border-bottom: 1px solid #30363d;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header h1 {
+            font-size: 22px;
+            background: linear-gradient(90deg, #daa520, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .badge {
+            background: rgba(218,165,32,0.15);
+            color: #daa520;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(218,165,32,0.3);
+        }
+
+        .canvas {
+            padding: 40px;
+            min-width: 1400px;
+        }
+
+        /* Pipeline Rows */
+        .pipeline-section {
+            margin-bottom: 48px;
+        }
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #8b949e;
+            margin-bottom: 16px;
+            padding-left: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-label::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: #daa520;
+            display: inline-block;
+        }
+
+        .pipeline-row {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-wrap: nowrap;
+        }
+
+        /* Node Styles */
+        .node {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px 24px;
+            min-width: 200px;
+            max-width: 260px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .node:hover {
+            border-color: #daa520;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(218,165,32,0.15);
+        }
+        .node.active {
+            border-color: #daa520;
+            box-shadow: 0 0 20px rgba(218,165,32,0.2);
+        }
+
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .node-icon.source { background: linear-gradient(135deg, #1a472a, #238636); }
+        .node-icon.process { background: linear-gradient(135deg, #2a1a47, #6e40c9); }
+        .node-icon.storage { background: linear-gradient(135deg, #1a3047, #2188ff); }
+        .node-icon.api { background: linear-gradient(135deg, #472a1a, #d29922); }
+        .node-icon.ui { background: linear-gradient(135deg, #47301a, #daa520); }
+        .node-icon.ai { background: linear-gradient(135deg, #3d1a47, #bc4dff); }
+        .node-icon.output { background: linear-gradient(135deg, #1a4747, #3fb950); }
+
+        .node-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6edf3;
+            margin-bottom: 4px;
+        }
+        .node-desc {
+            font-size: 11px;
+            color: #8b949e;
+            line-height: 1.4;
+        }
+        .node-tech {
+            margin-top: 8px;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .tech-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(139,148,158,0.1);
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+
+        .node-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+            box-shadow: 0 0 8px rgba(63,185,80,0.5);
+        }
+        .node-status.warning { background: #d29922; box-shadow: 0 0 8px rgba(210,153,34,0.5); }
+        .node-status.info { background: #2188ff; box-shadow: 0 0 8px rgba(33,136,255,0.5); }
+
+        /* Connectors */
+        .connector {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            padding: 0 4px;
+        }
+        .connector svg {
+            display: block;
+        }
+        .connector-line {
+            width: 60px;
+            height: 2px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .connector-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #30363d, #daa520, #30363d);
+            animation: flowPulse 2s ease-in-out infinite;
+        }
+        .connector-line .arrow {
+            position: absolute;
+            right: -6px;
+            width: 0; height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #daa520;
+        }
+        .connector-label {
+            font-size: 9px;
+            color: #6e7681;
+            position: absolute;
+            top: -14px;
+            white-space: nowrap;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes flowPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 32px;
+            display: none;
+        }
+        .detail-panel.visible { display: block; animation: fadeIn 0.3s ease; }
+        .detail-panel h3 {
+            font-size: 16px;
+            color: #daa520;
+            margin-bottom: 12px;
+        }
+        .detail-panel pre {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 12px;
+            color: #8b949e;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        .detail-panel .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .detail-panel .metric {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .detail-panel .metric .val {
+            font-size: 20px;
+            font-weight: 700;
+            color: #daa520;
+        }
+        .detail-panel .metric .lbl {
+            font-size: 10px;
+            color: #8b949e;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); }}
+
+        /* Vertical connectors */
+        .v-connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 0;
+            margin-left: 100px;
+        }
+        .v-connector .v-line {
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(180deg, #30363d, #daa520, #30363d);
+            animation: flowPulse 2s ease-in-out infinite;
+        }
+        .v-connector .v-arrow {
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid #daa520;
+        }
+
+        .legend {
+            display: flex;
+            gap: 24px;
+            margin-top: 40px;
+            padding: 16px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ ELETTRO Intelligence — Platform Pipeline</h1>
+        <span class="badge">LIVE ARCHITECTURE</span>
+        <span class="badge">v1.0</span>
+    </div>
+
+    <div class="canvas">
+
+        <!-- LAYER 1: DATA INGESTION -->
+        <div class="pipeline-section">
+            <div class="section-label">Layer 1 — Data Ingestion</div>
+            <div class="pipeline-row">
+
+                <div class="node" onclick="showDetail('csv')">
+                    <div class="node-status"></div>
+                    <div class="node-icon source">📄</div>
+                    <div class="node-title">CSV / Excel Upload</div>
+                    <div class="node-desc">Sales invoice data files uploaded by the operations team</div>
+                    <div class="node-tech"><span class="tech-tag">CSV</span><span class="tech-tag">XLSX</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">POST /upload</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('etl')">
+                    <div class="node-status"></div>
+                    <div class="node-icon process">⚙️</div>
+                    <div class="node-title">ETL Pipeline</div>
+                    <div class="node-desc">Column mapping, FY calculation, data validation & cleaning</div>
+                    <div class="node-tech"><span class="tech-tag">Pandas</span><span class="tech-tag">Python</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">to_sql()</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('supabase')">
+                    <div class="node-status"></div>
+                    <div class="node-icon storage">🗄️</div>
+                    <div class="node-title">Supabase PostgreSQL</div>
+                    <div class="node-desc">Cloud database — sales_master table with 26,761+ rows</div>
+                    <div class="node-tech"><span class="tech-tag">PostgreSQL</span><span class="tech-tag">Cloud</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">TTL Cache</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('cache')">
+                    <div class="node-status info"></div>
+                    <div class="node-icon process">💾</div>
+                    <div class="node-title">In-Memory Cache</div>
+                    <div class="node-desc">TTLCache — tenant DataFrames cached for 1 hour</div>
+                    <div class="node-tech"><span class="tech-tag">cachetools</span><span class="tech-tag">1h TTL</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VERTICAL CONNECTOR -->
+        <div class="v-connector">
+            <div class="v-line"></div>
+            <div class="v-arrow"></div>
+        </div>
+
+        <!-- LAYER 2: API LAYER -->
+        <div class="pipeline-section">
+            <div class="section-label">Layer 2 — API Gateway (FastAPI)</div>
+            <div class="pipeline-row">
+
+                <div class="node" onclick="showDetail('fastapi')">
+                    <div class="node-status"></div>
+                    <div class="node-icon api">🚀</div>
+                    <div class="node-title">FastAPI + Uvicorn</div>
+                    <div class="node-desc">16 REST endpoints — metrics, charts, filters, reports, chat</div>
+                    <div class="node-tech"><span class="tech-tag">Python</span><span class="tech-tag">Port 8080</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">JSON</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('endpoints')">
+                    <div class="node-status"></div>
+                    <div class="node-icon api">📡</div>
+                    <div class="node-title">API Endpoints</div>
+                    <div class="node-desc">/metrics, /charts, /customers, /geographic, /materials, /risk</div>
+                    <div class="node-tech"><span class="tech-tag">REST</span><span class="tech-tag">CORS</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">PDF bytes</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('pdf')">
+                    <div class="node-status warning"></div>
+                    <div class="node-icon output">📊</div>
+                    <div class="node-title">PDF Generator</div>
+                    <div class="node-desc">FPDF + Matplotlib Figure — 6-section industrial reports</div>
+                    <div class="node-tech"><span class="tech-tag">FPDF</span><span class="tech-tag">Thread-safe</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">Gemini API</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('chatbot')">
+                    <div class="node-status"></div>
+                    <div class="node-icon ai">🤖</div>
+                    <div class="node-title">AI Chatbot</div>
+                    <div class="node-desc">Gemini-powered natural language data queries</div>
+                    <div class="node-tech"><span class="tech-tag">Gemini</span><span class="tech-tag">NLP</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VERTICAL CONNECTOR -->
+        <div class="v-connector">
+            <div class="v-line"></div>
+            <div class="v-arrow"></div>
+        </div>
+
+        <!-- LAYER 3: FRONTEND -->
+        <div class="pipeline-section">
+            <div class="section-label">Layer 3 — Frontend (Next.js 16)</div>
+            <div class="pipeline-row">
+
+                <div class="node" onclick="showDetail('nextjs')">
+                    <div class="node-status"></div>
+                    <div class="node-icon ui">⚡</div>
+                    <div class="node-title">Next.js App Router</div>
+                    <div class="node-desc">8 pages — Dashboard, Sales, Customers, Materials, Geographic, Risk, Reports, Data</div>
+                    <div class="node-tech"><span class="tech-tag">React 19</span><span class="tech-tag">Port 3000</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">Components</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('charts')">
+                    <div class="node-status"></div>
+                    <div class="node-icon ui">📈</div>
+                    <div class="node-title">Charts & Visualization</div>
+                    <div class="node-desc">Area, Donut, Scatter, Treemap, Bar, India Choropleth Map</div>
+                    <div class="node-tech"><span class="tech-tag">Recharts</span><span class="tech-tag">SVG</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">State</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('filters')">
+                    <div class="node-status"></div>
+                    <div class="node-icon ui">🎛️</div>
+                    <div class="node-title">Global Filter Bar</div>
+                    <div class="node-desc">Region, Time, Customer, Material, FY, Month — shared across all pages</div>
+                    <div class="node-tech"><span class="tech-tag">Context API</span><span class="tech-tag">React</span></div>
+                </div>
+
+                <div class="connector">
+                    <div class="connector-line">
+                        <span class="connector-label">Tables</span>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+
+                <div class="node" onclick="showDetail('tables')">
+                    <div class="node-status"></div>
+                    <div class="node-icon ui">📋</div>
+                    <div class="node-title">Interactive Data Tables</div>
+                    <div class="node-desc">Sortable, searchable, paginated — customers, materials, items</div>
+                    <div class="node-tech"><span class="tech-tag">DataTable</span><span class="tech-tag">Custom</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VERTICAL CONNECTOR -->
+        <div class="v-connector">
+            <div class="v-line"></div>
+            <div class="v-arrow"></div>
+        </div>
+
+        <!-- LAYER 4: OUTPUTS -->
+        <div class="pipeline-section">
+            <div class="section-label">Layer 4 — User Outputs</div>
+            <div class="pipeline-row">
+
+                <div class="node" onclick="showDetail('dashboard')">
+                    <div class="node-status"></div>
+                    <div class="node-icon output">🖥️</div>
+                    <div class="node-title">Executive Dashboard</div>
+                    <div class="node-desc">KPIs, trends, top customers, material breakdown</div>
+                    <div class="node-tech"><span class="tech-tag">Web App</span></div>
+                </div>
+
+                <div class="connector"><div class="connector-line"><div class="arrow"></div></div></div>
+
+                <div class="node" onclick="showDetail('pdfout')">
+                    <div class="node-status"></div>
+                    <div class="node-icon output">📄</div>
+                    <div class="node-title">PDF Reports</div>
+                    <div class="node-desc">Executive Summary, Customer, State, Month, Material deep dives</div>
+                    <div class="node-tech"><span class="tech-tag">.PDF</span></div>
+                </div>
+
+                <div class="connector"><div class="connector-line"><div class="arrow"></div></div></div>
+
+                <div class="node" onclick="showDetail('map')">
+                    <div class="node-status"></div>
+                    <div class="node-icon output">🗺️</div>
+                    <div class="node-title">India Choropleth Map</div>
+                    <div class="node-desc">State-wise revenue heatmap with drill-down city analysis</div>
+                    <div class="node-tech"><span class="tech-tag">SVG</span><span class="tech-tag">GeoJSON</span></div>
+                </div>
+
+                <div class="connector"><div class="connector-line"><div class="arrow"></div></div></div>
+
+                <div class="node" onclick="showDetail('aiout')">
+                    <div class="node-status"></div>
+                    <div class="node-icon ai">💬</div>
+                    <div class="node-title">AI Chat Insights</div>
+                    <div class="node-desc">Ask natural-language questions about your sales data</div>
+                    <div class="node-tech"><span class="tech-tag">Gemini</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <h3 id="detailTitle">Node Details</h3>
+            <div id="detailContent"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Active & Healthy</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#d29922"></div> Slow / Needs Optimization</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#2188ff"></div> Caching Layer</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#daa520"></div> Data Flow Direction</div>
+        </div>
+
+    </div>
+
+    <script>
+        const details = {
+            csv: {
+                title: '📄 CSV / Excel Upload',
+                html: `<p style="color:#8b949e;margin-bottom:12px">The operations team uploads sales invoice files through the <strong style="color:#fff">Cloud Data Uploader</strong> page.</p>
+                <div class="metric-grid">
+                    <div class="metric"><div class="val">CSV</div><div class="lbl">Primary Format</div></div>
+                    <div class="metric"><div class="val">XLSX</div><div class="lbl">Also Supported</div></div>
+                    <div class="metric"><div class="val">~27K</div><div class="lbl">Rows Loaded</div></div>
+                    <div class="metric"><div class="val">13</div><div class="lbl">Columns</div></div>
+                </div>
+                <pre style="margin-top:16px">Required Columns:
+├── DATE, INVOICE_NO
+├── CUSTOMER_NAME, CITY, STATE
+├── ITEMNAME, ITEM_NAME_GROUP, MATERIALGROUP
+├── QUANTITY, AMOUNT
+└── Auto-Generated: FINANCIAL_YEAR, MONTH</pre>`
+            },
+            etl: {
+                title: '⚙️ ETL Pipeline',
+                html: `<p style="color:#8b949e;margin-bottom:12px">Transforms raw CSV data into analytics-ready format.</p>
+                <pre>Pipeline Steps:
+1. 📥 Read CSV/Excel file
+2. 🔄 Map columns to standard schema
+3. 📅 Parse DATE → compute FINANCIAL_YEAR (Apr-Mar)
+4. 📅 Generate MONTH labels (e.g. "FEB-26")
+5. ✅ Validate required columns exist
+6. 🧹 Clean null values & duplicates
+7. 💾 Write to Supabase via SQLAlchemy to_sql()
+8. 🔄 Invalidate TTL Cache for tenant</pre>`
+            },
+            supabase: {
+                title: '🗄️ Supabase PostgreSQL',
+                html: `<p style="color:#8b949e;margin-bottom:12px">Cloud-hosted PostgreSQL database on AWS Asia-Pacific.</p>
+                <div class="metric-grid">
+                    <div class="metric"><div class="val">26,761</div><div class="lbl">Total Rows</div></div>
+                    <div class="metric"><div class="val">13</div><div class="lbl">Columns</div></div>
+                    <div class="metric"><div class="val">318</div><div class="lbl">Customers</div></div>
+                    <div class="metric"><div class="val">1</div><div class="lbl">Tenant</div></div>
+                </div>
+                <pre style="margin-top:16px">Connection:
+Host: aws-1-ap-southeast-2.pooler.supabase.com:6543
+Table: sales_master
+Driver: pg8000 (pure Python)
+Pool: pool_pre_ping=True (auto-reconnect)</pre>`
+            },
+            cache: {
+                title: '💾 In-Memory Cache',
+                html: `<p style="color:#8b949e;margin-bottom:12px">Avoids hitting Supabase on every API request.</p>
+                <pre>Cache Config:
+├── Type: cachetools.TTLCache
+├── Max Size: 10 tenants
+├── TTL: 3600 seconds (1 hour)
+├── Key: tenant_id + date_range hash
+└── Invalidation: On new data upload
+
+Flow:
+  Request → Cache HIT? → Return DataFrame
+                 ↓ MISS
+         Query Supabase → Store in Cache → Return</pre>`
+            },
+            fastapi: {
+                title: '🚀 FastAPI + Uvicorn',
+                html: `<p style="color:#8b949e;margin-bottom:12px">Async Python web framework serving all backend APIs.</p>
+                <div class="metric-grid">
+                    <div class="metric"><div class="val">16</div><div class="lbl">Endpoints</div></div>
+                    <div class="metric"><div class="val">8080</div><div class="lbl">Port</div></div>
+                    <div class="metric"><div class="val">CORS</div><div class="lbl">Enabled</div></div>
+                    <div class="metric"><div class="val">Auto</div><div class="lbl">Reload</div></div>
+                </div>
+                <pre style="margin-top:16px">backend/
+├── main.py          → App config, CORS, startup
+└── api/
+    ├── routes.py    → All 16 endpoints (~490 lines)
+    ├── db.py        → Supabase connection + cache
+    ├── pdf_generator.py → PDF reports (~685 lines)
+    └── chatbot.py   → AI query processor</pre>`
+            },
+            endpoints: {
+                title: '📡 API Endpoints',
+                html: `<pre>GET  /api/metrics/summary      → KPI cards (revenue, orders, customers)
+GET  /api/charts/trend          → Monthly sales trend
+GET  /api/charts/top-customers  → Top N customers by revenue
+GET  /api/charts/material-groups→ Material group breakdown
+GET  /api/filters/options       → Filter dropdowns (states, FYs, months)
+GET  /api/customers/all         → All customers with revenue
+GET  /api/customers/rfm         → RFM segmentation analysis
+GET  /api/materials/performance → Material performance metrics
+GET  /api/materials/pareto      → 80/20 Pareto analysis
+GET  /api/geographic/states     → State-wise revenue
+GET  /api/geographic/cities     → City-wise revenue
+GET  /api/risk/analysis         → Customer risk scoring
+GET  /api/reports/download      → PDF report generation
+GET  /api/reports/item-details  → Item aggregated data
+POST /api/upload                → CSV/Excel data upload
+POST /api/chat                  → AI chatbot queries</pre>`
+            },
+            pdf: {
+                title: '📊 PDF Generator',
+                html: `<p style="color:#8b949e;margin-bottom:12px">Thread-safe report builder using FPDF + Matplotlib Figure objects.</p>
+                <pre>⚠️  CRITICAL: Never use matplotlib.pyplot (deadlocks Uvicorn)
+⚠️  CRITICAL: Never use pandas .plot() (calls pyplot internally)
+
+PDF Sections:
+1. 📋 Cover Page (branded letterhead)
+2. 📊 Executive Summary (KPI grid)
+3. 📈 Revenue Trend Chart
+4. 🍩 Category Distribution (Donut)
+5. 📊 Top 10 Items (Horizontal Bar)
+6. 📋 Detailed Breakdown Table
+7. 📈 FY Year-over-Year Analysis
+8. 🔍 Material Group Deep Dive
+9. 💡 AI-Generated Insights
+
+⏱️  Generation Time: ~15-30 seconds (26K rows)</pre>`
+            },
+            chatbot: {
+                title: '🤖 AI Chatbot',
+                html: `<p style="color:#8b949e;margin-bottom:12px">Natural language interface to query sales data via Google Gemini.</p>
+                <pre>Flow:
+1. User types question → "What is top customer revenue?"
+2. Frontend sends POST /api/chat
+3. Backend loads tenant DataFrame
+4. Constructs prompt with data context
+5. Sends to Gemini API
+6. Returns formatted response to chat widget
+
+Capabilities:
+├── Revenue queries
+├── Customer analysis
+├── Product comparisons
+├── Trend identification
+└── Geographic insights</pre>`
+            },
+            nextjs: {
+                title: '⚡ Next.js App Router',
+                html: `<pre>Pages (frontend/src/app/):
+├── page.tsx           → Executive Summary (home)
+├── sales/page.tsx     → Sales & Growth
+├── customers/page.tsx → Customer Intelligence
+├── materials/page.tsx → Material Performance
+├── geographic/page.tsx→ Geographic Intelligence
+├── risk/page.tsx      → Risk Management
+├── data/page.tsx      → Cloud Data Uploader
+└── reports/page.tsx   → Industrial Reporting (PDF export)
+
+Components (frontend/src/components/ui/):
+├── Sidebar.tsx        → Navigation sidebar
+├── GlobalFilterBar.tsx→ Top filter bar
+├── Charts.tsx         → 5 Recharts wrappers
+├── DataTable.tsx      → Sortable/searchable tables
+├── IndiaMap.tsx       → SVG choropleth map
+├── KpiCard.tsx        → Metric card
+└── ChatWidget.tsx     → AI chat floating widget</pre>`
+            }
+        };
+
+        function showDetail(id) {
+            const panel = document.getElementById('detailPanel');
+            const d = details[id];
+            if (!d) { panel.classList.remove('visible'); return; }
+            document.getElementById('detailTitle').textContent = d.title;
+            document.getElementById('detailContent').innerHTML = d.html;
+            panel.classList.add('visible');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            // Highlight active node
+            document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

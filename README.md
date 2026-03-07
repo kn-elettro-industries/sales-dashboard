@@ -87,6 +87,12 @@ Or from repo root: `streamlit run legacy/app.py`
 | `API_URL` | FastAPI base URL (legacy Streamlit, e.g. `http://localhost:8000`) |
 | `NEXT_PUBLIC_API_URL` | Full API base for Next.js (e.g. `http://localhost:8000/api`). Defaults to `http://localhost:8000/api` if unset. |
 
+## Deploy
+
+- **Quick path:** [docs/DEPLOY-NOW.md](docs/DEPLOY-NOW.md) — Render (backend) + Vercel (frontend).
+- **Full options:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — VPS, Docker, CORS, env vars.
+- Repo root **render.yaml** can be used for a Render Blueprint (backend only).
+
 ## License
 
 Proprietary — K.N. Elettro Industries

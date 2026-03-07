@@ -78,9 +78,15 @@ async function proxy(
             resHeaders.set(k, v);
         });
         resHeaders.set("Access-Control-Allow-Origin", "*");
+        resHeaders.set("Content-Encoding", "identity");
 
         const body = res.status === 204 || res.status === 304 ? null : await res.text();
-        return new NextResponse(body, { status: res.status, statusText: res.statusText, headers: resHeaders });
+        if (body !== null) {
+            const bytes = new TextEncoder().encode(body);
+            resHeaders.set("Content-Length", String(bytes.length));
+            return new NextResponse(bytes, { status: res.status, statusText: res.statusText, headers: resHeaders });
+        }
+        return new NextResponse(null, { status: res.status, statusText: res.statusText, headers: resHeaders });
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         console.error("[proxy]", message, e);

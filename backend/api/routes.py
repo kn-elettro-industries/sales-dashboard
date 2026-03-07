@@ -249,8 +249,7 @@ def get_data_health(tenant_id: str = "default_elettro"):
 
 
 # ─── NATIVE PDF REPORTS ───
-
-from .pdf_generator import generate_pdf_report, generate_dynamic_pdf_report, generate_distributor_strategy_pdf
+# pdf_generator (matplotlib) imported lazily below to avoid slow import on Render
 
 @router.get("/reports/download")
 def download_pdf_report(
@@ -271,6 +270,7 @@ def download_pdf_report(
     months: Optional[str] = None
 ):
     try:
+        from .pdf_generator import generate_pdf_report, generate_dynamic_pdf_report, generate_distributor_strategy_pdf
         df = get_tenant_data(tenant_id, start_date, end_date)
         df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
 
@@ -396,6 +396,7 @@ class DynamicReportRequest(BaseModel):
 @router.post("/reports/dynamic")
 def download_dynamic_report(req: DynamicReportRequest):
     try:
+        from .pdf_generator import generate_dynamic_pdf_report
         df = get_tenant_data(req.tenant_id, req.start_date, req.end_date)
         df = apply_filters(df, req.states, req.cities, req.customers, req.material_groups, req.fiscal_years, req.months)
         if df.empty:
@@ -430,8 +431,7 @@ def download_dynamic_report(req: DynamicReportRequest):
 
 
 # ─── AI CHATBOT ───
-
-from .chatbot import process_query as chat_process_query
+# chatbot imported lazily in handle_chat_query to keep app import fast
 
 class ChatRequest(BaseModel):
     query: str
@@ -442,6 +442,7 @@ class ChatRequest(BaseModel):
 @router.post("/chat")
 def handle_chat_query(req: ChatRequest):
     try:
+        from .chatbot import process_query as chat_process_query
         df = get_tenant_data(req.tenant, req.startDate, req.endDate)
         df = _exclude_material_groups(df)
         response_text = chat_process_query(req.query, df)

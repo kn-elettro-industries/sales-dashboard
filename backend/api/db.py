@@ -14,17 +14,25 @@ DATABASE_URL = os.environ.get(
     "postgresql://postgres.shpkzdnfcgxzqradrmku:Elettro%40123@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require"
 )
 
-try:
-    engine = create_engine(
-        DATABASE_URL,
-        pool_size=10,
-        max_overflow=20,
-        pool_pre_ping=True,
-        connect_args={"sslmode": "require"}
-    )
-except Exception as e:
-    logging.error(f"Failed to initialize PostgreSQL engine in Backend: {e}")
-    engine = None
+_engine = None
+
+def get_engine():
+    """Lazy engine creation so app starts even if DB is slow/unreachable at boot (e.g. Render)."""
+    global _engine
+    if _engine is not None:
+        return _engine
+    try:
+        _engine = create_engine(
+            DATABASE_URL,
+            pool_size=10,
+            max_overflow=20,
+            pool_pre_ping=True,
+            connect_args={"sslmode": "require"}
+        )
+        return _engine
+    except Exception as e:
+        logging.error(f"Failed to initialize PostgreSQL engine in Backend: {e}")
+        return None
 
 # Cache up to 10 tenants' full DataFrames for 1 hour
 tenant_cache = TTLCache(maxsize=10, ttl=3600)
@@ -32,11 +40,12 @@ tenant_cache = TTLCache(maxsize=10, ttl=3600)
 @cached(cache=tenant_cache)
 def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
     """Internal cached helper to fetch full tenant dataset from DB."""
-    if engine is None:
+    eng = get_engine()
+    if eng is None:
         return pd.DataFrame()
     try:
         query = f"SELECT * FROM sales_master WHERE tenant_id = '{tenant_id}'"
-        df = pd.read_sql(query, engine)
+        df = pd.read_sql(query, eng)
         if "DATE" in df.columns:
             df["DATE"] = pd.to_datetime(df["DATE"], errors='coerce')
         return df
@@ -76,7 +85,8 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
     if new_df is None or new_df.empty:
         return 0
 
-    if engine is None:
+    eng = get_engine()
+    if eng is None:
         logging.error("Database engine not initialized. Cannot update.")
         return 0
 
@@ -84,7 +94,7 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
     new_df["tenant_id"] = tenant_id
 
     try:
-        with engine.connect() as conn:
+        with eng.connect() as conn:
             # Check if table exists
             has_table = conn.execute(text(
                 "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'sales_master')"
@@ -94,7 +104,7 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
 
             if not has_table:
                 # First time creation
-                new_df.to_sql("sales_master", engine, if_exists="replace", index=False)
+                new_df.to_sql("sales_master", eng, if_exists="replace", index=False)
                 new_records_count = len(new_df)
                 logging.info(f"Created new Postgres table with {new_records_count} records for tenant {tenant_id}.")
             else:
@@ -114,7 +124,7 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
                 new_records_count = len(to_insert)
 
                 if new_records_count > 0:
-                    to_insert.to_sql("sales_master", engine, if_exists="append", index=False)
+                    to_insert.to_sql("sales_master", eng, if_exists="append", index=False)
                     logging.info(f"Appended {new_records_count} new records to Postgres for tenant {tenant_id}.")
                 else:
                     logging.info("No new records to append to Postgres DB.")

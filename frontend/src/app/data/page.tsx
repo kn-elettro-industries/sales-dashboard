@@ -136,6 +136,32 @@ export default function DataUploadPage() {
                     {masterStatus === "error" && <span className="text-sm text-red-400">{masterMsg}</span>}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">Upload this <strong>before</strong> uploading sales files. The master is used to add STATE/CITY to each row during upload.</p>
+                <div className="mt-4 pt-4 border-t border-[#30363d]">
+                    <p className="text-sm text-gray-400 mb-2">Already uploaded data without the master? Clear existing data and re-upload with the master loaded.</p>
+                    <button
+                        onClick={async () => {
+                            if (!confirm("This will DELETE all sales data for this tenant. You will need to re-upload your Excel files. Continue?")) return;
+                            const formData = new FormData();
+                            formData.append("tenant_id", tenant);
+                            try {
+                                const res = await fetch(`${API_BASE_URL}/data/clear`, { method: "POST", body: formData });
+                                const data = await res.json();
+                                if (res.ok) {
+                                    setMasterMsg(`Cleared ${data.deleted_rows} rows. Now upload your customer master, then re-upload sales files.`);
+                                    setMasterStatus("success");
+                                    setStatus("idle");
+                                    setMessage("");
+                                }
+                            } catch {
+                                setMasterMsg("Failed to clear data.");
+                                setMasterStatus("error");
+                            }
+                        }}
+                        className="px-4 py-2 rounded-lg bg-red-900/30 border border-red-800 text-sm text-red-400 hover:bg-red-900/50 transition-colors"
+                    >
+                        Clear All Sales Data
+                    </button>
+                </div>
             </div>
 
             {/* Data Quality */}

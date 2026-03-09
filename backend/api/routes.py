@@ -226,6 +226,14 @@ def _merge_customer_master(df: pd.DataFrame, tenant_id: str) -> pd.DataFrame:
     return merged
 
 
+@router.post("/data/clear")
+def clear_data(tenant_id: str = Form("default_elettro")):
+    """Clear all sales data for a tenant so it can be re-uploaded with enrichment."""
+    from .db import clear_tenant_data
+    deleted = clear_tenant_data(tenant_id)
+    return {"deleted_rows": deleted, "tenant": tenant_id}
+
+
 @router.post("/upload/customer-master")
 async def upload_customer_master(file: UploadFile = File(...), tenant_id: str = Form("default_elettro")):
     """Upload a customer master Excel/CSV. Stored in memory; used to enrich STATE/CITY on subsequent sales uploads."""

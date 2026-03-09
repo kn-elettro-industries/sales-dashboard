@@ -142,6 +142,22 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
     return df
 
 
+def clear_tenant_data(tenant_id: str = "default_elettro") -> int:
+    """Delete all rows for a tenant so data can be re-uploaded with enrichment (e.g. after adding customer master)."""
+    eng = get_engine()
+    if eng is None:
+        return 0
+    try:
+        with eng.connect() as conn:
+            result = conn.execute(text("DELETE FROM sales_master WHERE tenant_id = :tid"), {"tid": tenant_id})
+            conn.commit()
+            invalidate_tenant_cache(tenant_id)
+            return result.rowcount
+    except Exception as e:
+        logging.error(f"clear_tenant_data: {e}")
+        return 0
+
+
 def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") -> int:
     """Updates the PostgreSQL database with new records for the specific tenant."""
     if new_df is None or new_df.empty:

@@ -668,7 +668,7 @@ def get_dashboard_summary(
             df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
             df_t = df_t.dropna(subset=[date_col])
             if not df_t.empty:
-                t = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+                t = df_t.groupby(pd.Grouper(key=date_col, freq="ME"))[amount_col].sum().reset_index()
                 t = t.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
                 t["DATE"] = t["DATE"].dt.strftime("%Y-%m")
                 trend = serialize_df(t.tail(trend_limit))
@@ -747,7 +747,7 @@ def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str
         df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
         df_t = df_t.dropna(subset=[date_col])
         if not df_t.empty:
-            trend = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+            trend = df_t.groupby(pd.Grouper(key=date_col, freq="ME"))[amount_col].sum().reset_index()
             trend = trend.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
             trend["DATE"] = trend["DATE"].dt.strftime("%Y-%m")
             return serialize_df(trend)

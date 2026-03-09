@@ -88,6 +88,10 @@ If you call the backend directly (no proxy), ensure the backend allows your orig
 - Open `https://YOUR-RENDER-URL/` in a browser. You should see `{"status":"ok",...}`. If that fails, the backend is down or sleeping (free tier wakes in ~30–60 s).
 - Open `https://YOUR-RENDER-URL/api/dashboard/summary` in a browser. You should get JSON (summary, trend, etc.). If you get CORS or 404, fix the URL or CORS in `backend/main.py`.
 
+**Slow loading / “can’t fetch data”:**
+- The app uses a **single** dashboard request (`/dashboard/summary`) plus anomalies, with a **50 s** client timeout. If the backend is cold (Render free tier), the first load can take 30–60 s; if it takes longer, you’ll see “Backend is slow or unreachable … Please retry.” Use **Retry** after the backend has woken.
+- For faster, reliable loading: use Render paid (always on) or a keep-warm cron (see §7).
+
 ---
 
 ## 7. Production-grade (demos, MD, team)

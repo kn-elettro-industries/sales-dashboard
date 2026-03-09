@@ -8,6 +8,8 @@ export const API_BASE_URL = USE_PROXY
 
 /** Client cache: 90s TTL so back-navigation feels instant for demos and team use. */
 const CACHE_TTL_MS = 90 * 1000;
+/** Timeout for API requests (backend cold start on Render can be 30–60s). */
+const FETCH_TIMEOUT_MS = 50 * 1000;
 const apiCache = new Map<string, { data: unknown; expiresAt: number }>();
 
 function getCached<T>(key: string): T | null {
@@ -18,6 +20,12 @@ function getCached<T>(key: string): T | null {
 
 function setCached(key: string, data: unknown) {
     apiCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+function fetchWithTimeout(url: string, init?: RequestInit, timeoutMs = FETCH_TIMEOUT_MS): Promise<Response> {
+    const ac = new AbortController();
+    const id = setTimeout(() => ac.abort(), timeoutMs);
+    return fetch(url, { ...init, signal: ac.signal }).finally(() => clearTimeout(id));
 }
 
 type FilterParams = {
@@ -59,48 +67,50 @@ async function apiFetch(path: string, params?: FilterParams) {
     const key = `${path}${qs}`;
     const cached = getCached(key);
     if (cached !== null) return cached;
-    const res = await fetch(`${API_BASE_URL}${path}${qs}`, { cache: "no-store" });
-    if (!res.ok) return null;
+    const url = `${API_BASE_URL}${path}${qs}`;
+    const res = await fetchWithTimeout(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
     const data = await res.json();
     setCached(key, data);
     return data;
 }
 
-// Executive Summary
-export const fetchKpiSummary = (p?: FilterParams) => apiFetch("/metrics/summary", p);
-export const fetchSalesTrend = (p?: FilterParams) => apiFetch("/charts/trend", p).then(d => d || []);
-export const fetchMaterialGroups = (p?: FilterParams) => apiFetch("/charts/material-groups", p).then(d => d || []);
-export const fetchTopCustomers = (p?: FilterParams) => apiFetch("/charts/top-customers", p).then(d => d || []);
+// Executive Summary (other pages: swallow errors so they get empty data)
+export const fetchKpiSummary = (p?: FilterParams) => apiFetch("/metrics/summary", p).catch(() => null);
+export const fetchSalesTrend = (p?: FilterParams) => apiFetch("/charts/trend", p).then(d => d || []).catch(() => []);
+export const fetchMaterialGroups = (p?: FilterParams) => apiFetch("/charts/material-groups", p).then(d => d || []).catch(() => []);
+export const fetchTopCustomers = (p?: FilterParams) => apiFetch("/charts/top-customers", p).then(d => d || []).catch(() => []);
 
-// Single dashboard payload (faster: one request instead of four)
+// Single dashboard payload (throws on failure so dashboard can show "slow/unreachable" + retry)
 export const fetchDashboardSummary = (p?: FilterParams) => apiFetch("/dashboard/summary", p);
 
 // Sales & Growth
-export const fetchMonthlySales = (p?: FilterParams) => apiFetch("/sales/monthly", p).then(d => d || []);
-export const fetchDailySales = (days = 30, p?: FilterParams) => apiFetch(`/sales/daily${buildQueryString({ ...p, days: days.toString() })}`).then(d => d || []);
-export const fetchGrowthMetrics = (p?: FilterParams) => apiFetch("/sales/growth", p);
+export const fetchMonthlySales = (p?: FilterParams) => apiFetch("/sales/monthly", p).then(d => d || []).catch(() => []);
+export const fetchDailySales = (days = 30, p?: FilterParams) => apiFetch(`/sales/daily${buildQueryString({ ...p, days: days.toString() })}`).then(d => d || []).catch(() => []);
+export const fetchGrowthMetrics = (p?: FilterParams) => apiFetch("/sales/growth", p).catch(() => null);
 
 // Customer Intelligence
-export const fetchAllCustomers = (p?: FilterParams) => apiFetch("/customers/all", p).then(d => d || []);
-export const fetchRfmSegments = (p?: FilterParams) => apiFetch("/customers/rfm", p).then(d => d || []);
+export const fetchAllCustomers = (p?: FilterParams) => apiFetch("/customers/all", p).then(d => d || []).catch(() => []);
+export const fetchRfmSegments = (p?: FilterParams) => apiFetch("/customers/rfm", p).then(d => d || []).catch(() => []);
 
 // Geographic
-export const fetchStateData = (p?: FilterParams) => apiFetch("/geographic/states", p).then(d => d || []);
-export const fetchCityData = (p?: FilterParams) => apiFetch("/geographic/cities", p).then(d => d || []);
+export const fetchStateData = (p?: FilterParams) => apiFetch("/geographic/states", p).then(d => d || []).catch(() => []);
+export const fetchCityData = (p?: FilterParams) => apiFetch("/geographic/cities", p).then(d => d || []).catch(() => []);
 
 // Material Performance
-export const fetchMaterialPerformance = (p?: FilterParams) => apiFetch("/materials/performance", p).then(d => d || []);
-export const fetchParetoData = (p?: FilterParams) => apiFetch("/materials/pareto", p).then(d => d || []);
+export const fetchMaterialPerformance = (p?: FilterParams) => apiFetch("/materials/performance", p).then(d => d || []).catch(() => []);
+export const fetchParetoData = (p?: FilterParams) => apiFetch("/materials/pareto", p).then(d => d || []).catch(() => []);
 
 // Reports
-export const fetchItemDetails = (p?: FilterParams) => apiFetch("/reports/item-details", p).then(d => d || []);
+export const fetchItemDetails = (p?: FilterParams) => apiFetch("/reports/item-details", p).then(d => d || []).catch(() => []);
 
-// Data quality
+// Data quality (with timeout)
 export const fetchDataHealth = (tenant?: string) =>
-    fetch(`${API_BASE_URL}/data/health?tenant_id=${tenant || "default_elettro"}`, { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : null));
+    fetchWithTimeout(`${API_BASE_URL}/data/health?tenant_id=${tenant || "default_elettro"}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
 
-// Anomalies (alerts)
+// Anomalies (alerts) — uses timeout; returns empty on error so dashboard still renders
 export const fetchAnomalies = (p?: FilterParams & { dropThresholdPct?: number }) => {
     const params = new URLSearchParams();
     if (p?.tenant) params.append("tenant_id", p.tenant);
@@ -112,5 +122,8 @@ export const fetchAnomalies = (p?: FilterParams & { dropThresholdPct?: number })
     if (p?.fiscalYears) params.append("fiscal_years", p.fiscalYears);
     if (p?.months) params.append("months", p.months);
     if (p?.dropThresholdPct != null) params.append("drop_threshold_pct", String(p.dropThresholdPct));
-    return fetch(`${API_BASE_URL}/analytics/anomalies?${params.toString()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : { anomalies: [] }));
+    const url = `${API_BASE_URL}/analytics/anomalies?${params.toString()}`;
+    return fetchWithTimeout(url, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : { anomalies: [] }))
+        .catch(() => ({ anomalies: [] }));
 };

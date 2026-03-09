@@ -70,7 +70,10 @@ async function proxy(
             }
         }
 
-        const res = await fetch(url, init);
+        // 55s timeout so cold-start backends (e.g. Render) can respond without hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 55000);
+        const res = await fetch(url, { ...init, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
         const resHeaders = new Headers();
         res.headers.forEach((v, k) => {
             const lower = k.toLowerCase();

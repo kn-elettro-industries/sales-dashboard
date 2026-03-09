@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useFilter } from "@/components/FilterContext";
 import { DataTable } from "@/components/ui/DataTable";
 import { format } from "date-fns";
-import { fetchDashboardSummary, fetchAnomalies, fetchKpiSummary, fetchSalesTrend, fetchMaterialGroups, fetchTopCustomers } from "@/lib/api";
+import { fetchDashboardSummary, fetchAnomalies } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { GradientAreaChart, InteractiveDonutChart, CategoryHorizontalBarChart } from "@/components/ui/Charts";
 import { IndianRupee, ShoppingCart, Users, TrendingUp, AlertTriangle } from "lucide-react";
@@ -16,6 +16,7 @@ export default function DashboardPage() {
     const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
     const [anomalies, setAnomalies] = useState<{ entity: string; change_pct: number; current_revenue: number }[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [showTargets, setShowTargets] = useState(false);
     const [materialChartView, setMaterialChartView] = useState<"donut" | "bar">("donut");
     const [goalRevenue, setGoalRevenue] = useState<number | null>(null);
@@ -59,13 +60,11 @@ export default function DashboardPage() {
                 dropThresholdPct: 20,
             };
 
+            setLoadError(null);
             try {
-                const [res, kpi, trend, materials, customers, anom] = await Promise.all([
+                // Single dashboard call (summary + trend + materials + customers + comparison + goals) + anomalies
+                const [res, anom] = await Promise.all([
                     fetchDashboardSummary(p),
-                    fetchKpiSummary(p),
-                    fetchSalesTrend(p),
-                    fetchMaterialGroups(p),
-                    fetchTopCustomers(p),
                     fetchAnomalies(anomalyParams),
                 ]);
 
@@ -79,19 +78,19 @@ export default function DashboardPage() {
                         goals: res.goals ?? null,
                     });
                 } else {
-                    const hasAny = kpi || (Array.isArray(trend) && trend.length) || (Array.isArray(materials) && materials.length) || (Array.isArray(customers) && customers.length);
-                    setData({
-                        summary: kpi ? { revenue: kpi.revenue ?? 0, orders: kpi.orders ?? 0, customers: kpi.customers ?? 0, average_order_value: kpi.average_order_value ?? 0 } : null,
-                        trend: Array.isArray(trend) ? trend : [],
-                        materials: Array.isArray(materials) ? materials : [],
-                        customers: Array.isArray(customers) ? customers : [],
-                        comparison: null,
-                        goals: null,
-                    });
+                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
+                    setLoadError("No data returned. Check API URL and that data is uploaded.");
                 }
                 setAnomalies(anom?.anomalies ?? []);
             } catch (e) {
+                const msg = e instanceof Error ? e.message : String(e);
                 console.error("Failed to fetch dashboard data", e);
+                if (msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch")) {
+                    setLoadError("Backend is slow or unreachable (e.g. cold start). Please retry in a moment.");
+                } else {
+                    setLoadError(msg || "Failed to load data. Please retry.");
+                }
+                setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
             } finally {
                 setLoading(false);
             }
@@ -134,7 +133,15 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
                 <button type="button" onClick={() => setShowTargets((s) => !s)} className="text-sm text-[#daa520] hover:underline">{showTargets ? "Hide targets" : "Set revenue/order targets"}</button>
             </div>
-            {!loading && !data.summary && validTrend.length === 0 && validMat.length === 0 && validCust.length === 0 && (
+            {loadError && (
+                <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl">
+                    <h3 className="text-sm font-semibold text-red-400 flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4" /> {loadError}
+                    </h3>
+                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry</button>
+                </div>
+            )}
+            {!loading && !loadError && !data.summary && validTrend.length === 0 && validMat.length === 0 && validCust.length === 0 && (
                 <div className="p-4 bg-amber-900/20 border border-amber-700 rounded-xl">
                     <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-4 w-4" /> No data yet

@@ -262,21 +262,26 @@ def generate_dynamic_pdf_report(
         sub = df[df[primary_col].isin(top_primary) & df[secondary_col].isin(top_secondary)]
         if not sub.empty:
             pivot = sub.pivot_table(index=primary_col, columns=secondary_col, values="AMOUNT", aggfunc="sum", fill_value=0)
+            # Limit columns so cell width never too small (fpdf "Not enough horizontal space")
+            max_cols = 10
+            cols = list(pivot.columns)[:max_cols]
+            pivot = pivot[cols] if cols else pivot
+            ncols = max(1, len(pivot.columns))
+            col_w = max(12.0, 145.0 / ncols)
             # print small pivot as table (truncate)
             pdf.set_font("Arial", "B", 8)
             pdf.set_fill_color(33, 37, 41)
             pdf.set_text_color(255, 255, 255)
             pdf.cell(45, 8, _pdf_text(primary_col)[:14], 0, 0, "L", 1)
-            col_w = 145 / max(1, len(pivot.columns))
             for c in pivot.columns:
-                pdf.cell(col_w, 8, _pdf_text(c)[:12], 0, 0, "R", 1)
+                pdf.cell(col_w, 8, _pdf_text(str(c))[:12], 0, 0, "R", 1)
             pdf.ln()
             pdf.set_font("Arial", "", 8)
             pdf.set_text_color(0, 0, 0)
             fill = False
             for idx, row in pivot.iterrows():
                 pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-                pdf.cell(45, 7, _pdf_text(idx)[:18], 0, 0, "L", fill)
+                pdf.cell(45, 7, _pdf_text(str(idx))[:18], 0, 0, "L", fill)
                 for c in pivot.columns:
                     pdf.cell(col_w, 7, f"{float(row[c])/100000:.1f}L", 0, 0, "R", fill)
                 pdf.ln()
@@ -285,13 +290,21 @@ def generate_dynamic_pdf_report(
     out = pdf.output(dest="S")
     return out.encode("latin-1") if isinstance(out, str) else bytes(out)
 
+# Minimum cell width (mm) so fpdf2 never raises "Not enough horizontal space"
+_MIN_CELL_W = 3.0
+
+
 class PDF(FPDF):
 
     def cell(self, w, h=0, txt='', border=0, ln=0, align='', fill=False, link=''):
+        if w is not None and w > 0 and w < _MIN_CELL_W:
+            w = _MIN_CELL_W
         txt = _pdf_text(txt)
         super().cell(w, h, txt, border, ln, align, fill, link)
 
     def multi_cell(self, w, h, txt, border=0, align='J', fill=False):
+        if w is not None and w > 0 and w < _MIN_CELL_W:
+            w = _MIN_CELL_W
         txt = _pdf_text(txt)
         super().multi_cell(w, h, txt, border, align, fill)
     def __init__(self):

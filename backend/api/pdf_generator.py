@@ -175,7 +175,7 @@ def generate_dynamic_pdf_report(
         pdf.set_font("Arial", "B", 12)
         pdf.set_text_color(0, 0, 0)
         pdf.cell(0, 8, "2. Monthly Trend", 0, 1)
-        trend = df.groupby(pd.Grouper(key="DATE", freq="M"))["AMOUNT"].sum().reset_index()
+        trend = df.groupby(pd.Grouper(key="DATE", freq="ME"))["AMOUNT"].sum().reset_index()
         trend["DATE"] = pd.to_datetime(trend["DATE"], errors="coerce")
         trend = trend.sort_values("DATE").tail(24)
         trend["LABEL"] = trend["DATE"].dt.strftime("%Y-%m")

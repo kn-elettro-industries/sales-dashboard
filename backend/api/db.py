@@ -57,25 +57,35 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
     """
     Fetches the sales_master data for a specific SaaS tenant, with optional date filtering.
     Leverages in-memory caching to avoid hitting Supabase on every API request.
+    Never raises: returns empty DataFrame on any error.
     """
-    df = get_cached_tenant_df(tenant_id).copy()
-    
-    if not df.empty and "DATE" in df.columns:
-        if start_date:
-            start_dt = pd.to_datetime(start_date)
-            if getattr(start_dt, "tz", None) is not None:
-                start_dt = start_dt.tz_localize(None)
-            df = df[df["DATE"] >= start_dt]
-        if end_date:
-            end_dt = pd.to_datetime(end_date)
-            if getattr(end_dt, "tz", None) is not None:
-                end_dt = end_dt.tz_localize(None)
-            # Date-only (e.g. "2025-03-05") → include full end day
-            if len(str(end_date).strip()) <= 10:
-                end_dt = end_dt + pd.Timedelta(days=1)
-                df = df[df["DATE"] < end_dt]
-            else:
-                df = df[df["DATE"] <= end_dt]
+    try:
+        raw = get_cached_tenant_df(tenant_id)
+        df = raw.copy() if raw is not None and isinstance(raw, pd.DataFrame) else pd.DataFrame()
+    except Exception as e:
+        logging.error(f"get_tenant_data: %s", e)
+        df = pd.DataFrame()
+
+    try:
+        if not df.empty and "DATE" in df.columns:
+            if start_date:
+                start_dt = pd.to_datetime(start_date)
+                if getattr(start_dt, "tz", None) is not None:
+                    start_dt = start_dt.tz_localize(None)
+                df = df[df["DATE"] >= start_dt]
+            if end_date:
+                end_dt = pd.to_datetime(end_date)
+                if getattr(end_dt, "tz", None) is not None:
+                    end_dt = end_dt.tz_localize(None)
+                # Date-only (e.g. "2025-03-05") → include full end day
+                if len(str(end_date).strip()) <= 10:
+                    end_dt = end_dt + pd.Timedelta(days=1)
+                    df = df[df["DATE"] < end_dt]
+                else:
+                    df = df[df["DATE"] <= end_dt]
+    except Exception as e:
+        logging.error(f"get_tenant_data date filter: %s", e)
+        df = pd.DataFrame()
     return df
 
 from sqlalchemy import text

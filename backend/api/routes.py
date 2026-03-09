@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response
 from pydantic import BaseModel
 from typing import Optional
+import logging
 import pandas as pd
 import json
 import io
@@ -53,8 +54,17 @@ def auth_me():
     return {"user": None, "role": None}
 
 def serialize_df(df: pd.DataFrame) -> list:
-    """Helper to cleanly serialize pandas dataframes to JSON."""
-    return json.loads(df.to_json(orient="records", date_format="iso"))
+    """Helper to cleanly serialize pandas dataframes to JSON. Returns [] on error to avoid 500s."""
+    if df is None or df.empty:
+        return []
+    try:
+        raw = df.to_json(orient="records", date_format="iso")
+        # pandas can output NaN which is invalid JSON; replace so json.loads works
+        if raw.find("NaN") != -1:
+            raw = raw.replace("NaN", "null")
+        return json.loads(raw)
+    except Exception:
+        return []
 
 def _date_amount_columns(df: pd.DataFrame):
     """Return (date_col, amount_col) with case-insensitive match so trend works when DB returns lowercase."""
@@ -97,6 +107,8 @@ def _exclude_material_groups(df: pd.DataFrame) -> pd.DataFrame:
 
 def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, material_groups=None, fiscal_years=None, months=None) -> pd.DataFrame:
     """Apply granular filters to a dataframe. Ignores empty or whitespace-only filter strings."""
+    if df is None or not isinstance(df, pd.DataFrame):
+        return pd.DataFrame()
     if df.empty:
         return df
     df = _exclude_material_groups(df)
@@ -524,9 +536,6 @@ def get_dashboard_summary(
     goal_orders: Optional[int] = None,
 ):
     """Single endpoint: summary + trend + material groups + top customers + previous-period comparison + optional goals."""
-    df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
-
     empty_response = {
         "summary": {"revenue": 0, "orders": 0, "customers": 0, "average_order_value": 0},
         "previous_summary": None,
@@ -536,104 +545,108 @@ def get_dashboard_summary(
         "material_groups": [],
         "top_customers": [],
     }
+    try:
+        df = get_tenant_data(tenant_id, start_date, end_date)
+        df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+        if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+            return empty_response
+        revenue = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
+        orders = int(df["INVOICE_NO"].nunique()) if "INVOICE_NO" in df.columns else 0
+        cust_count = int(df["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df.columns else 0
+        aov = revenue / orders if orders > 0 else 0
+        summary = {"revenue": revenue, "orders": orders, "customers": cust_count, "average_order_value": aov}
 
-    if df.empty:
-        return empty_response
-
-    revenue = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
-    orders = int(df["INVOICE_NO"].nunique()) if "INVOICE_NO" in df.columns else 0
-    cust_count = int(df["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df.columns else 0
-    aov = revenue / orders if orders > 0 else 0
-    summary = {"revenue": revenue, "orders": orders, "customers": cust_count, "average_order_value": aov}
-
-    previous_summary = None
-    comparison = None
-    if start_date and end_date and "DATE" in df.columns:
-        try:
-            start_dt = pd.to_datetime(start_date)
-            end_dt = pd.to_datetime(end_date)
-            if len(str(end_date).strip()) <= 10:
-                end_dt = end_dt + pd.Timedelta(days=1)
-            delta = end_dt - start_dt
-            prev_end = start_dt - pd.Timedelta(days=1)
-            prev_start = prev_end - delta
-            prev_start_str = prev_start.strftime("%Y-%m-%d")
-            prev_end_str = prev_end.strftime("%Y-%m-%d")
-            df_prev = get_tenant_data(tenant_id, prev_start_str, prev_end_str)
-            df_prev = apply_filters(df_prev, states, cities, customers, material_groups, fiscal_years, months)
-            if not df_prev.empty:
-                pr = float(df_prev["AMOUNT"].sum()) if "AMOUNT" in df_prev.columns else 0.0
-                po = int(df_prev["INVOICE_NO"].nunique()) if "INVOICE_NO" in df_prev.columns else 0
-                pc = int(df_prev["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df_prev.columns else 0
-                paov = pr / po if po > 0 else 0
-                previous_summary = {"revenue": pr, "orders": po, "customers": pc, "average_order_value": paov}
-                rev_pct = ((revenue - pr) / pr * 100) if pr > 0 else 0
-                ord_pct = ((orders - po) / po * 100) if po > 0 else 0
-                cust_pct = ((cust_count - pc) / pc * 100) if pc > 0 else 0
-                aov_pct = ((aov - paov) / paov * 100) if paov > 0 else 0
-                comparison = {
-                    "revenue_pct": round(rev_pct, 1),
-                    "orders_pct": round(ord_pct, 1),
-                    "customers_pct": round(cust_pct, 1),
-                    "average_order_value_pct": round(aov_pct, 1),
-                }
-        except Exception:
-            pass
-
-    goals = None
-    if goal_revenue is not None and goal_revenue > 0:
-        goals = {"revenue_target": goal_revenue, "revenue_achievement_pct": round(revenue / goal_revenue * 100, 1)}
-    if goal_orders is not None and goal_orders > 0:
-        goals = goals or {}
-        goals["orders_target"] = goal_orders
-        goals["orders_achievement_pct"] = round(orders / goal_orders * 100, 1)
-
-    trend = []
-    date_col, amount_col = _date_amount_columns(df)
-    if date_col and amount_col:
-        df_t = df.copy()
-        df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
-        df_t = df_t.dropna(subset=[date_col])
-        if not df_t.empty:
-            t = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
-            t = t.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
-            t["DATE"] = t["DATE"].dt.strftime("%Y-%m")
-            trend = serialize_df(t.tail(trend_limit))
-    if not trend and amount_col:
-        month_col = next((c for c in df.columns if str(c).upper() == "MONTH"), None)
-        if month_col:
+        previous_summary = None
+        comparison = None
+        if start_date and end_date and "DATE" in df.columns:
             try:
-                by_month = df.groupby(month_col)[amount_col].sum().reset_index()
-                by_month = by_month.rename(columns={amount_col: "AMOUNT", month_col: "MONTH"})
-                month_str = by_month["MONTH"].astype(str).str.strip()
-                month_str = month_str.str[:3].str.title() + "-" + month_str.str[-2:]
-                by_month["DATE"] = pd.to_datetime(month_str, format="%b-%y", errors="coerce")
-                by_month = by_month.dropna(subset=["DATE"]).sort_values("DATE")
-                by_month["DATE"] = by_month["DATE"].dt.strftime("%Y-%m")
-                trend = serialize_df(by_month[["DATE", "AMOUNT"]].tail(trend_limit))
+                start_dt = pd.to_datetime(start_date)
+                end_dt = pd.to_datetime(end_date)
+                if len(str(end_date).strip()) <= 10:
+                    end_dt = end_dt + pd.Timedelta(days=1)
+                delta = end_dt - start_dt
+                prev_end = start_dt - pd.Timedelta(days=1)
+                prev_start = prev_end - delta
+                prev_start_str = prev_start.strftime("%Y-%m-%d")
+                prev_end_str = prev_end.strftime("%Y-%m-%d")
+                df_prev = get_tenant_data(tenant_id, prev_start_str, prev_end_str)
+                df_prev = apply_filters(df_prev, states, cities, customers, material_groups, fiscal_years, months)
+                if not df_prev.empty:
+                    pr = float(df_prev["AMOUNT"].sum()) if "AMOUNT" in df_prev.columns else 0.0
+                    po = int(df_prev["INVOICE_NO"].nunique()) if "INVOICE_NO" in df_prev.columns else 0
+                    pc = int(df_prev["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df_prev.columns else 0
+                    paov = pr / po if po > 0 else 0
+                    previous_summary = {"revenue": pr, "orders": po, "customers": pc, "average_order_value": paov}
+                    rev_pct = ((revenue - pr) / pr * 100) if pr > 0 else 0
+                    ord_pct = ((orders - po) / po * 100) if po > 0 else 0
+                    cust_pct = ((cust_count - pc) / pc * 100) if pc > 0 else 0
+                    aov_pct = ((aov - paov) / paov * 100) if paov > 0 else 0
+                    comparison = {
+                        "revenue_pct": round(rev_pct, 1),
+                        "orders_pct": round(ord_pct, 1),
+                        "customers_pct": round(cust_pct, 1),
+                        "average_order_value_pct": round(aov_pct, 1),
+                    }
             except Exception:
                 pass
 
-    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
-    material_groups_list = []
-    if grp_col in df.columns:
-        mg = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(material_limit).reset_index()
-        material_groups_list = serialize_df(mg)
+        goals = None
+        if goal_revenue is not None and goal_revenue > 0:
+            goals = {"revenue_target": goal_revenue, "revenue_achievement_pct": round(revenue / goal_revenue * 100, 1)}
+        if goal_orders is not None and goal_orders > 0:
+            goals = goals or {}
+            goals["orders_target"] = goal_orders
+            goals["orders_achievement_pct"] = round(orders / goal_orders * 100, 1)
 
-    top_customers_list = []
-    if "CUSTOMER_NAME" in df.columns:
-        tc = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(top_customers_limit).reset_index()
-        top_customers_list = serialize_df(tc)
+        trend = []
+        date_col, amount_col = _date_amount_columns(df)
+        if date_col and amount_col:
+            df_t = df.copy()
+            df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
+            df_t = df_t.dropna(subset=[date_col])
+            if not df_t.empty:
+                t = df_t.groupby(pd.Grouper(key=date_col, freq="M"))[amount_col].sum().reset_index()
+                t = t.rename(columns={date_col: "DATE", amount_col: "AMOUNT"})
+                t["DATE"] = t["DATE"].dt.strftime("%Y-%m")
+                trend = serialize_df(t.tail(trend_limit))
+        if not trend and amount_col:
+            month_col = next((c for c in df.columns if str(c).upper() == "MONTH"), None)
+            if month_col:
+                try:
+                    by_month = df.groupby(month_col)[amount_col].sum().reset_index()
+                    by_month = by_month.rename(columns={amount_col: "AMOUNT", month_col: "MONTH"})
+                    month_str = by_month["MONTH"].astype(str).str.strip()
+                    month_str = month_str.str[:3].str.title() + "-" + month_str.str[-2:]
+                    by_month["DATE"] = pd.to_datetime(month_str, format="%b-%y", errors="coerce")
+                    by_month = by_month.dropna(subset=["DATE"]).sort_values("DATE")
+                    by_month["DATE"] = by_month["DATE"].dt.strftime("%Y-%m")
+                    trend = serialize_df(by_month[["DATE", "AMOUNT"]].tail(trend_limit))
+                except Exception:
+                    pass
 
-    return {
-        "summary": summary,
-        "previous_summary": previous_summary,
-        "comparison": comparison,
-        "goals": goals,
-        "trend": trend,
-        "material_groups": material_groups_list,
-        "top_customers": top_customers_list,
-    }
+        grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
+        material_groups_list = []
+        if grp_col in df.columns:
+            mg = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(material_limit).reset_index()
+            material_groups_list = serialize_df(mg)
+
+        top_customers_list = []
+        if "CUSTOMER_NAME" in df.columns:
+            tc = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(top_customers_limit).reset_index()
+            top_customers_list = serialize_df(tc)
+
+        return {
+            "summary": summary,
+            "previous_summary": previous_summary,
+            "comparison": comparison,
+            "goals": goals,
+            "trend": trend,
+            "material_groups": material_groups_list,
+            "top_customers": top_customers_list,
+        }
+    except Exception as e:
+        logging.exception("dashboard/summary: processing failed: %s", e)
+        return empty_response
 
 
 # ─── EXECUTIVE SUMMARY ───

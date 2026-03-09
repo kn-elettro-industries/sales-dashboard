@@ -291,22 +291,28 @@ def generate_dynamic_pdf_report(
     return out.encode("latin-1") if isinstance(out, str) else bytes(out)
 
 # Minimum cell width (mm) so fpdf2 never raises "Not enough horizontal space"
-_MIN_CELL_W = 3.0
+_MIN_CELL_W = 5.0
 
 
 class PDF(FPDF):
 
-    def cell(self, w, h=0, txt='', border=0, ln=0, align='', fill=False, link=''):
-        if w is not None and w > 0 and w < _MIN_CELL_W:
+    def cell(self, w=None, h=0, txt='', border=0, ln=0, align='', fill=False, link=''):
+        if w is not None and w != 0 and abs(w) < _MIN_CELL_W:
             w = _MIN_CELL_W
         txt = _pdf_text(txt)
-        super().cell(w, h, txt, border, ln, align, fill, link)
+        try:
+            super().cell(w, h, txt, border, ln, align, fill, link)
+        except Exception:
+            super().cell(_MIN_CELL_W, h, txt, border, ln, align, fill, link)
 
     def multi_cell(self, w, h, txt, border=0, align='J', fill=False):
-        if w is not None and w > 0 and w < _MIN_CELL_W:
+        if w is not None and w != 0 and abs(w) < _MIN_CELL_W:
             w = _MIN_CELL_W
         txt = _pdf_text(txt)
-        super().multi_cell(w, h, txt, border, align, fill)
+        try:
+            super().multi_cell(w, h, txt, border, align, fill)
+        except Exception:
+            super().multi_cell(_MIN_CELL_W, h, txt, border, align, fill)
     def __init__(self):
         super().__init__()
         # Try to locate a logo image. Prefer absolute paths derived from this file's location

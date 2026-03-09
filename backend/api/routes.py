@@ -198,6 +198,51 @@ def calculate_fy(date):
 
 # ─── UPLOAD PIPELINE ───
 
+# In-memory customer master per tenant (uploaded via /upload/customer-master)
+_customer_masters: dict[str, pd.DataFrame] = {}
+
+
+def _merge_customer_master(df: pd.DataFrame, tenant_id: str) -> pd.DataFrame:
+    """Enrich sales data with STATE/CITY from the customer master if available."""
+    master = _customer_masters.get(tenant_id)
+    if master is None or master.empty:
+        return df
+    if "CUSTOMER_NAME" not in df.columns or "CUSTOMER_NAME" not in master.columns:
+        return df
+    master_cols = [c for c in ["CUSTOMER_NAME", "STATE", "CITY"] if c in master.columns]
+    if len(master_cols) < 2:
+        return df
+    merged = pd.merge(df, master[master_cols], on="CUSTOMER_NAME", how="left", suffixes=("_raw", "_master"))
+    for col in ["STATE", "CITY"]:
+        mc = f"{col}_master"
+        rc = f"{col}_raw"
+        if mc in merged.columns and rc in merged.columns:
+            merged[col] = merged[mc].fillna(merged[rc])
+            merged.drop(columns=[mc, rc], inplace=True)
+        elif mc in merged.columns:
+            merged.rename(columns={mc: col}, inplace=True)
+        elif rc in merged.columns:
+            merged.rename(columns={rc: col}, inplace=True)
+    return merged
+
+
+@router.post("/upload/customer-master")
+async def upload_customer_master(file: UploadFile = File(...), tenant_id: str = Form("default_elettro")):
+    """Upload a customer master Excel/CSV. Stored in memory; used to enrich STATE/CITY on subsequent sales uploads."""
+    try:
+        content = await file.read()
+        if file.filename and file.filename.endswith(".csv"):
+            master = pd.read_csv(io.BytesIO(content))
+        else:
+            master = pd.read_excel(io.BytesIO(content))
+        master = standardize(master)
+        _customer_masters[tenant_id] = master
+        cols = list(master.columns)
+        return {"filename": file.filename, "rows": len(master), "columns": cols, "tenant": tenant_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process customer master: {str(e)}")
+
+
 @router.post("/upload")
 async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form("default_elettro")):
     try:
@@ -214,7 +259,10 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
         df = standardize(df)
         df = _coalesce_state_region(df)
 
-        # 2. Enrich Dates
+        # 2. Enrich from customer master (STATE/CITY)
+        df = _merge_customer_master(df, tenant_id)
+
+        # 3. Enrich Dates
         if "DATE" in df.columns:
             df["DATE"] = pd.to_datetime(df["DATE"], errors='coerce')
             df["FINANCIAL_YEAR"] = df["DATE"].apply(calculate_fy)
@@ -223,10 +271,10 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
         if "CITY" not in df.columns: df["CITY"] = "City Not Found"
         if "STATE" not in df.columns: df["STATE"] = STATE_PLACEHOLDER
 
-        # 2.5 Exclude non-sales material groups (ETL rule)
+        # 4. Exclude non-sales material groups (ETL rule)
         df = _exclude_material_groups(df)
 
-        # 3. Insert into database
+        # 5. Insert into database
         from .db import update_database
         rows_inserted = update_database(df, tenant_id)
 

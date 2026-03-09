@@ -90,11 +90,52 @@ export default function DataUploadPage() {
         }
     };
 
+    const [masterStatus, setMasterStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+    const [masterMsg, setMasterMsg] = useState("");
+
+    const handleMasterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        setMasterStatus("uploading");
+        const formData = new FormData();
+        formData.append("file", f);
+        formData.append("tenant_id", tenant);
+        try {
+            const res = await fetch(`${API_BASE_URL}/upload/customer-master`, { method: "POST", body: formData });
+            const data = await res.json();
+            if (res.ok) {
+                setMasterStatus("success");
+                setMasterMsg(`Customer master loaded: ${data.rows} rows, columns: ${data.columns?.join(", ")}`);
+            } else {
+                setMasterStatus("error");
+                setMasterMsg(data.detail || "Upload failed.");
+            }
+        } catch {
+            setMasterStatus("error");
+            setMasterMsg("Network error uploading customer master.");
+        }
+    };
+
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-white">Cloud Data Management</h2>
                 <p className="text-gray-400 mt-1">Upload raw sales data (Excel/CSV) and monitor data quality.</p>
+            </div>
+
+            {/* Customer Master Upload */}
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-2">Customer Master</h3>
+                <p className="text-sm text-gray-400 mb-4">Upload your customer master Excel (with CUSTOMER_NAME, STATE, CITY columns) so sales data gets enriched with geographic info.</p>
+                <div className="flex items-center gap-4">
+                    <label className="cursor-pointer px-4 py-2 rounded-lg bg-[#0d1117] border border-[#30363d] text-sm text-gray-200 hover:border-[#daa520] transition-colors">
+                        {masterStatus === "uploading" ? "Uploading..." : "Choose Customer Master File"}
+                        <input type="file" accept=".xlsx,.xls,.csv" onChange={handleMasterUpload} className="hidden" disabled={masterStatus === "uploading"} />
+                    </label>
+                    {masterStatus === "success" && <span className="text-sm text-green-400">{masterMsg}</span>}
+                    {masterStatus === "error" && <span className="text-sm text-red-400">{masterMsg}</span>}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Upload this <strong>before</strong> uploading sales files. The master is used to add STATE/CITY to each row during upload.</p>
             </div>
 
             {/* Data Quality */}

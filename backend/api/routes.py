@@ -545,20 +545,22 @@ def get_dashboard_summary(
     goal_orders: Optional[int] = None,
 ):
     """Single endpoint: summary + trend + material groups + top customers + previous-period comparison + optional goals."""
-    empty_response = {
-        "summary": {"revenue": 0, "orders": 0, "customers": 0, "average_order_value": 0},
-        "previous_summary": None,
-        "comparison": None,
-        "goals": None,
-        "trend": [],
-        "material_groups": [],
-        "top_customers": [],
-    }
+    def _empty(msg: str):
+        return {
+            "summary": {"revenue": 0, "orders": 0, "customers": 0, "average_order_value": 0},
+            "previous_summary": None,
+            "comparison": None,
+            "goals": None,
+            "trend": [],
+            "material_groups": [],
+            "top_customers": [],
+            "message": msg,
+        }
     try:
         df = get_tenant_data(tenant_id, start_date, end_date)
         df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
         if df is None or not isinstance(df, pd.DataFrame) or df.empty:
-            return empty_response
+            return _empty("No rows in database for this tenant. Upload data from the Data page (Cloud Data Uploader).")
         revenue = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
         orders = int(df["INVOICE_NO"].nunique()) if "INVOICE_NO" in df.columns else 0
         cust_count = int(df["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df.columns else 0
@@ -655,7 +657,7 @@ def get_dashboard_summary(
         }
     except Exception as e:
         logging.exception("dashboard/summary: processing failed: %s", e)
-        return empty_response
+        return _empty("Backend error while loading data. Check Render service logs for details.")
 
 
 # ─── EXECUTIVE SUMMARY ───

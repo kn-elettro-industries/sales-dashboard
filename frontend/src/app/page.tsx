@@ -13,7 +13,7 @@ import { formatAmount } from "@/lib/format";
 
 export default function DashboardPage() {
     const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
-    const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
+    const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
     const [anomalies, setAnomalies] = useState<{ entity: string; change_pct: number; current_revenue: number }[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -76,9 +76,10 @@ export default function DashboardPage() {
                         customers: res.top_customers ?? [],
                         comparison: res.comparison ?? null,
                         goals: res.goals ?? null,
+                        message: res.message ?? null,
                     });
                 } else {
-                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
+                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
                     setLoadError("No data returned. Check API URL and that data is uploaded.");
                 }
                 setAnomalies(anom?.anomalies ?? []);
@@ -90,7 +91,7 @@ export default function DashboardPage() {
                 } else {
                     setLoadError(msg || "Failed to load data. Please retry.");
                 }
-                setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null });
+                setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
             } finally {
                 setLoading(false);
             }
@@ -146,10 +147,13 @@ export default function DashboardPage() {
                     <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-4 w-4" /> No data for this view
                     </h3>
+                    {data.message && (
+                        <p className="text-sm text-amber-200/90 mb-3 font-medium">{data.message}</p>
+                    )}
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside mb-3">
-                        <li>If you applied filters (e.g. <strong>FY</strong>, State, Date range), try <strong>Clear all filters</strong> or <strong>All Time</strong> to see all data.</li>
-                        <li>Ensure <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> points to your backend (Vercel env vars) and <strong>redeploy</strong> if you changed it.</li>
-                        <li>Upload data from the <strong><Link href="/data" className="text-[#daa520] hover:underline">Data</Link></strong> page (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT, etc.) if the table is empty.</li>
+                        <li>If you applied filters (e.g. <strong>FY</strong>, State, Date range), try <strong>Clear all filters</strong> or <strong>All Time</strong>.</li>
+                        <li>Ensure <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> points to your Render backend in Vercel env vars, then <strong>redeploy</strong>.</li>
+                        <li>Upload data via <strong><Link href="/data" className="text-[#daa520] hover:underline">Data / Cloud Data Uploader</Link></strong> (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT).</li>
                     </ul>
                     <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry</button>
                 </div>

@@ -8,9 +8,10 @@ import { fetchDataHealth, API_BASE_URL } from "@/lib/api";
 
 export default function DataUploadPage() {
     const { tenant } = useFilter();
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
     const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
+    const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [health, setHealth] = useState<{ total_rows: number; missing_dates: number; duplicate_invoices: number; negative_amounts: number; score: number; status: string; message: string } | null>(null);
     const [healthLoading, setHealthLoading] = useState(true);
 
@@ -25,7 +26,7 @@ export default function DataUploadPage() {
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length > 0) {
-            setFile(acceptedFiles[0]);
+            setFiles(prev => [...prev, ...acceptedFiles]);
             setStatus("idle");
             setMessage("");
         }
@@ -38,37 +39,54 @@ export default function DataUploadPage() {
             "application/vnd.ms-excel": [".xls"],
             "text/csv": [".csv"]
         },
-        maxFiles: 1
+        multiple: true,
     });
 
+    const removeFile = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleUpload = async () => {
-        if (!file) return;
+        if (files.length === 0) return;
 
         setStatus("uploading");
+        setProgress({ current: 0, total: files.length });
+        let totalRows = 0;
+        let failedFiles: string[] = [];
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("tenant_id", tenant);
+        for (let i = 0; i < files.length; i++) {
+            setProgress({ current: i + 1, total: files.length });
+            const formData = new FormData();
+            formData.append("file", files[i]);
+            formData.append("tenant_id", tenant);
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/upload`, {
-                method: "POST",
-                body: formData,
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                setStatus("success");
-                setMessage(`Successfully processed ${result.rows_inserted || 0} rows into the database.`);
-                setFile(null);
-            } else {
-                setStatus("error");
-                setMessage(result.detail || "Upload failed. Please check the file format.");
+            try {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
+                    method: "POST",
+                    body: formData,
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    totalRows += result.rows_inserted || 0;
+                } else {
+                    failedFiles.push(`${files[i].name}: ${result.detail || "failed"}`);
+                }
+            } catch {
+                failedFiles.push(`${files[i].name}: network error`);
             }
-        } catch (error) {
+        }
+
+        if (failedFiles.length === 0) {
+            setStatus("success");
+            setMessage(`Successfully processed ${files.length} file${files.length > 1 ? "s" : ""} — ${totalRows.toLocaleString()} rows inserted.`);
+            setFiles([]);
+        } else if (failedFiles.length < files.length) {
+            setStatus("success");
+            setMessage(`Processed ${files.length - failedFiles.length} of ${files.length} files (${totalRows.toLocaleString()} rows). Failed: ${failedFiles.join("; ")}`);
+            setFiles([]);
+        } else {
             setStatus("error");
-            setMessage("A network error occurred while uploading. Ensure the backend is running.");
+            setMessage(`All uploads failed: ${failedFiles.join("; ")}`);
         }
     };
 
@@ -138,20 +156,35 @@ export default function DataUploadPage() {
           `}
                 >
                     <input {...getInputProps()} />
-                    <UploadCloud className={`mx-auto h-16 w-16 mb-4 ${isDragActive ? 'text-[#daa520]' : file ? 'text-green-500' : 'text-gray-500'}`} />
+                    <UploadCloud className={`mx-auto h-16 w-16 mb-4 ${isDragActive ? 'text-[#daa520]' : files.length > 0 ? 'text-green-500' : 'text-gray-500'}`} />
 
-                    {file ? (
-                        <div className="space-y-2">
-                            <p className="text-lg font-medium text-white">{file.name}</p>
-                            <p className="text-sm text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            <p className="text-lg font-medium text-white">Drag & drop your file here, or click to select</p>
-                            <p className="text-sm text-gray-500">Must follow the standard ELETTRO data schema</p>
-                        </div>
-                    )}
+                    <div className="space-y-2">
+                        <p className="text-lg font-medium text-white">
+                            {isDragActive ? "Drop files here..." : "Drag & drop files here, or click to select"}
+                        </p>
+                        <p className="text-sm text-gray-500">Select multiple files at once or add more by dropping again</p>
+                    </div>
                 </div>
+
+                {/* Selected Files */}
+                {files.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-400">{files.length} file{files.length > 1 ? "s" : ""} selected</p>
+                            <button onClick={() => setFiles([])} className="text-xs text-red-400 hover:text-red-300">Clear all</button>
+                        </div>
+                        {files.map((f, i) => (
+                            <div key={`${f.name}-${i}`} className="flex items-center justify-between bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2">
+                                <div className="flex items-center gap-3">
+                                    <FileSpreadsheet className="h-4 w-4 text-[#daa520]" />
+                                    <span className="text-sm text-white">{f.name}</span>
+                                    <span className="text-xs text-gray-500">{(f.size / 1024 / 1024).toFixed(2)} MB</span>
+                                </div>
+                                <button onClick={() => removeFile(i)} className="text-gray-500 hover:text-red-400 text-sm">✕</button>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Status Messages */}
                 {status === "success" && (
@@ -178,9 +211,9 @@ export default function DataUploadPage() {
                 <div className="mt-8 flex justify-end">
                     <button
                         onClick={handleUpload}
-                        disabled={!file || status === "uploading"}
+                        disabled={files.length === 0 || status === "uploading"}
                         className={`flex items-center px-6 py-2.5 rounded-lg font-medium transition-all
-              ${!file || status === "uploading"
+              ${files.length === 0 || status === "uploading"
                                 ? 'bg-[#30363d] text-gray-500 cursor-not-allowed'
                                 : 'bg-[#daa520] text-[#0d1117] hover:bg-[#b8860b] hover:shadow-lg hover:shadow-[#daa520]/20'
                             }
@@ -189,12 +222,12 @@ export default function DataUploadPage() {
                         {status === "uploading" ? (
                             <>
                                 <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                                Processing Data...
+                                Processing {progress.current}/{progress.total}...
                             </>
                         ) : (
                             <>
                                 <FileSpreadsheet className="h-5 w-5 mr-2" />
-                                Upload to Database
+                                Upload {files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""}` : ""} to Database
                             </>
                         )}
                     </button>

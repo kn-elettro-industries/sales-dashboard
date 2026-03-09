@@ -127,7 +127,7 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
                                         <span style="color: #8b949e;">Orders</span>
                                         <span style="color: #f0f6fc; font-weight: 600; text-align: right;">${stateData.Orders?.toLocaleString()}</span>
                                         <span style="color: #8b949e;">Customers</span>
-                                        <span style="color: #f0f6fc; font-weight: 600; text-align: right;">${stateData.Customers}</span>
+                                        <span style="color: #f0f6fc; font-weight: 600; text-align: right;">${stateData.Customers ?? 0}</span>
                                     </div>
                                 </div>`,
                                 {

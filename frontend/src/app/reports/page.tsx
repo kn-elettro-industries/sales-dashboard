@@ -69,14 +69,14 @@ export default function ReportsPage() {
             try {
                 const params = {
                     tenant,
-                    startDate: dateRange?.from?.toISOString(),
-                    endDate: dateRange?.to?.toISOString(),
-                    states: selectedStates.join(','),
-                    cities: selectedCities.join(','),
-                    customers: selectedCustomers.join(','),
-                    materialGroups: selectedMaterialGroups.join(','),
-                    fiscalYears: selectedFiscalYears.join(','),
-                    months: selectedMonths.join(',')
+                    startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+                    endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+                    states: selectedStates.length > 0 ? selectedStates.join(',') : undefined,
+                    cities: selectedCities.length > 0 ? selectedCities.join(',') : undefined,
+                    customers: selectedCustomers.length > 0 ? selectedCustomers.join(',') : undefined,
+                    materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
+                    fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
+                    months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
                 };
 
                 const [kpis, mats, items] = await Promise.all([

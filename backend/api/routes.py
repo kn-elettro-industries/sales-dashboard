@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import logging
 import pandas as pd
 import json
 import io
-import math
 import os
 from datetime import datetime, timedelta
 
@@ -235,6 +234,49 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
+
+
+# ─── Legacy Streamlit compatibility (v1) ───
+
+@router.get("/v1/data")
+def v1_data(tenant_id: str = Query("default_elettro")):
+    """Legacy Streamlit: return full tenant data as JSON list of records."""
+    df = get_tenant_data(tenant_id)
+    return serialize_df(df)
+
+
+@router.post("/v1/upload_batch")
+async def v1_upload_batch(files: List[UploadFile] = File(...), tenant_id: str = Form("default_elettro")):
+    """Legacy Streamlit: accept multiple files, process each like /upload; return last result."""
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+    last_result = None
+    for file in files:
+        try:
+            content = await file.read()
+            if file.filename and file.filename.endswith(".csv"):
+                df = pd.read_csv(io.BytesIO(content))
+            else:
+                df = pd.read_excel(io.BytesIO(content))
+            if df.empty:
+                continue
+            df = standardize(df)
+            df = _coalesce_state_region(df)
+            if "DATE" in df.columns:
+                df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+                df["FINANCIAL_YEAR"] = df["DATE"].apply(calculate_fy)
+                df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
+            if "CITY" not in df.columns:
+                df["CITY"] = "City Not Found"
+            if "STATE" not in df.columns:
+                df["STATE"] = STATE_PLACEHOLDER
+            df = _exclude_material_groups(df)
+            from .db import update_database
+            rows = update_database(df, tenant_id)
+            last_result = {"filename": file.filename, "rows_inserted": rows, "tenant": tenant_id}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed on {file.filename}: {str(e)}")
+    return last_result or {"filename": None, "rows_inserted": 0, "tenant": tenant_id}
 
 
 # ─── DATA QUALITY / HEALTH ───
@@ -667,7 +709,10 @@ def get_dashboard_summary(
         }
     except Exception as e:
         logging.exception("dashboard/summary: processing failed: %s", e)
-        return _empty("Backend error while loading data. Check Render service logs for details.")
+        err_msg = str(e).strip() or "Unknown error"
+        if len(err_msg) > 200:
+            err_msg = err_msg[:197] + "..."
+        return _empty(f"Backend error: {err_msg}")
 
 
 # ─── EXECUTIVE SUMMARY ───
@@ -972,7 +1017,7 @@ def export_filtered_data(
     cities: Optional[str] = None,
     customers: Optional[str] = None,
     material_groups: Optional[str] = None,
-    fiscal_years: Optional[str] = None,
+    fiscal_years: Optional[str] = None, 
     months: Optional[str] = None,
 ):
     """

@@ -113,7 +113,7 @@ export default function MaterialsPage() {
                             header: 'Material Group',
                             accessorKey: 'MaterialGroup',
                             sortable: true,
-                            cell: (item: any) => <span className="font-medium text-gray-300">{(item.MaterialGroup).slice(0, 45)}</span>
+                            cell: (item: any) => <span className="font-medium text-gray-300">{(item.MaterialGroup ?? '').slice(0, 45)}</span>
                         },
                         {
                             header: 'Revenue',

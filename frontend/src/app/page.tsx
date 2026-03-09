@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useFilter } from "@/components/FilterContext";
 import { DataTable } from "@/components/ui/DataTable";
 import { format } from "date-fns";
-import { fetchDashboardSummary, fetchAnomalies } from "@/lib/api";
+import { fetchDashboardSummary, fetchAnomalies, fetchKpiSummary, fetchSalesTrend, fetchMaterialGroups, fetchTopCustomers } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { GradientAreaChart, InteractiveDonutChart, CategoryHorizontalBarChart } from "@/components/ui/Charts";
 import { IndianRupee, ShoppingCart, Users, TrendingUp, AlertTriangle } from "lucide-react";
@@ -61,12 +61,16 @@ export default function DashboardPage() {
             };
 
             setLoadError(null);
+            const anomPromise = fetchAnomalies(anomalyParams);
+
             try {
-                // Single dashboard call (summary + trend + materials + customers + comparison + goals) + anomalies
-                const [res, anom] = await Promise.all([
-                    fetchDashboardSummary(p),
-                    fetchAnomalies(anomalyParams),
-                ]);
+                // Prefer single dashboard call (fastest). If it errors in prod, fallback to individual endpoints.
+                const res = await fetchDashboardSummary(p);
+                const anom = await anomPromise;
+
+                if (res?.message && String(res.message).toLowerCase().includes("backend error")) {
+                    throw new Error(String(res.message));
+                }
 
                 if (res) {
                     setData({
@@ -84,14 +88,39 @@ export default function DashboardPage() {
                 }
                 setAnomalies(anom?.anomalies ?? []);
             } catch (e) {
-                const msg = e instanceof Error ? e.message : String(e);
-                console.error("Failed to fetch dashboard data", e);
-                if (msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch")) {
-                    setLoadError("Backend is slow or unreachable (e.g. cold start). Please retry in a moment.");
-                } else {
-                    setLoadError(msg || "Failed to load data. Please retry.");
+                console.error("Failed to fetch dashboard summary; falling back to individual endpoints", e);
+                try {
+                    const [kpi, trend, materials, customers, anom] = await Promise.all([
+                        fetchKpiSummary(p),
+                        fetchSalesTrend(p),
+                        fetchMaterialGroups(p),
+                        fetchTopCustomers(p),
+                        anomPromise,
+                    ]);
+
+                    setData({
+                        summary: kpi ? { revenue: kpi.revenue ?? 0, orders: kpi.orders ?? 0, customers: kpi.customers ?? 0, average_order_value: kpi.average_order_value ?? 0 } : null,
+                        trend: Array.isArray(trend) ? trend : [],
+                        materials: Array.isArray(materials) ? materials : [],
+                        customers: Array.isArray(customers) ? customers : [],
+                        comparison: null,
+                        goals: null,
+                        message: null,
+                    });
+                    setAnomalies(anom?.anomalies ?? []);
+                    setLoadError("Dashboard summary endpoint failed; loaded via fallback (slower).");
+                } catch (e2) {
+                    const msg = e2 instanceof Error ? e2.message : String(e2);
+                    if (msg.includes("502") || msg.includes("Bad Gateway")) {
+                        setLoadError("Backend unreachable (502). If using Render free tier, the service may be sleeping — wait 30–60s and retry.");
+                    } else if (msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch")) {
+                        setLoadError("Backend is slow or unreachable (e.g. cold start). Please retry in a moment.");
+                    } else {
+                        setLoadError(msg || "Failed to load data. Please retry.");
+                    }
+                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
+                    setAnomalies([]);
                 }
-                setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
             } finally {
                 setLoading(false);
             }

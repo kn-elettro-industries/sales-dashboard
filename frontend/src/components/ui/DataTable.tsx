@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface ColumnDef<T> {
@@ -84,10 +84,11 @@ export function DataTable<T extends Record<string, any>>({
     // 3. Paginate
     const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
 
-    // Ensure current page is valid after filtering
-    if (currentPage > totalPages && totalPages > 0) {
-        setCurrentPage(totalPages);
-    }
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * pageSize;

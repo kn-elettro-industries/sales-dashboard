@@ -2,7 +2,6 @@ fastapi
 uvicorn
 pandas
 python-multipart
-supabase
 pydantic
 psycopg2-binary
 python-dotenv
@@ -11,3 +10,4 @@ sqlalchemy
 openpyxl
 fpdf2
 matplotlib
+numpy

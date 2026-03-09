@@ -51,7 +51,7 @@ export default function SalesPage() {
     const g = data.growth || { mom_growth: 0, current_month_rev: 0, prev_month_rev: 0 };
 
     return (
-        <div className={`space - y - 8 transition - opacity duration - 300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'} `}>
+        <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div>
                 <h2 className="text-2xl font-bold text-white">Sales & Growth Analysis</h2>
                 <p className="text-gray-400 mt-1">Month-over-month trends and growth indicators.</p>

@@ -80,7 +80,7 @@ export default function GeographicPage() {
         : [];
 
     return (
-        <div className={`space - y - 8 transition - opacity duration - 300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'} `}>
+        <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div>
                 <h2 className="text-2xl font-bold text-white">Geographic Intelligence</h2>
                 <p className="text-gray-400 mt-1">Interactive map with state and city level revenue analysis.</p>
@@ -141,7 +141,7 @@ export default function GeographicPage() {
                                 </div>
                                 <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-4">
                                     <div className="text-xs text-gray-500 uppercase mb-1">Market Share</div>
-                                    <div className="text-xl font-bold text-[#daa520]">{stateInfo.MarketShare}%</div>
+                                    <div className="text-xl font-bold text-[#daa520]">{stateInfo.MarketShare ?? 0}%</div>
                                 </div>
                                 <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-4">
                                     <div className="text-xs text-gray-500 uppercase mb-1">Total Orders</div>

@@ -19,7 +19,7 @@ for folder in [RAW_FOLDER, MASTER_FOLDER, OUTPUT_FOLDER, PROCESSED_FOLDER]:
 
 # Database Connection (Supabase Cloud PostgreSQL via psycopg2)
 # Note: Using IPv4 Transaction Pooler Host for Windows routing compatibility.
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.shpkzdnfcgxzqradrmku:Elettro%40123@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require")
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 # FastAPI Backend URL
 API_URL = os.environ.get("API_URL", "http://localhost:8000")

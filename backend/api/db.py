@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import logging
 from typing import Optional
 from cachetools import TTLCache, cached
@@ -9,10 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL", 
-    "postgresql://postgres.shpkzdnfcgxzqradrmku:Elettro%40123@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require"
-)
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if not DATABASE_URL:
+    logging.warning("DATABASE_URL is not set. The backend will not be able to connect to the database.")
 
 _engine = None
 
@@ -34,8 +33,19 @@ def get_engine():
         logging.error(f"Failed to initialize PostgreSQL engine in Backend: {e}")
         return None
 
-# Cache up to 10 tenants' full DataFrames for 1 hour
-tenant_cache = TTLCache(maxsize=10, ttl=3600)
+# Cache up to 10 tenants' full DataFrames (4h TTL to reduce Supabase egress)
+tenant_cache = TTLCache(maxsize=10, ttl=4 * 3600)
+
+
+def invalidate_tenant_cache(tenant_id: str) -> None:
+    """Call after upload so the next dashboard/API request gets fresh data from DB."""
+    try:
+        key = (tenant_id,)
+        if key in tenant_cache:
+            del tenant_cache[key]
+    except Exception:
+        pass
+
 
 def _fy_from_date(date):
     """Same as routes.calculate_fy: April = start of FY. Used for read-time enrichment."""
@@ -51,6 +61,18 @@ def _fy_from_date(date):
     return "UNKNOWN"
 
 
+def _tenant_query_date_filter() -> str:
+    """Optional SQL fragment to limit rows by date and reduce Supabase egress. Set EGRESS_MAX_YEARS (e.g. 3) in env."""
+    try:
+        years = int(os.environ.get("EGRESS_MAX_YEARS", "0"))
+        if years <= 0:
+            return ""
+        # Column is often lowercase 'date' in Postgres when created via pandas to_sql
+        return f" AND date >= (CURRENT_DATE - INTERVAL '{years} years')"
+    except Exception:
+        return ""
+
+
 @cached(cache=tenant_cache)
 def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
     """Internal cached helper to fetch full tenant dataset from DB. Enriches FINANCIAL_YEAR and MONTH from DATE when missing."""
@@ -58,23 +80,27 @@ def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
     if eng is None:
         return pd.DataFrame()
     try:
-        query = f"SELECT * FROM sales_master WHERE tenant_id = '{tenant_id}'"
-        df = pd.read_sql(query, eng)
+        date_filter = _tenant_query_date_filter()
+        query = text(f"SELECT * FROM sales_master WHERE tenant_id = :tid{date_filter}")
+        df = pd.read_sql(query, eng, params={"tid": tenant_id})
         if df.empty:
             return df
-        # Coerce AMOUNT to numeric (DB may return string)
-        amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
-        if amt_col is not None:
-            df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
-        date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
-        if date_col is not None:
-            df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-            if hasattr(df[date_col].dtype, "tz") and df[date_col].dtype.tz is not None:
-                df[date_col] = df[date_col].dt.tz_localize(None)
-            if "FINANCIAL_YEAR" not in df.columns:
-                df["FINANCIAL_YEAR"] = df[date_col].apply(_fy_from_date)
-            if "MONTH" not in df.columns:
-                df["MONTH"] = df[date_col].dt.strftime("%b-%y").str.upper()
+        try:
+            # Coerce AMOUNT to numeric (DB may return string)
+            amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+            if amt_col is not None:
+                df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
+            date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
+            if date_col is not None:
+                df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+                if hasattr(df[date_col].dtype, "tz") and df[date_col].dtype.tz is not None:
+                    df[date_col] = df[date_col].dt.tz_localize(None)
+                if "FINANCIAL_YEAR" not in df.columns:
+                    df["FINANCIAL_YEAR"] = df[date_col].apply(_fy_from_date)
+                if "MONTH" not in df.columns:
+                    df["MONTH"] = df[date_col].dt.strftime("%b-%y").str.upper()
+        except Exception as e:
+            logging.warning("get_cached_tenant_df: enrich/coerce failed, returning raw df: %s", e)
         return df
     except Exception as e:
         logging.error(f"Error fetching data from DB: {e}")
@@ -115,7 +141,6 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
         df = pd.DataFrame()
     return df
 
-from sqlalchemy import text
 
 def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") -> int:
     """Updates the PostgreSQL database with new records for the specific tenant."""
@@ -166,6 +191,8 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
                 else:
                     logging.info("No new records to append to Postgres DB.")
 
+            if new_records_count > 0:
+                invalidate_tenant_cache(tenant_id)
             return new_records_count
     except Exception as e:
         logging.error(f"Failed to update Postgres database: {e}")

@@ -32,7 +32,8 @@ function MultiSelect({ label, options, selected, onChange }: {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
 
-    const filtered = options.filter(o => o.toLowerCase().includes(search.toLowerCase()));
+    const safeOptions = Array.isArray(options) ? options : [];
+    const filtered = safeOptions.filter(o => o.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
@@ -113,11 +114,25 @@ export default function GlobalFilterBar() {
     });
     const [exporting, setExporting] = useState(false);
 
-    // Load filter options from backend
+    // Load filter options from backend; on 502/error keep empty arrays so UI does not crash
     useEffect(() => {
         fetch(`${API_BASE}/filters/options?tenant_id=${tenant}`)
-            .then(r => r.json())
-            .then(setOptions)
+            .then(r => {
+                if (!r.ok) return null;
+                return r.json();
+            })
+            .then((data: FilterOptions | null) => {
+                if (data && typeof data === "object" && !("error" in data)) {
+                    setOptions({
+                        states: Array.isArray(data.states) ? data.states : [],
+                        cities: Array.isArray(data.cities) ? data.cities : [],
+                        customers: Array.isArray(data.customers) ? data.customers : [],
+                        material_groups: Array.isArray(data.material_groups) ? data.material_groups : [],
+                        fiscal_years: Array.isArray(data.fiscal_years) ? data.fiscal_years : [],
+                        months: Array.isArray(data.months) ? data.months : [],
+                    });
+                }
+            })
             .catch(() => { });
     }, [tenant]);
 

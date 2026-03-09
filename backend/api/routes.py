@@ -132,7 +132,16 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
     if fiscal_years and str(fiscal_years).strip():
         fy_list = [f.strip() for f in fiscal_years.split(",") if f.strip()]
         if "FINANCIAL_YEAR" in df.columns and fy_list:
-            df = df[df["FINANCIAL_YEAR"].isin(fy_list)]
+            # Normalize so "FY25-26" and "25-26" both match
+            fy_set = set()
+            for f in fy_list:
+                fy_set.add(f)
+                if str(f).upper().startswith("FY") and len(f) > 2:
+                    fy_set.add(str(f)[2:].strip())
+                else:
+                    fy_set.add("FY" + str(f).strip())
+            col = df["FINANCIAL_YEAR"].astype(str).str.strip()
+            df = df[col.isin(fy_set)]
     if months and str(months).strip():
         month_list = [m.strip() for m in months.split(",") if m.strip()]
         if "MONTH" in df.columns and month_list:

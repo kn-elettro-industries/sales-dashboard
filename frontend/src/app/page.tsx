@@ -141,16 +141,17 @@ export default function DashboardPage() {
                     <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry</button>
                 </div>
             )}
-            {!loading && !loadError && !data.summary && validTrend.length === 0 && validMat.length === 0 && validCust.length === 0 && (
+            {!loading && !loadError && (!data.summary || (data.summary.revenue === 0 && data.summary.orders === 0 && validTrend.length === 0 && validMat.length === 0 && validCust.length === 0)) && (
                 <div className="p-4 bg-amber-900/20 border border-amber-700 rounded-xl">
                     <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2 mb-2">
-                        <AlertTriangle className="h-4 w-4" /> No data yet
+                        <AlertTriangle className="h-4 w-4" /> No data for this view
                     </h3>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside mb-3">
-                        <li>Set <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> to your Render API (e.g. <code className="bg-[#0d1117] px-1 rounded">https://xxx.onrender.com/api</code>) in Vercel → Settings → Environment Variables, then <strong>redeploy</strong>.</li>
-                        <li>If the API is correct, upload data from the <strong><Link href="/data" className="text-[#daa520] hover:underline">Data</Link></strong> page (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT, etc.).</li>
+                        <li>If you applied filters (e.g. <strong>FY</strong>, State, Date range), try <strong>Clear all filters</strong> or <strong>All Time</strong> to see all data.</li>
+                        <li>Ensure <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> points to your backend (Vercel env vars) and <strong>redeploy</strong> if you changed it.</li>
+                        <li>Upload data from the <strong><Link href="/data" className="text-[#daa520] hover:underline">Data</Link></strong> page (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT, etc.) if the table is empty.</li>
                     </ul>
-                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry loading</button>
+                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry</button>
                 </div>
             )}
             {anomalies.length > 0 && (

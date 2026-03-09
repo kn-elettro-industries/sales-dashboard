@@ -37,17 +37,37 @@ def get_engine():
 # Cache up to 10 tenants' full DataFrames for 1 hour
 tenant_cache = TTLCache(maxsize=10, ttl=3600)
 
+def _fy_from_date(date):
+    """Same as routes.calculate_fy: April = start of FY. Used for read-time enrichment."""
+    if pd.isna(date):
+        return "UNKNOWN"
+    try:
+        d = pd.to_datetime(date)
+        if hasattr(d, "month"):
+            y = d.year % 100
+            return f"FY{y}-{(d.year + 1) % 100}" if d.month >= 4 else f"FY{y - 1}-{y}"
+    except Exception:
+        pass
+    return "UNKNOWN"
+
+
 @cached(cache=tenant_cache)
 def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
-    """Internal cached helper to fetch full tenant dataset from DB."""
+    """Internal cached helper to fetch full tenant dataset from DB. Enriches FINANCIAL_YEAR and MONTH from DATE when missing."""
     eng = get_engine()
     if eng is None:
         return pd.DataFrame()
     try:
         query = f"SELECT * FROM sales_master WHERE tenant_id = '{tenant_id}'"
         df = pd.read_sql(query, eng)
+        if df.empty:
+            return df
         if "DATE" in df.columns:
-            df["DATE"] = pd.to_datetime(df["DATE"], errors='coerce')
+            df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+            if "FINANCIAL_YEAR" not in df.columns:
+                df["FINANCIAL_YEAR"] = df["DATE"].apply(_fy_from_date)
+            if "MONTH" not in df.columns:
+                df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
         return df
     except Exception as e:
         logging.error(f"Error fetching data from DB: {e}")

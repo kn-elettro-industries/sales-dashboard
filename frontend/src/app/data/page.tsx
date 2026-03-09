@@ -152,7 +152,7 @@ export default function DataUploadPage() {
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors
             ${isDragActive ? 'border-[#daa520] bg-[#daa520]/10' : 'border-[#30363d] hover:border-gray-500 hover:bg-[#21262d]'}
-            ${file ? 'border-green-500/50 bg-green-500/5' : ''}
+            ${files.length > 0 ? 'border-green-500/50 bg-green-500/5' : ''}
           `}
                 >
                     <input {...getInputProps()} />

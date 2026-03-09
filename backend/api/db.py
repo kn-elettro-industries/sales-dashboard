@@ -62,12 +62,19 @@ def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
         df = pd.read_sql(query, eng)
         if df.empty:
             return df
-        if "DATE" in df.columns:
-            df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+        # Coerce AMOUNT to numeric (DB may return string)
+        amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+        if amt_col is not None:
+            df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
+        date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
+        if date_col is not None:
+            df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+            if hasattr(df[date_col].dtype, "tz") and df[date_col].dtype.tz is not None:
+                df[date_col] = df[date_col].dt.tz_localize(None)
             if "FINANCIAL_YEAR" not in df.columns:
-                df["FINANCIAL_YEAR"] = df["DATE"].apply(_fy_from_date)
+                df["FINANCIAL_YEAR"] = df[date_col].apply(_fy_from_date)
             if "MONTH" not in df.columns:
-                df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
+                df["MONTH"] = df[date_col].dt.strftime("%b-%y").str.upper()
         return df
     except Exception as e:
         logging.error(f"Error fetching data from DB: {e}")

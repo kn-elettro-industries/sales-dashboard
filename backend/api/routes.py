@@ -561,7 +561,16 @@ def get_dashboard_summary(
         df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
         if df is None or not isinstance(df, pd.DataFrame) or df.empty:
             return _empty("No rows in database for this tenant. Upload data from the Data page (Cloud Data Uploader).")
-        revenue = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
+        # Coerce numeric/date so DB string or tz-aware types never raise
+        amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+        if amt_col is not None:
+            df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
+        date_col_raw = next((c for c in df.columns if str(c).upper() == "DATE"), None)
+        if date_col_raw is not None:
+            df[date_col_raw] = pd.to_datetime(df[date_col_raw], errors="coerce")
+            if hasattr(df[date_col_raw].dtype, "tz") and df[date_col_raw].dtype.tz is not None:
+                df[date_col_raw] = df[date_col_raw].dt.tz_localize(None)
+        revenue = float(df[amt_col].sum()) if amt_col is not None else 0.0
         orders = int(df["INVOICE_NO"].nunique()) if "INVOICE_NO" in df.columns else 0
         cust_count = int(df["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df.columns else 0
         aov = revenue / orders if orders > 0 else 0
@@ -583,7 +592,8 @@ def get_dashboard_summary(
                 df_prev = get_tenant_data(tenant_id, prev_start_str, prev_end_str)
                 df_prev = apply_filters(df_prev, states, cities, customers, material_groups, fiscal_years, months)
                 if not df_prev.empty:
-                    pr = float(df_prev["AMOUNT"].sum()) if "AMOUNT" in df_prev.columns else 0.0
+                    _amt = next((c for c in df_prev.columns if str(c).upper() == "AMOUNT"), None)
+                    pr = float(df_prev[_amt].sum()) if _amt is not None else 0.0
                     po = int(df_prev["INVOICE_NO"].nunique()) if "INVOICE_NO" in df_prev.columns else 0
                     pc = int(df_prev["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df_prev.columns else 0
                     paov = pr / po if po > 0 else 0
@@ -637,13 +647,13 @@ def get_dashboard_summary(
 
         grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
         material_groups_list = []
-        if grp_col in df.columns:
-            mg = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(material_limit).reset_index()
+        if grp_col in df.columns and amt_col is not None:
+            mg = df.groupby(grp_col)[amt_col].sum().sort_values(ascending=False).head(material_limit).reset_index()
             material_groups_list = serialize_df(mg)
 
         top_customers_list = []
-        if "CUSTOMER_NAME" in df.columns:
-            tc = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(top_customers_limit).reset_index()
+        if "CUSTOMER_NAME" in df.columns and amt_col is not None:
+            tc = df.groupby("CUSTOMER_NAME")[amt_col].sum().sort_values(ascending=False).head(top_customers_limit).reset_index()
             top_customers_list = serialize_df(tc)
 
         return {

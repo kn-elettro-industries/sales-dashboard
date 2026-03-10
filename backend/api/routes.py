@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response
 from pydantic import BaseModel
-from typing import Optional, List
+     from typing import Optional, List
 import logging
 import pandas as pd
 import json
@@ -12,24 +12,23 @@ from .db import get_tenant_data
 
 router = APIRouter()
 
-EXCLUDED_MATERIAL_GROUPS = {
-    # Common non-sales buckets that should not appear in filters/analytics
-    "SALES ACCOUNTS",
-    "SALES ACCOUNT",
-    "SERVICES",
-    "SERVICE",
-    "FINISHED GOODS",
+# Keyword-based exclusion: row excluded if material group CONTAINS any of these (case-insensitive).
+# Kept in sync with legacy/config.py EXCLUDE_KEYWORDS.
+EXCLUDE_KEYWORDS = [
+    "SERVICE", "AIR VENT", "PACKING", "RAW", "BRASS", "PANEL",
+    "SALES ACCOUNT", "MASTER BATCH", "SEMI", "PPCP", "FIXED",
+    "PROTECTION", "HIPS", "ABS", "INDIRECT", "NYLOAN", "PP BLACK",
+    "NASER MILES PARIS", "DOCUMENT HOLDER",
+    "SWISS MILITARY MODLE MAZE",
+    "SELF ADHESIVE TIE MOUNT", "SCREW TYPE TIE MOUNT",
     "FINISHED GOOD",
-    # Additional exclusions (panel, packing, raw material, etc.)
-    "PANEL DOOR SWITCH",
-    "SCREW TYPE TIE MOUNT",
-    "DOCUMENT HOLDER",
-    "PACKING MATERIALS",
-    "PACKING MATERIAL",
-    "AIR VENT FELT",
-    "SMALL BRASS CONNECTOR 9020E/9040E",
-    "RAW-MATERIAL",
-    "RAW MATERIAL",
+]
+
+# Rename mappings: regex pattern → standardized name (applied before exclusion)
+MATERIAL_GROUP_MAPPINGS = {
+    r"CONDUIT.*GLAND": "POLYAMIDE CONDUIT GLAND",
+    r"REVER": "REVERSE FORWARD",
+    r"REVERSE FORWORD": "REVERSE FORWARD",
 }
 
 
@@ -84,10 +83,23 @@ def _material_group_column(df: pd.DataFrame):
             return col
     return None
 
+def _apply_material_mappings(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename/standardize material groups using regex patterns (same as legacy ETL)."""
+    if df is None or df.empty:
+        return df
+    grp_col = _material_group_column(df)
+    if grp_col is None:
+        return df
+    for pattern, replacement in MATERIAL_GROUP_MAPPINGS.items():
+        mask = df[grp_col].astype(str).str.contains(pattern, case=False, na=False)
+        df.loc[mask, grp_col] = replacement
+    return df
+
+
 def _exclude_material_groups(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Remove non-sales material groups from analytics + filters.
-    Applied in upload ETL and read-time (apply_filters / get_filter_options).
+    Remove non-sales material groups using keyword/substring matching (same as legacy ETL).
+    Row excluded if material group CONTAINS any keyword (case-insensitive).
     """
     if df is None or df.empty:
         return df
@@ -102,7 +114,10 @@ def _exclude_material_groups(df: pd.DataFrame) -> pd.DataFrame:
         .str.strip()
         .str.upper()
     )
-    return df[~norm.isin(EXCLUDED_MATERIAL_GROUPS)]
+    mask = pd.Series(False, index=df.index)
+    for keyword in EXCLUDE_KEYWORDS:
+        mask = mask | norm.str.contains(keyword, case=False, na=False)
+    return df[~mask]
 
 def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, material_groups=None, fiscal_years=None, months=None) -> pd.DataFrame:
     """Apply granular filters to a dataframe. Ignores empty or whitespace-only filter strings."""
@@ -152,21 +167,40 @@ STATE_PLACEHOLDER = "State Not Found"
 
 # Helper functions adapted from etl_pipeline
 def standardize(df):
-    if df.empty: return df
+    """Standardize column names and fuzzy-match to canonical names (synced with legacy ETL)."""
+    if df.empty:
+        return df
     df.columns = df.columns.str.strip().str.upper()
     df.columns = df.columns.str.replace(".", "", regex=False).str.replace(" ", "_")
-    for col in df.columns:
-        col_upper = col.upper()
-        if any(x in col_upper for x in ["CITY", "TOWN", "DISTRICT", "LOCATION"]) and "CITY" not in df.columns:
-            df.rename(columns={col: "CITY"}, inplace=True)
-        elif any(x in col_upper for x in ["STATE", "REGION", "PROVINCE", "TERRITORY"]) and "STATE" not in df.columns:
-            df.rename(columns={col: "STATE"}, inplace=True)
-        elif any(x in col_upper for x in ["CUSTOMER", "PARTY", "BILL TO"]) and "CUSTOMER_NAME" not in df.columns:
-            df.rename(columns={col: "CUSTOMER_NAME"}, inplace=True)
-        elif any(x in col_upper for x in ["ITEM", "MATERIAL", "PRODUCT"]) and "ITEMNAME" not in df.columns and "GROUP" not in col_upper:
-            df.rename(columns={col: "ITEMNAME"}, inplace=True)
-        elif (col_upper == "NO" or any(x in col_upper for x in ["INVOICE", "BILL_NO"])) and "INVOICE_NO" not in df.columns and "DATE" not in col_upper:
-            df.rename(columns={col: "INVOICE_NO"}, inplace=True)
+
+    for col in list(df.columns):
+        cu = col.upper()
+
+        # CITY synonyms
+        if any(x in cu for x in ["CITY", "TOWN", "DISTRICT", "LOCATION", "STATION", "DESTINATION", "PLACE"]):
+            if "CITY" not in df.columns:
+                df.rename(columns={col: "CITY"}, inplace=True)
+
+        # STATE synonyms
+        elif any(x in cu for x in ["STATE", "REGION", "PROVINCE", "TERRITORY", "POS", "SUPPLY"]):
+            if "STATE" not in df.columns:
+                df.rename(columns={col: "STATE"}, inplace=True)
+
+        # CUSTOMER synonyms
+        elif any(x in cu for x in ["CUSTOMER", "PARTY", "BILL TO", "BUYER", "DEBTOR"]):
+            if "CUSTOMER_NAME" not in df.columns:
+                df.rename(columns={col: "CUSTOMER_NAME"}, inplace=True)
+
+        # ITEM synonyms (but not GROUP columns)
+        elif any(x in cu for x in ["ITEM", "MATERIAL", "PRODUCT", "DESCRIPTION", "PART"]):
+            if "ITEMNAME" not in df.columns and "GROUP" not in cu:
+                df.rename(columns={col: "ITEMNAME"}, inplace=True)
+
+        # INVOICE synonyms
+        elif cu in ("NO", "NO.") or any(x in cu for x in ["INVOICE", "BILL_NO", "DOC_NO", "VOUCHER"]):
+            if "INVOICE_NO" not in df.columns and "DATE" not in cu:
+                df.rename(columns={col: "INVOICE_NO"}, inplace=True)
+
     return df
 
 def _coalesce_state_region(df: pd.DataFrame) -> pd.DataFrame:
@@ -195,6 +229,44 @@ def calculate_fy(date):
     if pd.isna(date): return "UNKNOWN"
     if date.month >= 4: return f"FY{date.year % 100}-{(date.year + 1) % 100}"
     else: return f"FY{(date.year - 1) % 100}-{date.year % 100}"
+
+
+COMPANY_STATE = "MAHARASHTRA"
+TAX_RATE = 0.18
+
+def calculate_taxes(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate IGST/CGST/SGST based on STATE (same as legacy ETL)."""
+    if df is None or df.empty or "AMOUNT" not in df.columns:
+        return df
+
+    cols_to_drop = [
+        "TOTALAMOUNT", "TAX", "IGST", "CGST", "SGST",
+        "IGST_RATE", "CGST_RATE", "SGST_RATE",
+        "GRAND_TOTAL", "NET_AMOUNT", "TOTAL_TAX", "ROUND_OFF",
+    ]
+    df = df.drop(columns=[c for c in cols_to_drop if c in df.columns], errors="ignore")
+
+    df["IGST"] = 0.0
+    df["CGST"] = 0.0
+    df["SGST"] = 0.0
+    df["TAX"] = 0.0
+    df["TOTALAMOUNT"] = 0.0
+
+    state_series = df["STATE"].copy() if "STATE" in df.columns else pd.Series(["Unknown"] * len(df), index=df.index)
+    state_series = state_series.fillna("Unknown").astype(str).str.upper().str.strip()
+
+    intra = state_series.isin([COMPANY_STATE, "UNKNOWN", "STATE NOT FOUND"])
+    inter = ~intra
+
+    df.loc[inter, "IGST"] = df.loc[inter, "AMOUNT"] * TAX_RATE
+    df.loc[intra, "CGST"] = df.loc[intra, "AMOUNT"] * (TAX_RATE / 2)
+    df.loc[intra, "SGST"] = df.loc[intra, "AMOUNT"] * (TAX_RATE / 2)
+
+    df["TAX"] = df["IGST"] + df["CGST"] + df["SGST"]
+    df["TOTALAMOUNT"] = df["AMOUNT"] + df["TAX"]
+
+    return df
+
 
 # ─── UPLOAD PIPELINE ───
 
@@ -279,10 +351,14 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
         if "CITY" not in df.columns: df["CITY"] = "City Not Found"
         if "STATE" not in df.columns: df["STATE"] = STATE_PLACEHOLDER
 
-        # 4. Exclude non-sales material groups (ETL rule)
+        # 4. Standardize material group names, then exclude non-sales rows (ETL rule)
+        df = _apply_material_mappings(df)
         df = _exclude_material_groups(df)
 
-        # 5. Insert into database
+        # 5. Calculate taxes (IGST/CGST/SGST based on state)
+        df = calculate_taxes(df)
+
+        # 6. Insert into database
         from .db import update_database
         rows_inserted = update_database(df, tenant_id)
 
@@ -326,7 +402,9 @@ async def v1_upload_batch(files: List[UploadFile] = File(...), tenant_id: str = 
                 df["CITY"] = "City Not Found"
             if "STATE" not in df.columns:
                 df["STATE"] = STATE_PLACEHOLDER
+            df = _apply_material_mappings(df)
             df = _exclude_material_groups(df)
+            df = calculate_taxes(df)
             from .db import update_database
             rows = update_database(df, tenant_id)
             last_result = {"filename": file.filename, "rows_inserted": rows, "tenant": tenant_id}

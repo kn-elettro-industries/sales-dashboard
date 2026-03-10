@@ -6,8 +6,8 @@ export const API_BASE_URL = USE_PROXY
     ? "/api/proxy"
     : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").trim().replace(/\/+$/, "");
 
-/** Client cache: 90s TTL so back-navigation feels instant for demos and team use. */
-const CACHE_TTL_MS = 90 * 1000;
+/** Client cache: 5 min TTL so navigation feels instant and reduces backend load. */
+const CACHE_TTL_MS = 5 * 60 * 1000;
 /** Timeout for API requests (backend cold start on Render can be 30–60s). */
 const FETCH_TIMEOUT_MS = 50 * 1000;
 const apiCache = new Map<string, { data: unknown; expiresAt: number }>();

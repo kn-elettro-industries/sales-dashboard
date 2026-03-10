@@ -52,6 +52,8 @@ class CorsAllMiddleware(BaseHTTPMiddleware):
         return response
 
 
+from starlette.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(CorsAllMiddleware)
 app.add_middleware(TimeoutMiddleware)
 app.add_middleware(
@@ -64,6 +66,18 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api")
+
+
+@app.on_event("startup")
+def _warm_cache():
+    """Pre-load the default tenant data into cache so the first dashboard request is fast."""
+    try:
+        from api.db import get_cached_tenant_df
+        import threading
+        threading.Thread(target=get_cached_tenant_df, args=("default_elettro",), daemon=True).start()
+    except Exception:
+        pass
+
 
 @app.api_route("/", methods=["GET", "HEAD"])
 def read_root():

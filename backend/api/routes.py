@@ -673,12 +673,6 @@ def get_filter_options(tenant_id: str = "default_elettro"):
     
     grp_col = _material_group_column(df)
     material_groups = sorted(df[grp_col].dropna().unique().tolist()) if grp_col else []
-    def _is_excluded(val: str) -> bool:
-        norm = str(val).replace("\u00a0", " ")
-        norm = " ".join(norm.split()).strip().upper()
-        return any(kw in norm for kw in EXCLUDE_KEYWORDS)
-
-    material_groups = [g for g in material_groups if not _is_excluded(g)]
     
     fiscal_years = sorted(df["FINANCIAL_YEAR"].dropna().unique().tolist()) if "FINANCIAL_YEAR" in df.columns else []
     months = []

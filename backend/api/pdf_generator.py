@@ -322,27 +322,40 @@ class PDF(FPDF):
         """
         fpdf2 2.8+ raises 'Not enough horizontal space' if a single word is wider than `w`.
         This dynamically truncates long words (adding '..') so they fit without crashing.
+        Accounting for c_margin which is ~1.0mm padding on each side.
         """
         if max_w <= 0 or not text:
             return text
+            
+        c_margin = getattr(self, 'c_margin', 1.0)
+        effective_w = max_w - (2 * c_margin)
         
         # Give a small safety margin for FPDF calculated character widths vs float boundaries
-        safe_w = max_w - 0.5 
+        safe_w = effective_w - 0.5 
         if safe_w <= 0:
             return text
 
-        words = str(text).split(' ')
+        suffix = '..' if effective_w > 10 else ''
+        words = str(text).replace('\n', ' \n ').split(' ')
         res_words = []
+        
         for word in words:
-            if self.get_string_width(word) <= safe_w:
+            if word == '\n':
+                res_words.append(word)
+            elif self.get_string_width(word) <= safe_w:
                 res_words.append(word)
             else:
                 # Word is too long, truncate letter by letter
                 trunc = word
-                while len(trunc) > 1 and self.get_string_width(trunc + "..") > safe_w:
+                while len(trunc) > 1 and self.get_string_width(trunc + suffix) > safe_w:
                     trunc = trunc[:-1]
-                res_words.append(trunc + "..")
-        return ' '.join(res_words)
+                    
+                if self.get_string_width(trunc + suffix) > safe_w:
+                    pass # Too small even for first char, drop it
+                else:
+                    res_words.append(trunc + suffix)
+                    
+        return ' '.join(res_words).replace(' \n ', '\n').replace('  ', ' ')
 
     def multi_cell(self, w, h=None, text="", border=0, align="J", fill=False, **kwargs):
         if "txt" in kwargs:
@@ -350,7 +363,12 @@ class PDF(FPDF):
         text = _pdf_text(text)
         
         # Calculate effective width (if w=0, it extends to right margin)
-        w_effective = w if w > 0 else (self.epw - self.x + self.l_margin)
+        # We must limit to the page's effective printable width to prevent 
+        # FPDF2 2.8+ raising "Not enough horizontal space" when x is skewed.
+        w_effective = w if w > 0 else (self.epw - (self.x - getattr(self, "l_margin", 10)))
+        if w_effective <= 0:
+            w_effective = self.epw
+            
         text = self._truncate_text_to_fit(text, w_effective)
             
         super().multi_cell(w=w, h=h, text=text, border=border, align=align, fill=fill, **kwargs)
@@ -673,6 +691,7 @@ def generate_distributor_strategy_pdf(
     recs.append(f"Report generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
 
     for r in recs:
+        pdf.set_x(10)
         pdf.multi_cell(0, 6, _pdf_text(r), 0, "L")
 
     return _pdf_to_bytes(pdf)

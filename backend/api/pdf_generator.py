@@ -307,71 +307,76 @@ _MIN_CELL_W = 5.0
 
 class PDF(FPDF):
 
-    def cell(self, w=None, h=None, text="", border=0, ln=0, align="", fill=False, link="", **kwargs):
+    def cell(self, *args, **kwargs):
+        """Override cell() to sanitize text for fpdf2 compatibility."""
+        # Support legacy 'txt' kwarg used in older fpdf versions
         if "txt" in kwargs:
-            text = kwargs.pop("txt")
-        text = _pdf_text(text)
-        
-        if w is not None:
-            w_effective = w if w > 0 else (self.epw - self.x + self.l_margin)
-            text = self._truncate_text_to_fit(text, w_effective)
-            
-        super().cell(w=w, h=h, text=text, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+            kwargs["txt"] = _pdf_text(kwargs["txt"])
+        elif "text" in kwargs:
+            kwargs["text"] = _pdf_text(kwargs["text"])
+        elif len(args) >= 3:
+            # text is the 3rd positional argument (after w, h)
+            args = list(args)
+            args[2] = _pdf_text(args[2])
+            args = tuple(args)
+        return super().cell(*args, **kwargs)
 
     def _truncate_text_to_fit(self, text: str, max_w: float) -> str:
         """
-        fpdf2 2.8+ raises 'Not enough horizontal space' if a single word is wider than `w`.
-        This dynamically truncates long words (adding '..') so they fit without crashing.
-        Accounting for c_margin which is ~1.0mm padding on each side.
+        fpdf2 2.8+ raises 'Not enough horizontal space to render a single character'
+        if a single token is wider than `w` in multi_cell.
+        Truncates long words to fit within max_w, accounting for c_margin padding.
         """
         if max_w <= 0 or not text:
             return text
-            
         c_margin = getattr(self, 'c_margin', 1.0)
-        effective_w = max_w - (2 * c_margin)
-        
-        # Give a small safety margin for FPDF calculated character widths vs float boundaries
-        safe_w = effective_w - 0.5 
-        if safe_w <= 0:
+        # effective width after cell padding on each side
+        effective_w = max_w - (2 * c_margin) - 0.5
+        if effective_w <= 0:
             return text
-
         suffix = '..' if effective_w > 10 else ''
         words = str(text).replace('\n', ' \n ').split(' ')
         res_words = []
-        
         for word in words:
             if word == '\n':
                 res_words.append(word)
-            elif self.get_string_width(word) <= safe_w:
+            elif self.get_string_width(word) <= effective_w:
                 res_words.append(word)
             else:
-                # Word is too long, truncate letter by letter
                 trunc = word
-                while len(trunc) > 1 and self.get_string_width(trunc + suffix) > safe_w:
+                while len(trunc) > 1 and self.get_string_width(trunc + suffix) > effective_w:
                     trunc = trunc[:-1]
-                    
-                if self.get_string_width(trunc + suffix) > safe_w:
-                    pass # Too small even for first char, drop it
-                else:
+                if self.get_string_width(trunc + suffix) <= effective_w:
                     res_words.append(trunc + suffix)
-                    
+                # else: drop the word entirely (unreachable with any reasonable font/size)
         return ' '.join(res_words).replace(' \n ', '\n').replace('  ', ' ')
 
-    def multi_cell(self, w, h=None, text="", border=0, align="J", fill=False, **kwargs):
+    def multi_cell(self, *args, **kwargs):
+        """Override multi_cell() to sanitize text and reset x if needed."""
+        # Reset x to left margin if cursor is off the page
+        if self.x >= self.w - self.r_margin:
+            self.set_x(self.l_margin)
+        # Support legacy 'txt' kwarg
         if "txt" in kwargs:
-            text = kwargs.pop("txt")
-        text = _pdf_text(text)
-        
-        # Calculate effective width (if w=0, it extends to right margin)
-        # We must limit to the page's effective printable width to prevent 
-        # FPDF2 2.8+ raising "Not enough horizontal space" when x is skewed.
-        w_effective = w if w > 0 else (self.epw - (self.x - getattr(self, "l_margin", 10)))
-        if w_effective <= 0:
-            w_effective = self.epw
-            
-        text = self._truncate_text_to_fit(text, w_effective)
-            
-        super().multi_cell(w=w, h=h, text=text, border=border, align=align, fill=fill, **kwargs)
+            kwargs["txt"] = _pdf_text(kwargs["txt"])
+        elif "text" in kwargs:
+            raw_text = _pdf_text(kwargs["text"])
+            # Get width arg for truncation (first positional arg or kwarg 'w')
+            w = args[0] if args else kwargs.get("w", 0)
+            w_eff = w if w > 0 else (self.epw - (self.x - self.l_margin))
+            if w_eff <= 0:
+                w_eff = self.epw
+            kwargs["text"] = self._truncate_text_to_fit(raw_text, w_eff)
+        elif len(args) >= 3:
+            args = list(args)
+            raw_text = _pdf_text(args[2])
+            w = args[0]
+            w_eff = w if w > 0 else (self.epw - (self.x - self.l_margin))
+            if w_eff <= 0:
+                w_eff = self.epw
+            args[2] = self._truncate_text_to_fit(raw_text, w_eff)
+            args = tuple(args)
+        return super().multi_cell(*args, **kwargs)
 
     def __init__(self):
         super().__init__()

@@ -308,10 +308,14 @@ _MIN_CELL_W = 5.0
 class PDF(FPDF):
 
     def cell(self, w=None, h=None, txt="", border=0, ln=0, align="", fill=False, link="", **kwargs):
+        if w is not None and 0 < abs(w) < _MIN_CELL_W:
+            w = _MIN_CELL_W
         txt = _pdf_text(txt)
         super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
 
     def multi_cell(self, w, h=None, txt="", border=0, align="J", fill=False, **kwargs):
+        if w is not None and 0 < abs(w) < _MIN_CELL_W:
+            w = _MIN_CELL_W
         txt = _pdf_text(txt)
         super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
 

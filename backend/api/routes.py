@@ -455,6 +455,22 @@ def get_data_health(tenant_id: str = "default_elettro"):
 # ─── NATIVE PDF REPORTS ───
 # pdf_generator (matplotlib) imported lazily below to avoid slow import on Render
 
+@router.get("/reports/test-pdf")
+def test_pdf():
+    """Generate a simple test PDF to verify fpdf2 is working."""
+    from fpdf import FPDF
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 24)
+    pdf.cell(0, 20, "TEST PDF - fpdf2 is working", 0, 1, "C")
+    pdf.set_font("Arial", "", 14)
+    pdf.cell(0, 10, f"Generated: {datetime.now().isoformat()}", 0, 1, "C")
+    pdf.cell(0, 10, "If you can read this, PDF generation works.", 0, 1, "C")
+    raw = pdf.output()
+    pdf_bytes = bytes(raw) if isinstance(raw, (bytearray, memoryview)) else raw.encode("latin-1") if isinstance(raw, str) else raw
+    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="test.pdf"'})
+
+
 @router.get("/reports/download")
 def download_pdf_report(
     tenant_id: str = "default_elettro",

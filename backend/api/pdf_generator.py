@@ -200,7 +200,7 @@ def generate_dynamic_pdf_report(
         ax.set_title("Revenue (Last 24 months)", fontsize=12, fontweight="bold", pad=10)
         ax.tick_params(axis="x", rotation=45, labelsize=8)
         img = create_chart(fig)
-        pdf.image(img, x=10, w=190)
+        pdf.image(img, x=10, w=185)
         os.remove(img)
         pdf.ln(3)
 
@@ -247,7 +247,7 @@ def generate_dynamic_pdf_report(
         pdf.set_font("Arial", "B", 9)
         pdf.set_fill_color(33, 37, 41)
         pdf.set_text_color(255, 255, 255)
-        pdf.cell(90, 8, _pdf_text(primary_col.replace("_", " ").title()), 0, 0, "L", 1)
+        pdf.cell(85, 8, _pdf_text(primary_col.replace("_", " ").title()), 0, 0, "L", 1)
         pdf.cell(40, 8, "Revenue", 0, 0, "R", 1)
         pdf.cell(30, 8, "Orders", 0, 0, "R", 1)
         pdf.cell(30, 8, "Customers", 0, 1, "R", 1)
@@ -256,7 +256,7 @@ def generate_dynamic_pdf_report(
         fill = False
         for _, row in grp.iterrows():
             pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-            pdf.cell(90, 7, _pdf_text(row[primary_col])[:45], 0, 0, "L", fill)
+            pdf.cell(85, 7, _pdf_text(row[primary_col])[:45], 0, 0, "L", fill)
             pdf.cell(40, 7, format_currency_pdf(float(row["Revenue"])), 0, 0, "R", fill)
             pdf.cell(30, 7, str(int(row["Orders"])), 0, 0, "R", fill)
             pdf.cell(30, 7, str(int(row["Customers"])), 0, 1, "R", fill)
@@ -497,31 +497,31 @@ class PDF(FPDF):
         self.set_text_color(218, 165, 32)
         self.set_font("Arial", "B", 30)
         self.set_xy(0, 95)
-        self.cell(210, 12, "DISTRIBUTOR STRATEGY", 0, 1, "C")
+        self.cell(0, 12, "DISTRIBUTOR STRATEGY", 0, 1, "C")
 
         self.set_text_color(255, 255, 255)
         self.set_font("Arial", "B", 20)
         self.set_xy(0, 112)
-        self.cell(210, 10, "REPORT", 0, 1, "C")
+        self.cell(0, 10, "REPORT", 0, 1, "C")
 
         # Customer + period
         self.set_text_color(218, 165, 32)
         self.set_font("Arial", "B", 14)
         self.set_xy(0, 140)
-        self.cell(210, 8, _pdf_text(customer_name).upper(), 0, 1, "C")
+        self.cell(0, 8, _pdf_text(customer_name).upper(), 0, 1, "C")
 
         self.set_text_color(200, 200, 200)
         self.set_font("Arial", "", 10)
         self.set_xy(0, 152)
-        self.cell(210, 6, f"Analysis Period: {_pdf_text(analysis_period)}", 0, 1, "C")
+        self.cell(0, 6, f"Analysis Period: {_pdf_text(analysis_period)}", 0, 1, "C")
         self.set_xy(0, 160)
-        self.cell(210, 6, f"Generated: {datetime.now().strftime('%d %B %Y, %I:%M %p')}", 0, 1, "C")
+        self.cell(0, 6, f"Generated: {datetime.now().strftime('%d %B %Y, %I:%M %p')}", 0, 1, "C")
 
         # Subtle footer note (must stay above page-break threshold)
         self.set_text_color(140, 140, 140)
         self.set_font("Arial", "", 8)
         self.set_xy(0, 274)
-        self.cell(210, 5, "CONFIDENTIAL • For internal use only", 0, 0, "C")
+        self.cell(0, 5, "CONFIDENTIAL • For internal use only", 0, 0, "C")
 
         # Restore normal page-break behavior for subsequent pages
         self.set_auto_page_break(auto=prev_auto, margin=prev_margin)
@@ -558,7 +558,7 @@ def generate_distributor_strategy_pdf(
         pdf.set_text_color(200, 200, 200)
         pdf.set_font("Arial", "", 11)
         pdf.set_xy(0, 185)
-        pdf.cell(210, 8, "No data available for the selected filters.", 0, 0, "C")
+        pdf.cell(0, 8, "No data available for the selected filters.", 0, 0, "C")
         return _pdf_to_bytes(pdf)
 
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
@@ -617,7 +617,7 @@ def generate_distributor_strategy_pdf(
     pdf.set_fill_color(218, 165, 32)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(10, 8, "#", 1, 0, "C", True)
-    pdf.cell(120, 8, "Product Category", 1, 0, "L", True)
+    pdf.cell(115, 8, "Product Category", 1, 0, "L", True)
     pdf.cell(35, 8, "Revenue", 1, 0, "R", True)
     pdf.cell(25, 8, "Share %", 1, 1, "R", True)
 
@@ -630,13 +630,13 @@ def generate_distributor_strategy_pdf(
             share = (float(amt) / total_rev * 100.0) if total_rev > 0 else 0.0
             pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(10, 7, str(i), 1, 0, "C", fill)
-            pdf.cell(120, 7, _pdf_text(str(cat))[:60], 1, 0, "L", fill)
+            pdf.cell(115, 7, _pdf_text(str(cat))[:55], 1, 0, "L", fill)
             pdf.cell(35, 7, format_currency_pdf(float(amt)), 1, 0, "R", fill)
             pdf.cell(25, 7, f"{share:.1f}%", 1, 1, "R", fill)
             fill = not fill
     else:
         pdf.set_fill_color(255, 255, 255)
-        pdf.cell(190, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
+        pdf.cell(185, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
 
     pdf.ln(6)
 
@@ -828,7 +828,7 @@ def generate_pdf_report(
         
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 10, "2. Revenue Trend", 0, 1)
-        pdf.image(img_path, x=10, w=190)
+        pdf.image(img_path, x=10, w=185)
         os.remove(img_path)
         pdf.ln(5)
 
@@ -898,7 +898,7 @@ def generate_pdf_report(
     fig.tight_layout()
     img_path = create_chart(fig)
     
-    pdf.image(img_path, x=10, w=190)
+    pdf.image(img_path, x=10, w=185)
     os.remove(img_path)
     pdf.ln(10)
 
@@ -910,7 +910,7 @@ def generate_pdf_report(
     pdf.set_font("Arial", 'B', 9)
     pdf.set_fill_color(33, 37, 41)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(100, 10, "Item Description", 0, 0, 'L', 1)
+    pdf.cell(95, 10, "Item Description", 0, 0, 'L', 1)
     pdf.cell(45, 10, "Category", 0, 0, 'L', 1)
     pdf.cell(45, 10, "Revenue", 0, 1, 'R', 1)
     
@@ -928,7 +928,7 @@ def generate_pdf_report(
         grp = str(row[grp_col])[:20]
         amt = format_currency_pdf(row["AMOUNT"])
         
-        pdf.cell(100, 8, name, 0, 0, 'L', fill)
+        pdf.cell(95, 8, name, 0, 0, 'L', fill)
         pdf.cell(45, 8, grp, 0, 0, 'L', fill)
         pdf.cell(45, 8, amt, 0, 1, 'R', fill)
         fill = not fill
@@ -1000,7 +1000,7 @@ def generate_pdf_report(
                 
                 img_path = create_chart(fig)
                 
-                pdf.image(img_path, x=10, w=190)
+                pdf.image(img_path, x=10, w=185)
                 os.remove(img_path)
                 pdf.ln(5)
             except Exception:

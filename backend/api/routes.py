@@ -458,14 +458,31 @@ def get_data_health(tenant_id: str = "default_elettro"):
 @router.get("/reports/test-pdf")
 def test_pdf():
     """Generate a simple test PDF to verify fpdf2 is working."""
+    import fpdf as _fpdf_module
+    fpdf_version = getattr(_fpdf_module, '__version__', 'unknown')
+    fpdf_path = getattr(_fpdf_module, '__file__', 'unknown')
     from fpdf import FPDF
+    import inspect
+    cell_sig = str(inspect.signature(FPDF.cell))
+    uses_text_param = 'text' in inspect.signature(FPDF.cell).parameters
+    
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", "B", 24)
-    pdf.cell(0, 20, "TEST PDF - fpdf2 is working", 0, 1, "C")
-    pdf.set_font("Arial", "", 14)
-    pdf.cell(0, 10, f"Generated: {datetime.now().isoformat()}", 0, 1, "C")
-    pdf.cell(0, 10, "If you can read this, PDF generation works.", 0, 1, "C")
+    pdf.set_font("Helvetica", "B", 18)
+    # Use positional arg for max compatibility
+    pdf.cell(0, 20, "TEST PDF - fpdf version check", 0, 1, "C")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 8, f"fpdf version: {fpdf_version}", 0, 1, "L")
+    pdf.cell(0, 8, f"fpdf path: {fpdf_path[:80]}", 0, 1, "L")
+    pdf.cell(0, 8, f"cell() uses 'text=' param: {uses_text_param}", 0, 1, "L")
+    pdf.cell(0, 8, f"Generated: {datetime.now().isoformat()}", 0, 1, "L")
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "B", 12)
+    # Test text= kwarg - will be blank on old PyFPDF
+    pdf.cell(0, 10, text="If THIS line has text, fpdf2 is working correctly.", border=1)
+    pdf.ln(12)
+    # Test positional (always works)
+    pdf.cell(0, 10, "This line uses positional args (always works).", 1, 1)
     raw = pdf.output()
     pdf_bytes = bytes(raw) if isinstance(raw, (bytearray, memoryview)) else raw.encode("latin-1") if isinstance(raw, str) else raw
     return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="test.pdf"'})

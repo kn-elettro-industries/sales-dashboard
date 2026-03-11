@@ -1,6 +1,20 @@
 import pandas as pd
-from fpdf import FPDF
 from datetime import datetime
+
+# ── fpdf2 guard ──────────────────────────────────────────────────────────────
+# Both `fpdf` (PyFPDF 1.7.x) and `fpdf2` (2.x) share the same module name.
+# If old PyFPDF wins the import race, cell() ignores the `text=` kwarg and
+# produces blank PDFs.  We force fpdf2 by checking the version here.
+import fpdf as _fpdf_pkg
+_fpdf_ver = getattr(_fpdf_pkg, "__version__", "0")
+if not _fpdf_ver.startswith("2"):
+    raise ImportError(
+        f"fpdf2 2.x required but got fpdf version '{_fpdf_ver}'. "
+        "Run: pip uninstall -y fpdf && pip install fpdf2"
+    )
+from fpdf import FPDF
+# ─────────────────────────────────────────────────────────────────────────────
+
 import tempfile
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas

@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ELETTRO Intelligence — Sales Analytics Platform
 
-## Getting Started
+Internal sales intelligence dashboard for K.N. Elettro Industries. Ingests invoice-level data, provides real-time analytics, and generates executive PDF reports.
 
-First, run the development server:
+## Stack
+
+- **Frontend**: Next.js (App Router), TypeScript, Recharts, Vanilla CSS
+- **Backend**: FastAPI, Python, Pandas, Matplotlib, fpdf2
+- **Database**: Supabase (PostgreSQL)
+- **Hosting**: Vercel (frontend) + Render (backend)
+
+## Running Locally
 
 ```bash
+# Backend — http://localhost:8000
+cd backend
+pip install -r requirements.txt
+python main.py
+
+# Frontend — http://localhost:3000
+cd frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set environment variables:
+- `DATABASE_URL` — Supabase connection string
+- `NEXT_PUBLIC_API_URL` — Backend API base URL (e.g. `http://localhost:8000/api`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Revenue & order KPIs with fiscal year filtering
+- Customer RFM segmentation and risk heatmaps
+- Product category performance & Pareto analysis
+- India choropleth map for geographic revenue distribution
+- Multi-format PDF report export (Executive Summary, Distributor Strategy, Category Report)
+- AI chatbot for natural language data queries
+- CSV/Excel data upload with auto-processing pipeline
 
-## Learn More
+## Project Layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+├── backend/
+│   ├── main.py               # FastAPI app entry point
+│   └── api/
+│       ├── routes.py         # API endpoints
+│       ├── db.py             # Supabase connection + TTL cache
+│       ├── pdf_generator.py  # PDF report generation
+│       └── chatbot.py        # AI chatbot query engine
+├── frontend/
+│   └── src/
+│       ├── app/              # Next.js pages
+│       ├── components/ui/    # Shared UI components
+│       └── lib/api.ts        # API client
+└── assets/                   # Brand assets (logos)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- PDF charts use `matplotlib.figure.Figure` directly — **never** `pyplot` (not thread-safe with Uvicorn)
+- Multi-tenancy via `tenant_id` query parameter
+- CORS exposes `Content-Disposition` header for PDF download filenames
+- Proxy in `frontend/src/app/api/proxy/` forwards all backend calls to avoid CORS in production

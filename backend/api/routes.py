@@ -125,7 +125,6 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
         return pd.DataFrame()
     if df.empty:
         return df
-    df = _exclude_material_groups(df)
     if states and str(states).strip():
         state_list = [s.strip() for s in states.split(",") if s.strip()]
         if "STATE" in df.columns and state_list:
@@ -477,7 +476,9 @@ def download_pdf_report(
     try:
         from .pdf_generator import generate_pdf_report, generate_dynamic_pdf_report, generate_distributor_strategy_pdf
         df = get_tenant_data(tenant_id, start_date, end_date)
+        logging.info(f"REPORT: raw rows={len(df)}, cols={list(df.columns)[:10]}")
         df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+        logging.info(f"REPORT: after filters rows={len(df)}, report_type={report_type}, entity={specific_entity}, months={months}")
 
         if df.empty:
             raise HTTPException(
@@ -649,7 +650,6 @@ def handle_chat_query(req: ChatRequest):
     try:
         from .chatbot import process_query as chat_process_query
         df = get_tenant_data(req.tenant, req.startDate, req.endDate)
-        df = _exclude_material_groups(df)
         response_text = chat_process_query(req.query, df)
         return {"response": response_text}
     except Exception as e:
@@ -664,7 +664,6 @@ def get_filter_options(tenant_id: str = "default_elettro"):
     if df.empty:
         return {"states": [], "cities": [], "customers": [], "material_groups": [], "fiscal_years": [], "months": []}
 
-    df = _exclude_material_groups(df)
     # Exclude "State Not Found" / "STATE NOT FOUND ⚠️" from filter options so only real states appear (no duplicate region placeholders)
     raw_states = df["STATE"].dropna().unique().tolist() if "STATE" in df.columns else []
     states = sorted([s for s in raw_states if str(s).strip() and "NOT FOUND" not in str(s).upper()])

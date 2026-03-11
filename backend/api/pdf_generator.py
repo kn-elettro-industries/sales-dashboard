@@ -307,6 +307,14 @@ _MIN_CELL_W = 5.0
 
 class PDF(FPDF):
 
+    def cell(self, w=None, h=None, txt="", border=0, ln=0, align="", fill=False, link="", **kwargs):
+        txt = _pdf_text(txt)
+        super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+
+    def multi_cell(self, w, h=None, txt="", border=0, align="J", fill=False, **kwargs):
+        txt = _pdf_text(txt)
+        super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
+
     def __init__(self):
         super().__init__()
         # Try to locate a logo image. Prefer absolute paths derived from this file's location

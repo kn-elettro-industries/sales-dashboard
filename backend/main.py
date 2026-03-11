@@ -83,6 +83,20 @@ def _warm_cache():
 def read_root():
     return {"status": "ok", "message": "ELETTRO Intelligence API is running."}
 
+@app.get("/version")
+def version_check():
+    """Diagnostic endpoint: returns fpdf version info to confirm fpdf2 is loaded."""
+    import fpdf as _fpdf
+    import inspect
+    from fpdf import FPDF
+    uses_text = 'text' in inspect.signature(FPDF.cell).parameters
+    return {
+        "fpdf_version": getattr(_fpdf, "__version__", "unknown"),
+        "fpdf_path": getattr(_fpdf, "__file__", "unknown"),
+        "cell_uses_text_param": uses_text,
+        "is_fpdf2": uses_text,
+    }
+
 if __name__ == "__main__":
     import uvicorn
     # Use the PORT environment variable if available, otherwise default to 8080

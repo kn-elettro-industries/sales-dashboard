@@ -307,25 +307,41 @@ _MIN_CELL_W = 5.0
 
 class PDF(FPDF):
 
-    def cell(self, w=None, h=None, txt="", border=0, ln=0, align="", fill=False, link="", **kwargs):
+    def _safe_w(self, w):
+        """Ensure cell width fits on page. Returns adjusted width."""
         if w is not None and 0 < abs(w) < _MIN_CELL_W:
             w = _MIN_CELL_W
-        txt = _pdf_text(txt)
         remaining = self.w - self.r_margin - self.x
+        if remaining < _MIN_CELL_W:
+            self.ln()
+            remaining = self.w - self.r_margin - self.x
         if w is not None and w > 0 and w > remaining:
             w = max(remaining, _MIN_CELL_W)
-        if (w == 0 or w is None) and remaining < _MIN_CELL_W:
+        return w
+
+    def cell(self, w=None, h=None, txt="", border=0, ln=0, align="", fill=False, link="", **kwargs):
+        w = self._safe_w(w)
+        txt = _pdf_text(txt)
+        try:
+            super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+        except Exception:
             self.ln()
-        super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+            try:
+                super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+            except Exception:
+                pass
 
     def multi_cell(self, w, h=None, txt="", border=0, align="J", fill=False, **kwargs):
-        if w is not None and 0 < abs(w) < _MIN_CELL_W:
-            w = _MIN_CELL_W
+        w = self._safe_w(w)
         txt = _pdf_text(txt)
-        remaining = self.w - self.r_margin - self.x
-        if w is not None and w > 0 and w > remaining:
-            w = max(remaining, _MIN_CELL_W)
-        super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
+        try:
+            super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
+        except Exception:
+            self.ln()
+            try:
+                super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
+            except Exception:
+                pass
 
     def __init__(self):
         super().__init__()

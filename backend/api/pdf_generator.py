@@ -311,12 +311,20 @@ class PDF(FPDF):
         if w is not None and 0 < abs(w) < _MIN_CELL_W:
             w = _MIN_CELL_W
         txt = _pdf_text(txt)
+        remaining = self.w - self.r_margin - self.x
+        if w is not None and w > 0 and w > remaining:
+            w = max(remaining, _MIN_CELL_W)
+        if (w == 0 or w is None) and remaining < _MIN_CELL_W:
+            self.ln()
         super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
 
     def multi_cell(self, w, h=None, txt="", border=0, align="J", fill=False, **kwargs):
         if w is not None and 0 < abs(w) < _MIN_CELL_W:
             w = _MIN_CELL_W
         txt = _pdf_text(txt)
+        remaining = self.w - self.r_margin - self.x
+        if w is not None and w > 0 and w > remaining:
+            w = max(remaining, _MIN_CELL_W)
         super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
 
     def __init__(self):

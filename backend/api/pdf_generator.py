@@ -323,11 +323,11 @@ class PDF(FPDF):
         w = self._safe_w(w)
         txt = _pdf_text(txt)
         try:
-            super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+            super().cell(w=w, h=h, text=txt, border=border, ln=ln, align=align, fill=fill, link=link)
         except Exception:
             self.ln()
             try:
-                super().cell(w=w, h=h, txt=txt, border=border, ln=ln, align=align, fill=fill, link=link, **kwargs)
+                super().cell(w=w, h=h, text=txt, border=border, ln=ln, align=align, fill=fill, link=link)
             except Exception:
                 pass
 
@@ -335,11 +335,11 @@ class PDF(FPDF):
         w = self._safe_w(w)
         txt = _pdf_text(txt)
         try:
-            super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
+            super().multi_cell(w=w, h=h, text=txt, border=border, align=align, fill=fill)
         except Exception:
             self.ln()
             try:
-                super().multi_cell(w=w, h=h, txt=txt, border=border, align=align, fill=fill, **kwargs)
+                super().multi_cell(w=w, h=h, text=txt, border=border, align=align, fill=fill)
             except Exception:
                 pass
 

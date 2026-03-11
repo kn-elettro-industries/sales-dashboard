@@ -83,7 +83,29 @@ async function proxy(
         resHeaders.set("Access-Control-Allow-Origin", "*");
         resHeaders.set("Content-Encoding", "identity");
 
-        const body = res.status === 204 || res.status === 304 ? null : await res.text();
+        // Detect if response is binary (PDF, images, etc.) - must NOT run through res.text() / TextEncoder
+        // as that would mangle bytes > 127 and produce a corrupt/blank PDF.
+        const contentType = (res.headers.get("content-type") || "").toLowerCase();
+        const isBinary =
+            contentType.includes("pdf") ||
+            contentType.includes("octet-stream") ||
+            contentType.startsWith("image/") ||
+            contentType.includes("zip") ||
+            contentType.includes("excel") ||
+            contentType.includes("spreadsheet");
+
+        if (res.status === 204 || res.status === 304) {
+            return new NextResponse(null, { status: res.status, statusText: res.statusText, headers: resHeaders });
+        }
+
+        if (isBinary) {
+            // Stream the raw bytes directly — do NOT convert to text
+            const arrayBuf = await res.arrayBuffer();
+            resHeaders.set("Content-Length", String(arrayBuf.byteLength));
+            return new NextResponse(arrayBuf, { status: res.status, statusText: res.statusText, headers: resHeaders });
+        }
+
+        const body = await res.text();
         if (body !== null) {
             const bytes = new TextEncoder().encode(body);
             resHeaders.set("Content-Length", String(bytes.length));

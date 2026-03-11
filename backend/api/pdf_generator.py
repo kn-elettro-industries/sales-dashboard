@@ -12,6 +12,20 @@ from typing import Optional
 
 matplotlib.use('Agg')
 
+
+def _pdf_to_bytes(pdf: FPDF) -> bytes:
+    """Safely extract PDF bytes from any fpdf/fpdf2 version."""
+    try:
+        raw = pdf.output()
+        if isinstance(raw, (bytes, bytearray)):
+            return bytes(raw)
+        return raw.encode("latin-1")
+    except TypeError:
+        raw = pdf.output(dest="S")
+        if isinstance(raw, (bytes, bytearray)):
+            return bytes(raw)
+        return raw.encode("latin-1")
+
 def format_currency_pdf(value):
     """
     Human-friendly INR formatting for PDFs using Indian-style scales.
@@ -121,8 +135,7 @@ def generate_dynamic_pdf_report(
     if df.empty:
         pdf.set_font("Arial", "B", 14)
         pdf.cell(0, 10, "No data available for the selected filters.", 0, 1)
-        out = pdf.output(dest="S")
-        return out.encode("latin-1") if isinstance(out, str) else bytes(out)
+        return _pdf_to_bytes(pdf)
 
     # KPI summary
     total_rev = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
@@ -287,8 +300,7 @@ def generate_dynamic_pdf_report(
                 pdf.ln()
                 fill = not fill
 
-    out = pdf.output(dest="S")
-    return out.encode("latin-1") if isinstance(out, str) else bytes(out)
+    return _pdf_to_bytes(pdf)
 
 _MIN_CELL_W = 5.0
 
@@ -511,8 +523,7 @@ def generate_distributor_strategy_pdf(
         pdf.set_font("Arial", "", 11)
         pdf.set_xy(0, 185)
         pdf.cell(210, 8, "No data available for the selected filters.", 0, 0, "C")
-        out = pdf.output(dest="S")
-        return out.encode("latin-1") if isinstance(out, str) else bytes(out)
+        return _pdf_to_bytes(pdf)
 
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
     pdf = PDF()
@@ -616,8 +627,7 @@ def generate_distributor_strategy_pdf(
     for r in recs:
         pdf.multi_cell(0, 6, _pdf_text(r), 0, "L")
 
-    out = pdf.output(dest="S")
-    return out.encode("latin-1") if isinstance(out, str) else bytes(out)
+    return _pdf_to_bytes(pdf)
 
 
 def generate_pdf_report(
@@ -702,8 +712,7 @@ def generate_pdf_report(
     if df.empty:
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, "No data available for the selected period.", 0, 1)
-        out = pdf.output(dest='S')
-        return out.encode('latin-1') if isinstance(out, str) else bytes(out)
+        return _pdf_to_bytes(pdf)
 
     # 2. KPI Grid 
     print("PDF Gen - Calculating KPIs...")
@@ -1177,7 +1186,5 @@ def generate_pdf_report(
             pdf.set_font("Arial", '', 9)
             pdf.cell(0, 7, insight, 0, 1, 'L')
 
-    # Output the PDF as bytes
-    out = pdf.output(dest='S')
-    return out.encode('latin-1') if isinstance(out, str) else bytes(out)
+    return _pdf_to_bytes(pdf)
 

@@ -30,14 +30,14 @@ sales_pipeline/
 │
 ├── docs/               # All documentation
 │   ├── DEPLOYMENT.md
-│   ├── DEPLOY-TOMORROW.md
 │   ├── VISION.md, PROJECT_JOURNEY.md, …
 │   ├── ELETTRO_Platform_Documentation.pdf
 │   └── engineering_journal/
 │
 ├── assets/             # Logos, CSS (used by backend PDF + legacy app)
+├── shared/             # Shared Python (geo_data, etc.)
 ├── data/               # Local data (masters, raw, output)
-├── scripts/            # Utility scripts and .bat helpers
+├── scripts/            # Utility scripts (e.g. create_targets_template, remove_bg)
 ├── tests/
 ├── reports/
 │
@@ -58,4 +58,4 @@ sales_pipeline/
 
 - **Data:** `data/` at repo root (masters, raw, output). Legacy app uses it via `config.py` (BASE_DIR = repo root).
 - **Assets:** `assets/` at repo root. Backend (e.g. PDF) and legacy app both use it.
-- **Documentation:** Everything is under `docs/` (including `DEPLOYMENT.md` and `DEPLOY-TOMORROW.md`).
+- **Documentation:** Everything is under `docs/` (including `DEPLOYMENT.md`).

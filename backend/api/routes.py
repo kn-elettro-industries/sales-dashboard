@@ -537,19 +537,7 @@ def download_pdf_report(
                     detail="No data for the selected customer and filters. Widen filters or choose a different period."
                 )
 
-            # If user didn't select a month, default the distributor report to the previous month
-            # (most common usage: generate in March for Feb).
-            #
-            # Note: the UI often sets a wide date range (e.g. full FY). We still want the default
-            # month behavior when `months` isn't selected.
             effective_months = months
-            if (not months or not str(months).strip()) and ("MONTH" in df.columns):
-                prev_month_day = (datetime.now().replace(day=1) - timedelta(days=1))
-                prev_month_label = prev_month_day.strftime("%b-%y").upper()
-                prev_df = df[df["MONTH"].astype(str).str.upper() == prev_month_label]
-                if not prev_df.empty:
-                    df = prev_df
-                    effective_months = prev_month_label
 
             # Extra safeguard: if the dataframe already resolves to a single month
             # (e.g. due to other filtering), display that month on the PDF.
@@ -1057,7 +1045,7 @@ def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str]
     import sys, os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
     try:
-        from assets.geo_data import STATE_COORDS
+        from shared.geo_data import STATE_COORDS
         state["lat"] = state["STATE"].map(lambda x: STATE_COORDS.get(x.title(), [20.5937, 78.9629])[0])
         state["lon"] = state["STATE"].map(lambda x: STATE_COORDS.get(x.title(), [20.5937, 78.9629])[1])
     except:

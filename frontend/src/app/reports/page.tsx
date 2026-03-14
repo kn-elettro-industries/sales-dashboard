@@ -12,9 +12,7 @@ import { formatAmount, formatCr } from "@/lib/format";
 const REPORT_TYPES = [
     { id: "Executive Summary", label: "Executive Summary (All Data)", icon: FileText, needsEntity: false },
     { id: "Distributor Strategy Report", label: "Distributor Strategy Report", icon: FileText, needsEntity: true },
-    { id: "Customer Wise", label: "Customer Deep Dive", icon: FileText, needsEntity: true },
     { id: "State Wise", label: "State/Region Deep Dive", icon: FileText, needsEntity: true },
-    { id: "Month Wise", label: "Monthly Performance Deep Dive", icon: FileText, needsEntity: true },
     { id: "Material Group Wise", label: "Material Category Deep Dive", icon: FileText, needsEntity: true },
 ];
 
@@ -112,7 +110,7 @@ export default function ReportsPage() {
 
             setIsLoadingOptions(true);
             try {
-                if (selectedReport === "Customer Wise" || selectedReport === "Distributor Strategy Report") {
+                if (selectedReport === "Distributor Strategy Report") {
                     if (customerOptions.length > 0) {
                         setEntityOptions(customerOptions);
                     } else {
@@ -126,9 +124,6 @@ export default function ReportsPage() {
                         const data = await fetchStateData({ tenant });
                         setEntityOptions(data.map((s: any) => s.STATE).filter(Boolean).sort());
                     }
-                } else if (selectedReport === "Month Wise") {
-                    const data = await fetchMonthlySales({ tenant });
-                    setEntityOptions(data.map((m: any) => m.MONTH).filter(Boolean).sort());
                 } else if (selectedReport === "Material Group Wise") {
                     setEntityOptions(["AIR FILTER", "SELF LOCKING PA 66 CABLE TIE", "JUNCTION BOXES", "POLYMIDE FLEXIBLE CONDUIT & SLITTED", "POLYAMIDE CONDUIT GLAND"]);
                 }
@@ -168,7 +163,7 @@ export default function ReportsPage() {
             if (filterCustomer === "All") {
                 setFilterCustomer(selectedCustomers[0]);
             }
-            if ((selectedReport === "Customer Wise" || selectedReport === "Distributor Strategy Report") && selectedEntity === "All") {
+            if (selectedReport === "Distributor Strategy Report" && selectedEntity === "All") {
                 setSelectedEntity(selectedCustomers[0]);
             }
         }
@@ -479,45 +474,39 @@ export default function ReportsPage() {
                                     </label>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {selectedReport !== "Customer Wise" && (
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Isolate by Customer</p>
-                                                <select
-                                                    value={filterCustomer}
-                                                    onChange={(e) => setFilterCustomer(e.target.value)}
-                                                    className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                                >
-                                                    <option value="All">All Customers</option>
-                                                    {customerOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                </select>
-                                            </div>
-                                        )}
-                                        {selectedReport !== "State Wise" && (
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Isolate by State</p>
-                                                <select
-                                                    value={filterState}
-                                                    onChange={(e) => setFilterState(e.target.value)}
-                                                    className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                                >
-                                                    <option value="All">All States</option>
-                                                    {stateOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                </select>
-                                            </div>
-                                        )}
-                                        {selectedReport !== "Material Group Wise" && (
-                                            <div className={`${selectedReport === "Customer Wise" || selectedReport === "State Wise" ? 'md:col-span-2' : ''}`}>
-                                                <p className="text-xs text-gray-500 mb-1">Isolate by Material Category</p>
-                                                <select
-                                                    value={filterMaterial}
-                                                    onChange={(e) => setFilterMaterial(e.target.value)}
-                                                    className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                                >
-                                                    <option value="All">All Categories</option>
-                                                    {materialOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                </select>
-                                            </div>
-                                        )}
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Isolate by Customer</p>
+                                            <select
+                                                value={filterCustomer}
+                                                onChange={(e) => setFilterCustomer(e.target.value)}
+                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
+                                            >
+                                                <option value="All">All Customers</option>
+                                                {customerOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Isolate by State</p>
+                                            <select
+                                                value={filterState}
+                                                onChange={(e) => setFilterState(e.target.value)}
+                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
+                                            >
+                                                <option value="All">All States</option>
+                                                {stateOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Isolate by Material Category</p>
+                                            <select
+                                                value={filterMaterial}
+                                                onChange={(e) => setFilterMaterial(e.target.value)}
+                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
+                                            >
+                                                <option value="All">All Categories</option>
+                                                {materialOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 

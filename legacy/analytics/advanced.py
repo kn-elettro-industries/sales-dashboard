@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import assets.geo_data as geo_data
+import shared.geo_data as geo_data
 
 def render_pareto(df):
     """

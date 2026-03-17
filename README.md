@@ -42,7 +42,7 @@ See **STRUCTURE.md** for the full layout. Summary:
 ├── frontend/             # Next.js dashboard (current UI)
 ├── backend/              # FastAPI API (current backend)
 ├── legacy/               # Old Streamlit app (app.py, analytics/, …)
-├── docs/                 # DEPLOYMENT.md, DEPLOY-TOMORROW.md, PDF, engineering_journal
+├── docs/                 # DEPLOYMENT.md, PDF, engineering_journal
 ├── assets/               # Logos, CSS
 ├── data/                 # Data files (gitignored)
 ├── scripts/              # Utility scripts
@@ -79,6 +79,20 @@ streamlit run app.py
 
 Or from repo root: `streamlit run legacy/app.py`
 
+## Auth & Default Login
+
+Create a default admin user for local development:
+
+```bash
+python scripts/seed_admin.py
+```
+
+**Default credentials (after seeding):**
+- Username: `admin`
+- Password: `admin123`
+
+Or sign up at `/signup` to create your own account.
+
 ## Environment Variables
 
 | Variable | Description |
@@ -89,7 +103,7 @@ Or from repo root: `streamlit run legacy/app.py`
 
 ## Deploy
 
-- **Quick path:** [docs/DEPLOY-NOW.md](docs/DEPLOY-NOW.md) — Render (backend) + Vercel (frontend).
+- **Quick path:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Render (backend) + Vercel (frontend).
 - **Full options:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — VPS, Docker, CORS, env vars.
 - Repo root **render.yaml** can be used for a Render Blueprint (backend only).
 

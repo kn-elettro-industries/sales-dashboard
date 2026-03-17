@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
+# Copy backend code and shared modules
 COPY backend/ .
+COPY shared/ /app/shared/
 
 EXPOSE 8000
 

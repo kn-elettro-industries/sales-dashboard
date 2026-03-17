@@ -69,14 +69,10 @@ app.include_router(api_router, prefix="/api")
 
 
 @app.on_event("startup")
-def _warm_cache():
-    """Pre-load the default tenant data into cache so the first dashboard request is fast."""
-    try:
-        from api.db import get_cached_tenant_df
-        import threading
-        threading.Thread(target=get_cached_tenant_df, args=("default_elettro",), daemon=True).start()
-    except Exception:
-        pass
+def _startup():
+    """Startup: log that server is ready. Data loads on first request to keep RAM low."""
+    import logging
+    logging.info("ELETTRO API started. Data will load on first dashboard request.")
 
 
 @app.api_route("/", methods=["GET", "HEAD"])

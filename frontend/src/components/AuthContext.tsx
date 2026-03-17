@@ -14,6 +14,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     login: (username: string, password: string) => Promise<boolean>;
+    setUserFromResponse: (data: { user: string; role?: string; tenant?: string }) => void;
     logout: () => void;
     isLoading: boolean;
 }
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const res = await fetch(`${base}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: username || "user", password }),
+                body: JSON.stringify({ username: username.trim(), password }),
             });
             if (!res.ok) return false;
             const data = await res.json();
@@ -61,8 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(AUTH_KEY);
     };
 
+    const setUserFromResponse = (data: { user: string; role?: string; tenant?: string }) => {
+        const u = { user: data.user, role: data.role || "viewer", tenant: data.tenant || "default_elettro" };
+        setUser(u);
+        localStorage.setItem(AUTH_KEY, JSON.stringify(u));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, login, setUserFromResponse, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

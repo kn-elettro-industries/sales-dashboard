@@ -8,7 +8,7 @@ import io
 import os
 from datetime import datetime, timedelta
 
-from .db import get_tenant_data
+from .db import get_tenant_data, create_user, verify_user
 
 router = APIRouter()
 
@@ -32,18 +32,41 @@ MATERIAL_GROUP_MAPPINGS = {
 }
 
 
-# ─── AUTH (minimal: mock login + role for UI) ───
+# ─── AUTH (real: users stored in auth_users table) ───
 
 class LoginRequest(BaseModel):
     username: str = ""
     password: str = ""
 
 
+class SignupRequest(BaseModel):
+    username: str = ""
+    password: str = ""
+    confirm_password: str = ""
+
+
 @router.post("/auth/login")
 def auth_login(req: LoginRequest):
-    """Mock login: accepts any credentials. In production replace with real auth."""
-    role = os.environ.get("ELETTRO_DEFAULT_ROLE", "viewer")
-    return {"user": req.username or "user", "role": role, "tenant": "default_elettro"}
+    """Verify credentials against auth_users table."""
+    if not req.username or not req.password:
+        raise HTTPException(status_code=400, detail="Username and password required")
+    user = verify_user(req.username.strip(), req.password)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    return user
+
+
+@router.post("/auth/signup")
+def auth_signup(req: SignupRequest):
+    """Create a new user account."""
+    if req.password != req.confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    err = create_user(req.username, req.password)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    # Auto-return user for immediate login
+    user = verify_user(req.username.strip(), req.password)
+    return user
 
 
 @router.get("/auth/me")

@@ -11,11 +11,16 @@ interface KpiCardProps {
     trendSuffix?: string;
     /** Optional goal progress 0–100 */
     goalPct?: number;
+    /** Stagger delay in ms for entrance animation */
+    animationDelay?: number;
 }
 
-export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix = "vs previous period", goalPct }: KpiCardProps) {
+export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix = "vs previous period", goalPct, animationDelay = 0 }: KpiCardProps) {
     return (
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 shadow-sm flex flex-col justify-between">
+        <div
+            className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 shadow-sm flex flex-col justify-between animate-slide-up opacity-0 hover:border-[#3d444d] transition-colors duration-200"
+            style={{ animationDelay: `${animationDelay}ms` }}
+        >
             <div className="flex justify-between items-start">
                 <p className="text-sm font-medium text-gray-400">{title}</p>
                 <div className="p-2 bg-[#2d333b] rounded-lg">

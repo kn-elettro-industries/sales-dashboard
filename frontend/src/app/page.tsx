@@ -205,6 +205,7 @@ export default function DashboardPage() {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
+                    animationDelay={0}
                     title="Total Revenue"
                     value={loading || !data.summary ? "—" : fmt(sum.revenue)}
                     icon={IndianRupee}
@@ -213,6 +214,7 @@ export default function DashboardPage() {
                     goalPct={goals?.revenue_achievement_pct}
                 />
                 <KpiCard
+                    animationDelay={50}
                     title="Total Orders"
                     value={loading || !data.summary ? "—" : sum.orders.toLocaleString()}
                     icon={ShoppingCart}
@@ -221,6 +223,7 @@ export default function DashboardPage() {
                     goalPct={goals?.orders_achievement_pct}
                 />
                 <KpiCard
+                    animationDelay={100}
                     title="Active Customers"
                     value={loading || !data.summary ? "—" : sum.customers.toLocaleString()}
                     icon={Users}
@@ -228,6 +231,7 @@ export default function DashboardPage() {
                     trendUp={comp ? comp.customers_pct >= 0 : undefined}
                 />
                 <KpiCard
+                    animationDelay={150}
                     title="Avg Order Value"
                     value={loading || !data.summary ? "—" : fmt(sum.average_order_value)}
                     icon={TrendingUp}
@@ -237,7 +241,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-[#161b22] border border-[#30363d] rounded-xl p-6 min-h-[420px] flex flex-col">
+                <div className="lg:col-span-2 bg-[#161b22] border border-[#30363d] rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-200">
                     <div className="border-l-4 border-[#daa520] pl-3 mb-4">
                         <h3 className="text-lg font-semibold text-white">Monthly Sales Trend</h3>
                         <p className="text-sm text-gray-400 mt-0.5">Revenue over the selected period</p>
@@ -253,7 +257,7 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 min-h-[420px] flex flex-col">
+                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-300">
                     <div className="border-l-4 border-[#daa520] pl-3 mb-4 flex items-center justify-between flex-wrap gap-2">
                         <div>
                             <h3 className="text-lg font-semibold text-white">Top Material Groups</h3>
@@ -282,7 +286,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 {/* Top Customers Table */}
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col">
+                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-400">
                     <h3 className="text-lg font-semibold text-white mb-4 border-b border-[#30363d] pb-4">Top Customers</h3>
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
@@ -307,7 +311,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Top Material Groups Table */}
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col">
+                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-500">
                     <h3 className="text-lg font-semibold text-white mb-4 border-b border-[#30363d] pb-4">Top Performers (Material Groups)</h3>
                     <div className="flex-1 min-h-[400px]">
                         <DataTable

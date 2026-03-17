@@ -42,5 +42,10 @@ clean_*.py
 frontend/.next/
 node_modules/
 
-# Generated test PDFs
+# Generated test PDFs (anywhere in repo)
 backend/*.pdf
+*.pdf
+reports/
+
+# Scratch / debug scripts
+backend/check_app.py

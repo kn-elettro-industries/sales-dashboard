@@ -13,6 +13,18 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 if not DATABASE_URL:
     logging.warning("DATABASE_URL is not set. The backend will not be able to connect to the database.")
 
+def _clean_db_url(url: str) -> str:
+    """Strip parameters unsupported by psycopg2 (e.g. channel_binding) from the URL."""
+    from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+    try:
+        parsed = urlparse(url)
+        params = parse_qs(parsed.query, keep_blank_values=True)
+        params.pop("channel_binding", None)
+        new_query = urlencode({k: v[0] for k, v in params.items()})
+        return urlunparse(parsed._replace(query=new_query))
+    except Exception:
+        return url
+
 _engine = None
 
 def get_engine():
@@ -20,9 +32,13 @@ def get_engine():
     global _engine
     if _engine is not None:
         return _engine
+    if not DATABASE_URL:
+        logging.error("DATABASE_URL is not set — cannot create engine.")
+        return None
     try:
+        clean_url = _clean_db_url(DATABASE_URL)
         _engine = create_engine(
-            DATABASE_URL,
+            clean_url,
             pool_size=10,
             max_overflow=20,
             pool_pre_ping=True,
@@ -47,6 +63,83 @@ def invalidate_tenant_cache(tenant_id: str) -> None:
         pass
 
 
+# ─── AUTH USERS ────────────────────────────────────────────────────────────
+def _ensure_auth_users_table(conn):
+    """Create auth_users table if it does not exist."""
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS auth_users (
+            username VARCHAR(128) PRIMARY KEY,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(32) DEFAULT 'viewer',
+            tenant VARCHAR(128) DEFAULT 'default_elettro',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    conn.commit()
+
+
+def create_user(username: str, password: str, role: str = "viewer", tenant: str = "default_elettro") -> Optional[str]:
+    """
+    Create a new user. Returns error message on failure, None on success.
+    """
+    if not username or not password:
+        return "Username and password are required."
+    username = username.strip().lower()
+    if len(username) < 2:
+        return "Username must be at least 2 characters."
+    if len(password) < 6:
+        return "Password must be at least 6 characters."
+    eng = get_engine()
+    if eng is None:
+        return "Database unavailable."
+    try:
+        import bcrypt
+        pw_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        with eng.connect() as conn:
+            _ensure_auth_users_table(conn)
+            conn.execute(
+                text("INSERT INTO auth_users (username, password_hash, role, tenant) VALUES (:u, :h, :r, :t)"),
+                {"u": username, "h": pw_hash, "r": role, "t": tenant}
+            )
+            conn.commit()
+        return None
+    except Exception as e:
+        msg = str(e).lower()
+        if "unique" in msg or "duplicate" in msg or "already exists" in msg:
+            return "Username already taken."
+        logging.error(f"create_user: {e}")
+        return "Sign up failed. Please try again."
+
+
+def verify_user(username: str, password: str):
+    """
+    Verify credentials. Returns dict with user, role, tenant on success, None on failure.
+    """
+    if not username or not password:
+        return None
+    username = username.strip().lower()
+    eng = get_engine()
+    if eng is None:
+        return None
+    try:
+        import bcrypt
+        with eng.connect() as conn:
+            _ensure_auth_users_table(conn)
+            row = conn.execute(
+                text("SELECT username, password_hash, role, tenant FROM auth_users WHERE username = :u"),
+                {"u": username}
+            ).fetchone()
+        if not row:
+            return None
+        _, pw_hash, role, tenant = row
+        if bcrypt.checkpw(password.encode("utf-8"), pw_hash.encode("utf-8")):
+            return {"user": username, "role": role or "viewer", "tenant": tenant or "default_elettro"}
+        return None
+    except Exception as e:
+        logging.error(f"verify_user: {e}")
+        return None
+
+
 def _fy_from_date(date):
     """Same as routes.calculate_fy: April = start of FY. Used for read-time enrichment."""
     if pd.isna(date):
@@ -62,9 +155,9 @@ def _fy_from_date(date):
 
 
 def _tenant_query_date_filter() -> str:
-    """Optional SQL fragment to limit rows by date and reduce Supabase egress. Set EGRESS_MAX_YEARS (e.g. 3) in env."""
+    """Limit rows fetched from DB to reduce RAM. Defaults to 3 years. Set EGRESS_MAX_YEARS=0 to disable."""
     try:
-        years = int(os.environ.get("EGRESS_MAX_YEARS", "0"))
+        years = int(os.environ.get("EGRESS_MAX_YEARS", "3"))
         if years <= 0:
             return ""
         # Column is often lowercase 'date' in Postgres when created via pandas to_sql

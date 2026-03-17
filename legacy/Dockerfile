@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY legacy/ .
 COPY assets/ /app/assets/
+COPY shared/ /app/shared/
 
 EXPOSE 8501
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || true

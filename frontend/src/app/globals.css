@@ -31,3 +31,49 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #daa520;
 }
+
+/* Animations */
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-down {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+}
+.animate-slide-up {
+    animation: slide-up 0.5s ease-out forwards;
+}
+.animate-slide-down {
+    animation: slide-down 0.4s ease-out forwards;
+}
+.animate-scale-in {
+    animation: scale-in 0.4s ease-out forwards;
+}
+.animate-shimmer {
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animation-delay-75 { animation-delay: 75ms; }
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-150 { animation-delay: 150ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }

@@ -1,10 +1,13 @@
 import pandas as pd
 from datetime import datetime
+import os
+import tempfile
+import gc
+import numpy as np
+from typing import Optional
 
-# ── fpdf2 guard ──────────────────────────────────────────────────────────────
-# Both `fpdf` (PyFPDF 1.7.x) and `fpdf2` (2.x) share the same module name.
-# If old PyFPDF wins the import race, cell() ignores the `text=` kwarg and
-# produces blank PDFs.  We force fpdf2 by checking the version here.
+# ── fpdf2 guard ───────────────────────────────────────────────────────────────
+# fpdf and fpdf2 share the same module name. Force fpdf2 2.x.
 import fpdf as _fpdf_pkg
 _fpdf_ver = getattr(_fpdf_pkg, "__version__", "0")
 if not _fpdf_ver.startswith("2"):
@@ -15,16 +18,8 @@ if not _fpdf_ver.startswith("2"):
 from fpdf import FPDF
 # ─────────────────────────────────────────────────────────────────────────────
 
-import tempfile
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import matplotlib.cm as cm
-import matplotlib
-import os
-import numpy as np
-from typing import Optional
-
-matplotlib.use('Agg')
+# matplotlib is NOT imported here — loaded lazily inside PDF functions only.
+# This saves ~80 MB of RAM at server startup.
 
 
 def _pdf_to_bytes(pdf: FPDF) -> bytes:
@@ -136,6 +131,25 @@ def generate_dynamic_pdf_report(
     Streamlit-like dynamic report: content adapts to selected dimensions + cross-filters.
     Uses the same PDF theming but renders only the requested sections.
     """
+    _matplotlib, Figure, FigureCanvas, cm, plt = _get_matplotlib()
+    try:
+     return _generate_dynamic_pdf_report_inner(
+        df=df, title=title, tenant=tenant, primary_dimension=primary_dimension,
+        secondary_dimension=secondary_dimension, top_n=top_n,
+        include_trend=include_trend, include_share=include_share,
+        include_top_table=include_top_table, include_pivot=include_pivot,
+        Figure=Figure, FigureCanvas=FigureCanvas, cm=cm,
+     )
+    finally:
+        plt.close('all')
+        gc.collect()
+
+
+def _generate_dynamic_pdf_report_inner(
+    df, title, tenant, primary_dimension, secondary_dimension, top_n,
+    include_trend, include_share, include_top_table, include_pivot,
+    Figure, FigureCanvas, cm,
+) -> bytes:
     pdf = PDF()
     pdf.alias_nb_pages()
 
@@ -576,15 +590,25 @@ class PDF(FPDF):
         self.set_auto_page_break(auto=prev_auto, margin=prev_margin)
         self._suppress_header_footer = False
 
+def _get_matplotlib():
+    """Lazy-load matplotlib — only imported when a PDF chart is actually needed."""
+    import matplotlib
+    matplotlib.use('Agg')
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+    import matplotlib.cm as cm
+    import matplotlib.pyplot as plt
+    return matplotlib, Figure, FigureCanvas, cm, plt
+
+
 def create_chart(fig):
     for ax in fig.get_axes():
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.grid(True, linestyle='--', alpha=0.6, color='#dddddd')
         ax.tick_params(axis='both', which='major', labelsize=10)
-        
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-        # Lower DPI to reduce PDF generation time while keeping charts readable
         fig.savefig(tmp.name, bbox_inches='tight', dpi=150, facecolor='white')
         return tmp.name
 
@@ -597,6 +621,22 @@ def generate_distributor_strategy_pdf(
     """
     Generates the usual Distributor Strategy Report: cover (DISTRIBUTOR STRATEGY REPORT + customer + FY),
     Efficiency & Consolidation (scatter + zone + Top 10 table), Executive Summary (KPIs, Top Material Groups, Insights).
+    matplotlib is lazy-loaded and freed after generation to save RAM."""
+    _matplotlib, Figure, FigureCanvas, cm, plt = _get_matplotlib()
+    try:
+        return _generate_distributor_strategy_pdf_inner(df, customer_name, analysis_period, Figure, FigureCanvas, cm)
+    finally:
+        plt.close('all')
+        gc.collect()
+
+
+def _generate_distributor_strategy_pdf_inner(
+    df: pd.DataFrame,
+    customer_name: str,
+    analysis_period: str,
+    Figure, FigureCanvas, cm,
+) -> bytes:
+    """Inner implementation — matplotlib symbols passed in as arguments.
     """
     # Distributor Strategy Report: cover + performance summary (no consolidation page).
     if df.empty:
@@ -717,13 +757,36 @@ def generate_distributor_strategy_pdf(
 
 
 def generate_pdf_report(
-    df: pd.DataFrame, 
-    report_type: str = "Executive Summary", 
-    tenant: str = "", 
+    df: pd.DataFrame,
+    report_type: str = "Executive Summary",
+    tenant: str = "",
     specific_entity: str = None,
     filter_customer: str = None,
     filter_state: str = None,
     filter_material: str = None
+) -> bytes:
+    _matplotlib, Figure, FigureCanvas, cm, plt = _get_matplotlib()
+    try:
+        return _generate_pdf_report_inner(
+            df=df, report_type=report_type, tenant=tenant,
+            specific_entity=specific_entity, filter_customer=filter_customer,
+            filter_state=filter_state, filter_material=filter_material,
+            Figure=Figure, FigureCanvas=FigureCanvas, cm=cm,
+        )
+    finally:
+        plt.close('all')
+        gc.collect()
+
+
+def _generate_pdf_report_inner(
+    df: pd.DataFrame,
+    report_type: str,
+    tenant: str,
+    specific_entity,
+    filter_customer,
+    filter_state,
+    filter_material,
+    Figure, FigureCanvas, cm,
 ) -> bytes:
     import sys
     print("PDF_GEN - ENTERED generate_pdf_report", flush=True); sys.stdout.flush()

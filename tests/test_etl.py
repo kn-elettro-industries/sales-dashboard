@@ -3,10 +3,11 @@ import pytest
 import sys
 import os
 
-# Add parent to path to allow importing etl_pipeline
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add repo root to path to allow importing from legacy
+_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _repo_root)
 
-from etl_pipeline import standardize, calculate_taxes, merge_customer_master
+from legacy.etl_pipeline import standardize, calculate_taxes, merge_customer_master
 
 def test_standardize_columns():
     """Test that weird column names from Excel are properly standardized to SQL-safe strings."""

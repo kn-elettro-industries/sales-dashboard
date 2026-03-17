@@ -155,9 +155,9 @@ def _fy_from_date(date):
 
 
 def _tenant_query_date_filter() -> str:
-    """Limit rows fetched from DB to reduce RAM. Defaults to 3 years. Set EGRESS_MAX_YEARS=0 to disable."""
+    """Limit rows fetched from DB to reduce RAM. Set EGRESS_MAX_YEARS=3 in env to enable. Default=0 (load all)."""
     try:
-        years = int(os.environ.get("EGRESS_MAX_YEARS", "3"))
+        years = int(os.environ.get("EGRESS_MAX_YEARS", "0"))
         if years <= 0:
             return ""
         # Column is often lowercase 'date' in Postgres when created via pandas to_sql

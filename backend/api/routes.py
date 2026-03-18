@@ -45,6 +45,13 @@ class SignupRequest(BaseModel):
     confirm_password: str = ""
 
 
+@router.get("/auth/signup-enabled")
+def auth_signup_enabled():
+    """Returns whether public signup is allowed. When false, only admin can create accounts."""
+    enabled = os.environ.get("SIGNUP_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+    return {"enabled": enabled}
+
+
 @router.post("/auth/login")
 def auth_login(req: LoginRequest):
     """Verify credentials against auth_users table."""
@@ -58,7 +65,9 @@ def auth_login(req: LoginRequest):
 
 @router.post("/auth/signup")
 def auth_signup(req: SignupRequest):
-    """Create a new user account."""
+    """Create a new user account. Disabled when SIGNUP_ENABLED is not 'true' — only admin can add users via seed script."""
+    if not os.environ.get("SIGNUP_ENABLED", "false").strip().lower() in ("true", "1", "yes"):
+        raise HTTPException(status_code=403, detail="Sign up is disabled. Contact your administrator for access.")
     if req.password != req.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
     err = create_user(req.username, req.password)
@@ -73,6 +82,29 @@ def auth_signup(req: SignupRequest):
 def auth_me():
     """Placeholder: in production validate session/JWT and return current user."""
     return {"user": None, "role": None}
+
+
+class CreateUserRequest(BaseModel):
+    username: str = ""
+    password: str = ""
+    admin_username: str = ""
+    admin_password: str = ""
+
+
+@router.post("/admin/create-user")
+def admin_create_user(req: CreateUserRequest):
+    """Admin only: create a new user. Verifies admin credentials before creating."""
+    if not req.admin_username or not req.admin_password:
+        raise HTTPException(status_code=400, detail="Admin credentials required.")
+    admin = verify_user(req.admin_username.strip(), req.admin_password)
+    if admin is None:
+        raise HTTPException(status_code=401, detail="Invalid admin credentials.")
+    if (admin.get("role") or "").lower() != "admin":
+        raise HTTPException(status_code=403, detail="Admin role required.")
+    err = create_user(req.username.strip(), req.password)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    return {"message": f"User '{req.username}' created."}
 
 def serialize_df(df: pd.DataFrame) -> list:
     """Helper to cleanly serialize pandas dataframes to JSON. Returns [] on error to avoid 500s."""

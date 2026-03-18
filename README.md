@@ -79,19 +79,24 @@ streamlit run app.py
 
 Or from repo root: `streamlit run legacy/app.py`
 
-## Auth & Default Login
+## Auth & Access
 
-Create a default admin user for local development:
+**Signup is disabled by default.** Only you (the admin) can create accounts.
 
+### Create the default admin
 ```bash
 python scripts/seed_admin.py
 ```
+→ Username: `admin`, Password: `admin123`
 
-**Default credentials (after seeding):**
-- Username: `admin`
-- Password: `admin123`
+### Add more users (admin only)
+```bash
+python scripts/seed_admin.py add <username> <password>
+```
+Example: `python scripts/seed_admin.py add sales1 MyP@ss123`
 
-Or sign up at `/signup` to create your own account.
+### Open signup (optional)
+Set `SIGNUP_ENABLED=true` in Render environment to allow anyone to sign up at `/signup`.
 
 ## Environment Variables
 

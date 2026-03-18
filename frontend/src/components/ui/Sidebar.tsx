@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 
 const navItems = [
@@ -73,6 +73,21 @@ export default function Sidebar() {
                         })}
                     </div>
                 ))}
+                {(user?.role || "").toLowerCase() === "admin" && (
+                    <div>
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Admin</div>
+                        <Link
+                            href="/admin"
+                            className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 ${pathname === "/admin"
+                                ? "bg-[#daa520] text-[#0d1117] font-medium"
+                                : "text-gray-400 hover:bg-[#2d333b] hover:text-white"
+                                }`}
+                        >
+                            <UserPlus className="h-5 w-5" />
+                            <span className="text-sm">Add user</span>
+                        </Link>
+                    </div>
+                )}
             </nav>
 
             <div className="p-4 border-t border-[#30363d] text-sm text-gray-500 space-y-2">

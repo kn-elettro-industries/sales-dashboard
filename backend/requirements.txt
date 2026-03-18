@@ -12,3 +12,4 @@ fpdf2
 matplotlib
 numpy
 bcrypt
+PyJWT

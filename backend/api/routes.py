@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response, Request
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
@@ -52,15 +52,35 @@ def auth_signup_enabled():
     return {"enabled": enabled}
 
 
+def _create_token(user: str, role: str, tenant: str) -> str:
+    """Create a short-lived JWT for the logged-in user."""
+    import jwt
+    from datetime import datetime, timedelta
+    secret = os.environ.get("JWT_SECRET", "elettro-dev-secret-change-in-production")
+    payload = {"user": user, "role": role, "tenant": tenant, "exp": datetime.utcnow() + timedelta(hours=24)}
+    return jwt.encode(payload, secret, algorithm="HS256")
+
+
+def _verify_token(token: str):
+    """Verify JWT and return payload or None."""
+    import jwt
+    try:
+        secret = os.environ.get("JWT_SECRET", "elettro-dev-secret-change-in-production")
+        return jwt.decode(token, secret, algorithms=["HS256"])
+    except Exception:
+        return None
+
+
 @router.post("/auth/login")
 def auth_login(req: LoginRequest):
-    """Verify credentials against auth_users table."""
+    """Verify credentials against auth_users table. Returns user + token for Add user."""
     if not req.username or not req.password:
         raise HTTPException(status_code=400, detail="Username and password required")
     user = verify_user(req.username.strip(), req.password)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    return user
+    token = _create_token(user["user"], user.get("role", "viewer"), user.get("tenant", "default_elettro"))
+    return {**user, "token": token}
 
 
 @router.post("/auth/signup")
@@ -75,7 +95,8 @@ def auth_signup(req: SignupRequest):
         raise HTTPException(status_code=400, detail=err)
     # Auto-return user for immediate login
     user = verify_user(req.username.strip(), req.password)
-    return user
+    token = _create_token(user["user"], user.get("role", "viewer"), user.get("tenant", "default_elettro"))
+    return {**user, "token": token}
 
 
 @router.get("/auth/me")
@@ -87,20 +108,20 @@ def auth_me():
 class CreateUserRequest(BaseModel):
     username: str = ""
     password: str = ""
-    admin_username: str = ""
-    admin_password: str = ""
 
 
 @router.post("/admin/create-user")
-def admin_create_user(req: CreateUserRequest):
-    """Admin only: create a new user. Verifies admin credentials before creating."""
-    if not req.admin_username or not req.admin_password:
-        raise HTTPException(status_code=400, detail="Admin credentials required.")
-    admin = verify_user(req.admin_username.strip(), req.admin_password)
-    if admin is None:
-        raise HTTPException(status_code=401, detail="Invalid admin credentials.")
-    if (admin.get("role") or "").lower() != "admin":
-        raise HTTPException(status_code=403, detail="Admin role required.")
+def admin_create_user(request: Request, req: CreateUserRequest):
+    """Admin only: create a new user. Use Bearer token (from login) — no password needed."""
+    is_admin = False
+    auth = request.headers.get("Authorization") or ""
+    if auth.startswith("Bearer "):
+        token = auth[7:].strip()
+        payload = _verify_token(token)
+        if payload and (payload.get("role") or "").lower() == "admin":
+            is_admin = True
+    if not is_admin:
+        raise HTTPException(status_code=401, detail="Invalid or expired session. Log out and log in again, then try Add user.")
     err = create_user(req.username.strip(), req.password)
     if err:
         raise HTTPException(status_code=400, detail=err)

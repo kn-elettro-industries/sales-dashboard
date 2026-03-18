@@ -7,11 +7,10 @@ import { API_BASE_URL } from "@/lib/api";
 import { UserPlus, Shield } from "lucide-react";
 
 export default function AdminPage() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const router = useRouter();
     const [newUsername, setNewUsername] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [adminPassword, setAdminPassword] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
@@ -47,20 +46,21 @@ export default function AdminPage() {
             setError("Password must be at least 6 characters.");
             return;
         }
-        if (!adminPassword) {
-            setError("Enter your password to confirm.");
+        if (!token) {
+            setError("Session expired. Log out and log in again.");
             return;
         }
         setLoading(true);
         try {
             const res = await fetch(`${API_BASE_URL}/admin/create-user`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     username: newUsername.trim(),
                     password: newPassword,
-                    admin_username: user.user,
-                    admin_password: adminPassword,
                 }),
             });
             const data = await res.json().catch(() => ({}));
@@ -71,7 +71,6 @@ export default function AdminPage() {
             setSuccess(`User "${newUsername}" created. They can sign in now.`);
             setNewUsername("");
             setNewPassword("");
-            setAdminPassword("");
         } catch {
             setError("Failed to create user.");
         } finally {
@@ -108,17 +107,6 @@ export default function AdminPage() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Min 6 characters"
-                        className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#daa520]"
-                        disabled={loading}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Your password (to confirm)</label>
-                    <input
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter your admin password"
                         className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#daa520]"
                         disabled={loading}
                     />

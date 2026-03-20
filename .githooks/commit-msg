@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Strip IDE commit trailers before the commit is finalized."""
+import sys
+
+if len(sys.argv) < 2:
+    sys.exit(0)
+path = sys.argv[1]
+try:
+    with open(path, encoding="utf-8") as f:
+        lines = [ln for ln in f if ln.strip() != "Made-with: Cursor"]
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.writelines(lines)
+except OSError:
+    pass

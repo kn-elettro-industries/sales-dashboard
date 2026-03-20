@@ -79,6 +79,16 @@ streamlit run app.py
 
 Or from repo root: `streamlit run legacy/app.py`
 
+### Git commits (optional)
+
+If your editor appends a `Made-with: Cursor` line to commit messages, turn that off in the editor’s Git/commit settings. To strip it automatically for this repo, enable the bundled hook:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook removes that trailer line before the commit is recorded. (History was also rewritten locally to remove past trailers.)
+
 ## Auth & Access
 
 **Signup is disabled by default.** Only you (the admin) can create accounts.

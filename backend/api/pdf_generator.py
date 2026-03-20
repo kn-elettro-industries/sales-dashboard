@@ -131,7 +131,7 @@ def generate_dynamic_pdf_report(
     Streamlit-like dynamic report: content adapts to selected dimensions + cross-filters.
     Uses the same PDF theming but renders only the requested sections.
     """
-    _matplotlib, Figure, FigureCanvas, cm, plt = _get_matplotlib()
+    _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
      return _generate_dynamic_pdf_report_inner(
         df=df, title=title, tenant=tenant, primary_dimension=primary_dimension,
@@ -141,7 +141,6 @@ def generate_dynamic_pdf_report(
         Figure=Figure, FigureCanvas=FigureCanvas, cm=cm,
      )
     finally:
-        plt.close('all')
         gc.collect()
 
 
@@ -591,14 +590,13 @@ class PDF(FPDF):
         self._suppress_header_footer = False
 
 def _get_matplotlib():
-    """Lazy-load matplotlib — only imported when a PDF chart is actually needed."""
+    """Lazy-load matplotlib (OO API only — no pyplot; avoids global state / thread issues under Uvicorn)."""
     import matplotlib
     matplotlib.use('Agg')
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
     import matplotlib.cm as cm
-    import matplotlib.pyplot as plt
-    return matplotlib, Figure, FigureCanvas, cm, plt
+    return matplotlib, Figure, FigureCanvas, cm
 
 
 def create_chart(fig):
@@ -622,11 +620,10 @@ def generate_distributor_strategy_pdf(
     Generates the usual Distributor Strategy Report: cover (DISTRIBUTOR STRATEGY REPORT + customer + FY),
     Efficiency & Consolidation (scatter + zone + Top 10 table), Executive Summary (KPIs, Top Material Groups, Insights).
     matplotlib is lazy-loaded and freed after generation to save RAM."""
-    _matplotlib, Figure, FigureCanvas, cm, plt = _get_matplotlib()
+    _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
         return _generate_distributor_strategy_pdf_inner(df, customer_name, analysis_period, Figure, FigureCanvas, cm)
     finally:
-        plt.close('all')
         gc.collect()
 
 
@@ -765,7 +762,7 @@ def generate_pdf_report(
     filter_state: str = None,
     filter_material: str = None
 ) -> bytes:
-    _matplotlib, Figure, FigureCanvas, cm, plt = _get_matplotlib()
+    _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
         return _generate_pdf_report_inner(
             df=df, report_type=report_type, tenant=tenant,
@@ -774,7 +771,6 @@ def generate_pdf_report(
             Figure=Figure, FigureCanvas=FigureCanvas, cm=cm,
         )
     finally:
-        plt.close('all')
         gc.collect()
 
 

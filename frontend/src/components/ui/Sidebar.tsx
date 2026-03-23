@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus, Target } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 
 const navItems = [
@@ -21,6 +21,7 @@ const navItems = [
             { href: "/risk", label: "Risk Management", icon: ShieldAlert },
             { href: "/data", label: "Cloud Data Uploader", icon: Database },
             { href: "/reports", label: "Industrial Reporting", icon: FileText },
+            { href: "/distributor", label: "Distributor vs Target", icon: Target },
         ]
     },
 ];

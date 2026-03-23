@@ -5,30 +5,51 @@ import Link from "next/link";
 import { useFilter } from "@/components/FilterContext";
 import { DataTable } from "@/components/ui/DataTable";
 import { format } from "date-fns";
-import { fetchDashboardSummary, fetchAnomalies, fetchKpiSummary, fetchSalesTrend, fetchMaterialGroups, fetchTopCustomers } from "@/lib/api";
+import { fetchDashboardSummary, fetchAnomalies, fetchKpiSummary, fetchSalesTrend, fetchMaterialGroups, fetchTopCustomers, saveSalesTargets } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { GradientAreaChart, InteractiveDonutChart, CategoryHorizontalBarChart } from "@/components/ui/Charts";
 import { IndianRupee, ShoppingCart, Users, TrendingUp, AlertTriangle } from "lucide-react";
 import { formatAmount } from "@/lib/format";
 
+/** Columns from API that are not the material group name */
+const MATERIAL_META = new Set(["AMOUNT", "SHARE_PCT", "TARGET_REVENUE", "VS_TARGET_PCT"]);
+
 export default function DashboardPage() {
     const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
-    const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
+    const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, sales_targets: null, message: null });
     const [anomalies, setAnomalies] = useState<{ entity: string; change_pct: number; current_revenue: number }[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [showTargets, setShowTargets] = useState(false);
     const [materialChartView, setMaterialChartView] = useState<"donut" | "bar">("donut");
-    const [goalRevenue, setGoalRevenue] = useState<number | null>(null);
-    const [goalOrders, setGoalOrders] = useState<number | null>(null);
+    /** Draft inputs for sales targets (saved to Postgres via API) */
+    const [draftRevenue, setDraftRevenue] = useState("");
+    const [draftOrders, setDraftOrders] = useState("");
+    const [savingTargets, setSavingTargets] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
+    const migratedLocalTargets = React.useRef(false);
 
-    useEffect(() => {
+    /** One-time migration: browser-only targets → database */
+    React.useEffect(() => {
+        if (migratedLocalTargets.current) return;
         const r = localStorage.getItem("elettro_goal_revenue");
         const o = localStorage.getItem("elettro_goal_orders");
-        if (r) setGoalRevenue(Number(r));
-        if (o) setGoalOrders(Number(o));
-    }, []);
+        if (!r && !o) return;
+        migratedLocalTargets.current = true;
+        (async () => {
+            try {
+                await saveSalesTargets({
+                    tenant_id: tenant,
+                    target_revenue: r ? Number(r) : null,
+                    target_orders: o ? Number(o) : null,
+                });
+                localStorage.removeItem("elettro_goal_revenue");
+                localStorage.removeItem("elettro_goal_orders");
+                setRefreshKey((k) => k + 1);
+            } catch {
+                migratedLocalTargets.current = false;
+            }
+        })();
+    }, [tenant]);
 
     useEffect(() => {
         async function loadData() {
@@ -44,8 +65,6 @@ export default function DashboardPage() {
                 materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
                 fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
-                goalRevenue: goalRevenue ?? undefined,
-                goalOrders: goalOrders ?? undefined,
             };
 
             const anomalyParams = {
@@ -80,10 +99,16 @@ export default function DashboardPage() {
                         customers: res.top_customers ?? [],
                         comparison: res.comparison ?? null,
                         goals: res.goals ?? null,
+                        sales_targets: res.sales_targets ?? null,
                         message: res.message ?? null,
                     });
+                    const st = res.sales_targets;
+                    if (st) {
+                        setDraftRevenue(st.revenue != null ? String(st.revenue) : "");
+                        setDraftOrders(st.orders != null ? String(st.orders) : "");
+                    }
                 } else {
-                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
+                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, sales_targets: null, message: null });
                     setLoadError("No data returned. Check API URL and that data is uploaded.");
                 }
                 setAnomalies(anom?.anomalies ?? []);
@@ -105,6 +130,7 @@ export default function DashboardPage() {
                         customers: Array.isArray(customers) ? customers : [],
                         comparison: null,
                         goals: null,
+                        sales_targets: null,
                         message: null,
                     });
                     setAnomalies(anom?.anomalies ?? []);
@@ -118,7 +144,7 @@ export default function DashboardPage() {
                     } else {
                         setLoadError(msg || "Failed to load data. Please retry.");
                     }
-                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, message: null });
+                    setData({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, sales_targets: null, message: null });
                     setAnomalies([]);
                 }
             } finally {
@@ -127,7 +153,33 @@ export default function DashboardPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, goalRevenue, goalOrders, refreshKey]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, refreshKey]);
+
+    const handleSaveSalesTargets = async () => {
+        setSavingTargets(true);
+        try {
+            const rev = draftRevenue.trim() === "" ? null : Number(draftRevenue.replace(/,/g, ""));
+            const ord = draftOrders.trim() === "" ? null : parseInt(draftOrders.replace(/,/g, ""), 10);
+            if (rev != null && (Number.isNaN(rev) || rev < 0)) {
+                alert("Revenue target must be a non-negative number.");
+                return;
+            }
+            if (ord != null && (Number.isNaN(ord) || ord < 0)) {
+                alert("Orders target must be a non-negative integer.");
+                return;
+            }
+            await saveSalesTargets({
+                tenant_id: tenant,
+                target_revenue: rev,
+                target_orders: ord,
+            });
+            setRefreshKey((k) => k + 1);
+        } catch (e) {
+            alert(e instanceof Error ? e.message : "Could not save sales targets.");
+        } finally {
+            setSavingTargets(false);
+        }
+    };
 
     const fmt = formatAmount;
     const sum = data.summary || { revenue: 0, orders: 0, customers: 0, average_order_value: 0 };
@@ -139,29 +191,77 @@ export default function DashboardPage() {
     const validCust = Array.isArray(data.customers) ? data.customers : [];
 
     const tableMat = React.useMemo(() => {
-        return validMat.map((m: any) => ({
-            name: Object.keys(m).find(k => k !== 'AMOUNT') ? m[Object.keys(m).find(k => k !== 'AMOUNT')!] : 'Unknown',
-            AMOUNT: m.AMOUNT
-        }));
+        return validMat.map((m: any) => {
+            const nameKey =
+                (["ITEM_NAME_GROUP", "MATERIALGROUP"].find((k) => k in m) as string | undefined) ||
+                Object.keys(m).find((k) => !MATERIAL_META.has(k) && k !== "AMOUNT") ||
+                "name";
+            return {
+                name: m[nameKey] ?? "Unknown",
+                AMOUNT: m.AMOUNT,
+                SHARE_PCT: m.SHARE_PCT,
+                TARGET_REVENUE: m.TARGET_REVENUE,
+                VS_TARGET_PCT: m.VS_TARGET_PCT,
+            };
+        });
     }, [validMat]);
+
+    const materialChartNameKey = React.useMemo(() => {
+        if (!validMat.length) return "name";
+        const row = validMat[0] as Record<string, unknown>;
+        if ("ITEM_NAME_GROUP" in row) return "ITEM_NAME_GROUP";
+        if ("MATERIALGROUP" in row) return "MATERIALGROUP";
+        return Object.keys(row).find((k) => !MATERIAL_META.has(k as string) && k !== "AMOUNT") || "name";
+    }, [validMat]);
+
+    const hasRevenueTargetSplit = Boolean(
+        goals?.revenue_target &&
+            validCust.length > 0 &&
+            validCust[0]?.SHARE_PCT != null &&
+            validCust[0]?.SHARE_PCT !== undefined
+    );
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-            {showTargets && (
-                <div className="flex flex-wrap items-center gap-4 p-4 bg-[#161b22] border border-[#30363d] rounded-xl">
-                    <span className="text-sm text-gray-400">Targets (saved in browser):</span>
-                    <label className="flex items-center gap-2 text-sm">
-                        Revenue (₹): <input type="number" min="0" step="10000" value={goalRevenue ?? ""} onChange={(e) => { const v = e.target.value ? Number(e.target.value) : null; setGoalRevenue(v); if (v != null) localStorage.setItem("elettro_goal_revenue", String(v)); else localStorage.removeItem("elettro_goal_revenue"); }} className="w-32 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-white" placeholder="Optional" />
-                    </label>
-                    <label className="flex items-center gap-2 text-sm">
-                        Orders: <input type="number" min="0" value={goalOrders ?? ""} onChange={(e) => { const v = e.target.value ? Number(e.target.value) : null; setGoalOrders(v); if (v != null) localStorage.setItem("elettro_goal_orders", String(v)); else localStorage.removeItem("elettro_goal_orders"); }} className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-white" placeholder="Optional" />
-                    </label>
-                    <button type="button" onClick={() => setShowTargets(false)} className="text-sm text-gray-500 hover:text-white">Hide</button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap p-4 bg-[#161b22] border border-[#30363d] rounded-xl">
+                <div>
+                    <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Save a <strong className="text-gray-400">revenue target</strong> once — tables below split it by <strong className="text-gray-400">each row’s % of total</strong> sales (same idea for customers and material groups).
+                    </p>
                 </div>
-            )}
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
-                <button type="button" onClick={() => setShowTargets((s) => !s)} className="text-sm text-[#daa520] hover:underline">{showTargets ? "Hide targets" : "Set revenue/order targets"}</button>
+                <div className="flex flex-wrap items-end gap-3 w-full sm:w-auto">
+                    <label className="flex flex-col gap-1 text-xs text-gray-400 min-w-[140px]">
+                        Revenue target (₹)
+                        <input
+                            type="text"
+                            inputMode="decimal"
+                            value={draftRevenue}
+                            onChange={(e) => setDraftRevenue(e.target.value)}
+                            placeholder="e.g. 50000000"
+                            className="bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white w-full sm:w-40"
+                        />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs text-gray-400 min-w-[120px]">
+                        Orders target
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            value={draftOrders}
+                            onChange={(e) => setDraftOrders(e.target.value)}
+                            placeholder="e.g. 1200"
+                            className="bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white w-full sm:w-32"
+                        />
+                    </label>
+                    <button
+                        type="button"
+                        onClick={handleSaveSalesTargets}
+                        disabled={savingTargets || loading}
+                        className="px-4 py-2 rounded-lg text-sm font-medium bg-[#daa520] text-[#0d1117] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {savingTargets ? "Saving…" : "Save targets"}
+                    </button>
+                </div>
             </div>
             {loadError && (
                 <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl">
@@ -212,6 +312,7 @@ export default function DashboardPage() {
                     trend={comp ? `${comp.revenue_pct >= 0 ? "+" : ""}${comp.revenue_pct}%` : undefined}
                     trendUp={comp ? comp.revenue_pct >= 0 : undefined}
                     goalPct={goals?.revenue_achievement_pct}
+                    targetLabel={goals?.revenue_target != null ? `Target ${fmt(goals.revenue_target)}` : undefined}
                 />
                 <KpiCard
                     animationDelay={50}
@@ -221,6 +322,7 @@ export default function DashboardPage() {
                     trend={comp ? `${comp.orders_pct >= 0 ? "+" : ""}${comp.orders_pct}%` : undefined}
                     trendUp={comp ? comp.orders_pct >= 0 : undefined}
                     goalPct={goals?.orders_achievement_pct}
+                    targetLabel={goals?.orders_target != null ? `Target ${goals.orders_target.toLocaleString()} orders` : undefined}
                 />
                 <KpiCard
                     animationDelay={100}
@@ -275,9 +377,9 @@ export default function DashboardPage() {
                     ) : (
                         <div className="flex-1 min-h-[320px]">
                             {materialChartView === "bar" ? (
-                                <CategoryHorizontalBarChart data={validMat} nameKey={validMat.length > 0 ? Object.keys(validMat[0]).find(k => k !== "AMOUNT") || "name" : "name"} valueKey="AMOUNT" />
+                                <CategoryHorizontalBarChart data={validMat} nameKey={materialChartNameKey} valueKey="AMOUNT" />
                             ) : (
-                                <InteractiveDonutChart data={validMat} nameKey={validMat.length > 0 ? Object.keys(validMat[0]).find(k => k !== "AMOUNT") || "name" : "name"} valueKey="AMOUNT" />
+                                <InteractiveDonutChart data={validMat} nameKey={materialChartNameKey} valueKey="AMOUNT" />
                             )}
                         </div>
                     )}
@@ -287,7 +389,10 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 {/* Top Customers Table */}
                 <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-400">
-                    <h3 className="text-lg font-semibold text-white mb-4 border-b border-[#30363d] pb-4">Top Customers</h3>
+                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-[#30363d] pb-4">Top Customers</h3>
+                    {hasRevenueTargetSplit && (
+                        <p className="text-xs text-gray-500 mb-3 -mt-2">Share % = row revenue ÷ total filtered revenue. Implied target = your saved revenue goal × same share.</p>
+                    )}
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
                             data={validCust}
@@ -304,7 +409,38 @@ export default function DashboardPage() {
                                     sortable: true,
                                     align: 'right',
                                     cell: (item: any) => <span className="text-white font-bold">{fmt(item.AMOUNT)}</span>
-                                }
+                                },
+                                ...(hasRevenueTargetSplit
+                                    ? [
+                                          {
+                                              header: 'Share %',
+                                              accessorKey: 'SHARE_PCT',
+                                              sortable: true,
+                                              align: 'right' as const,
+                                              cell: (item: any) => (
+                                                  <span className="text-gray-300">{Number(item.SHARE_PCT).toFixed(1)}%</span>
+                                              ),
+                                          },
+                                          {
+                                              header: 'Implied target',
+                                              accessorKey: 'TARGET_REVENUE',
+                                              sortable: true,
+                                              align: 'right' as const,
+                                              cell: (item: any) => (
+                                                  <span className="text-[#daa520]">{fmt(item.TARGET_REVENUE)}</span>
+                                              ),
+                                          },
+                                          {
+                                              header: '% of target',
+                                              accessorKey: 'VS_TARGET_PCT',
+                                              sortable: true,
+                                              align: 'right' as const,
+                                              cell: (item: any) => (
+                                                  <span className="text-gray-300">{Number(item.VS_TARGET_PCT).toFixed(0)}%</span>
+                                              ),
+                                          },
+                                      ]
+                                    : []),
                             ]}
                         />
                     </div>
@@ -312,7 +448,10 @@ export default function DashboardPage() {
 
                 {/* Top Material Groups Table */}
                 <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-500">
-                    <h3 className="text-lg font-semibold text-white mb-4 border-b border-[#30363d] pb-4">Top Performers (Material Groups)</h3>
+                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-[#30363d] pb-4">Top Performers (Material Groups)</h3>
+                    {hasRevenueTargetSplit && (
+                        <p className="text-xs text-gray-500 mb-3 -mt-2">Same split rule as customers: each group’s % of total sales × your revenue goal.</p>
+                    )}
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
                             data={tableMat}
@@ -329,7 +468,38 @@ export default function DashboardPage() {
                                     sortable: true,
                                     align: 'right',
                                     cell: (item: any) => <span className="text-white font-bold">{fmt(item.AMOUNT)}</span>
-                                }
+                                },
+                                ...(hasRevenueTargetSplit
+                                    ? [
+                                          {
+                                              header: 'Share %',
+                                              accessorKey: 'SHARE_PCT',
+                                              sortable: true,
+                                              align: 'right' as const,
+                                              cell: (item: any) => (
+                                                  <span className="text-gray-300">{Number(item.SHARE_PCT).toFixed(1)}%</span>
+                                              ),
+                                          },
+                                          {
+                                              header: 'Implied target',
+                                              accessorKey: 'TARGET_REVENUE',
+                                              sortable: true,
+                                              align: 'right' as const,
+                                              cell: (item: any) => (
+                                                  <span className="text-[#daa520]">{fmt(item.TARGET_REVENUE)}</span>
+                                              ),
+                                          },
+                                          {
+                                              header: '% of target',
+                                              accessorKey: 'VS_TARGET_PCT',
+                                              sortable: true,
+                                              align: 'right' as const,
+                                              cell: (item: any) => (
+                                                  <span className="text-gray-300">{Number(item.VS_TARGET_PCT).toFixed(0)}%</span>
+                                              ),
+                                          },
+                                      ]
+                                    : []),
                             ]}
                         />
                     </div>

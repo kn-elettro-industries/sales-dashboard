@@ -11,11 +11,13 @@ interface KpiCardProps {
     trendSuffix?: string;
     /** Optional goal progress 0–100 */
     goalPct?: number;
+    /** Shown under the progress bar, e.g. "Target ₹5.2 Cr" */
+    targetLabel?: string;
     /** Stagger delay in ms for entrance animation */
     animationDelay?: number;
 }
 
-export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix = "vs previous period", goalPct, animationDelay = 0 }: KpiCardProps) {
+export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix = "vs previous period", goalPct, targetLabel, animationDelay = 0 }: KpiCardProps) {
     return (
         <div
             className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 shadow-sm flex flex-col justify-between animate-slide-up opacity-0 hover:border-[#3d444d] transition-colors duration-200"
@@ -36,11 +38,17 @@ export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix 
                     </p>
                 )}
                 {goalPct != null && (
-                    <div className="mt-2 h-1.5 bg-[#30363d] rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-[#daa520] rounded-full transition-all"
-                            style={{ width: `${Math.min(100, Math.max(0, goalPct))}%` }}
-                        />
+                    <div className="mt-2">
+                        {targetLabel && (
+                            <p className="text-xs text-gray-500 mb-1">{targetLabel}</p>
+                        )}
+                        <div className="h-1.5 bg-[#30363d] rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-[#daa520] rounded-full transition-all"
+                                style={{ width: `${Math.min(100, Math.max(0, goalPct))}%` }}
+                            />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{Math.round(Math.min(100, Math.max(0, goalPct)))}% of target</p>
                     </div>
                 )}
             </div>

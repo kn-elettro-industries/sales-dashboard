@@ -8,7 +8,18 @@ import io
 import os
 from datetime import datetime, timedelta
 
-from .db import get_tenant_data, create_user, verify_user
+import calendar
+
+from .db import (
+    get_tenant_data,
+    create_user,
+    verify_user,
+    get_sales_targets,
+    set_sales_targets,
+    get_distributor_target,
+    list_distributor_targets,
+    upsert_distributor_target,
+)
 
 router = APIRouter()
 
@@ -113,6 +124,23 @@ def auth_me():
 class CreateUserRequest(BaseModel):
     username: str = ""
     password: str = ""
+
+
+class SalesTargetsPut(BaseModel):
+    """Persisted sales targets for dashboard KPI progress (same tenant as sales_master)."""
+    tenant_id: str = "default_elettro"
+    target_revenue: Optional[float] = None  # absolute ₹ amount
+    target_orders: Optional[int] = None
+
+
+class DistributorTargetPut(BaseModel):
+    """Monthly distributor (customer) target. Use % of company goal OR explicit ₹."""
+    tenant_id: str = "default_elettro"
+    customer_name: str = ""
+    year_month: str = ""  # YYYY-MM
+    target_revenue: Optional[float] = None
+    # If set (e.g. 30), target_revenue = company revenue goal × (pct / 100). Requires company goal on Executive Summary.
+    allocation_pct_of_company_goal: Optional[float] = None
 
 
 @router.post("/admin/create-user")
@@ -795,6 +823,222 @@ def get_filter_options(tenant_id: str = "default_elettro"):
         "months": months
     }
 
+# ─── SALES TARGETS (Neon / Postgres) ───
+
+@router.get("/settings/sales-targets")
+def api_get_sales_targets(tenant_id: str = Query("default_elettro")):
+    """Current saved targets for the tenant (dashboard revenue/order goals)."""
+    t = get_sales_targets(tenant_id)
+    return {"tenant_id": tenant_id, "target_revenue": t["revenue"], "target_orders": t["orders"]}
+
+
+@router.put("/settings/sales-targets")
+def api_put_sales_targets(body: SalesTargetsPut):
+    """Create or update sales targets. Use null to clear a target."""
+    ok = set_sales_targets(body.tenant_id, body.target_revenue, body.target_orders)
+    if not ok:
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+    return {"ok": True, "tenant_id": body.tenant_id, **get_sales_targets(body.tenant_id)}
+
+
+# ─── DISTRIBUTOR MONTHLY TARGETS (per customer, material split inside customer) ───
+
+@router.get("/distributor/targets")
+def api_list_distributor_targets(
+    tenant_id: str = Query("default_elettro"),
+    year_month: Optional[str] = None,
+):
+    """Saved monthly ₹ targets per distributor (optional filter by YYYY-MM)."""
+    return {"targets": list_distributor_targets(tenant_id, year_month)}
+
+
+@router.put("/distributor/targets")
+def api_put_distributor_target(body: DistributorTargetPut):
+    """
+    Set a distributor's monthly target. Either pass target_revenue (₹) OR
+    allocation_pct_of_company_goal (e.g. 30 = 30% of company revenue goal from Executive Summary).
+    """
+    if not body.customer_name or not body.year_month:
+        raise HTTPException(status_code=400, detail="customer_name and year_month (YYYY-MM) are required.")
+    ym = body.year_month.strip()
+    if len(ym) != 7 or ym[4] != "-":
+        raise HTTPException(status_code=400, detail="year_month must be YYYY-MM.")
+
+    rev: Optional[float] = body.target_revenue
+    pct_snap: Optional[float] = None
+    if body.allocation_pct_of_company_goal is not None:
+        g = get_sales_targets(body.tenant_id)
+        gr = g.get("revenue")
+        if gr is None or float(gr) <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Set a company revenue goal (Executive Summary → Save targets) before using percent allocation.",
+            )
+        pct = float(body.allocation_pct_of_company_goal)
+        if pct < 0 or pct > 100:
+            raise HTTPException(status_code=400, detail="Percent must be between 0 and 100.")
+        rev = float(gr) * (pct / 100.0)
+        pct_snap = pct
+    if rev is None or rev < 0:
+        raise HTTPException(status_code=400, detail="Provide target_revenue or allocation_pct_of_company_goal.")
+
+    ok = upsert_distributor_target(body.tenant_id, body.customer_name, ym, float(rev), pct_snap)
+    if not ok:
+        raise HTTPException(status_code=503, detail="Database unavailable.")
+    return {
+        "ok": True,
+        "tenant_id": body.tenant_id,
+        "customer_name": body.customer_name.strip(),
+        "year_month": ym,
+        "target_revenue": float(rev),
+        "allocation_pct_snapshot": pct_snap,
+    }
+
+
+def build_distributor_vs_target_report(tenant_id: str, customer_name: str, year_month: str) -> dict:
+    """
+    Shared payload for JSON and PDF: actual vs target by material group for one customer/month.
+    """
+    ym = year_month.strip()
+    if len(ym) != 7 or ym[4] != "-":
+        raise HTTPException(status_code=400, detail="year_month must be YYYY-MM.")
+    try:
+        y, m = map(int, ym.split("-"))
+        last_day = calendar.monthrange(y, m)[1]
+        start_str = f"{y}-{m:02d}-01"
+        end_str = f"{y}-{m:02d}-{last_day}"
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid year_month.")
+
+    target = get_distributor_target(tenant_id, customer_name, ym)
+    if target is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No saved target for this customer and month. Save under Distributor vs Target first.",
+        )
+
+    df = get_tenant_data(tenant_id, start_str, end_str)
+    cn = "CUSTOMER_NAME"
+    amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+    if not df.empty and cn not in df.columns:
+        raise HTTPException(status_code=400, detail="CUSTOMER_NAME column missing.")
+    if not df.empty and amt_col is None:
+        raise HTTPException(status_code=400, detail="AMOUNT column missing.")
+
+    if df.empty or amt_col is None:
+        return {
+            "tenant_id": tenant_id,
+            "customer_name": customer_name.strip(),
+            "year_month": ym,
+            "period": {"start": start_str, "end": end_str},
+            "customer_target": round(float(target), 2),
+            "customer_actual": 0.0,
+            "customer_variance": round(-float(target), 2),
+            "customer_pct_of_target": 0.0,
+            "material_groups": [],
+            "message": "No invoice rows in database for this month.",
+        }
+
+    df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
+    dfc = df[df[cn].astype(str).str.strip() == customer_name.strip()]
+    if dfc.empty:
+        return {
+            "tenant_id": tenant_id,
+            "customer_name": customer_name.strip(),
+            "year_month": ym,
+            "period": {"start": start_str, "end": end_str},
+            "customer_target": round(float(target), 2),
+            "customer_actual": 0.0,
+            "customer_variance": round(-float(target), 2),
+            "customer_pct_of_target": 0.0,
+            "material_groups": [],
+            "message": "No sales for this customer in the selected month.",
+        }
+
+    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in dfc.columns else ("MATERIALGROUP" if "MATERIALGROUP" in dfc.columns else None)
+    cust_actual = float(dfc[amt_col].sum())
+    rows = []
+
+    if grp_col is None:
+        tgt = float(target)
+        var = cust_actual - tgt
+        pct_t = (cust_actual / tgt * 100) if tgt > 0 else 0.0
+        rows.append({
+            "material_group": "(all)",
+            "actual": round(cust_actual, 2),
+            "share_of_customer_pct": 100.0,
+            "target": round(tgt, 2),
+            "variance": round(var, 2),
+            "pct_of_target": round(pct_t, 1),
+        })
+    else:
+        mg = dfc.groupby(grp_col)[amt_col].sum()
+        for gname, aval in mg.items():
+            aval = float(aval)
+            share = (aval / cust_actual) if cust_actual > 0 else 0.0
+            tgt = float(target) * share
+            var = aval - tgt
+            pct = (aval / tgt * 100) if tgt > 0 else 0.0
+            rows.append({
+                "material_group": str(gname),
+                "actual": round(aval, 2),
+                "share_of_customer_pct": round(share * 100, 2),
+                "target": round(tgt, 2),
+                "variance": round(var, 2),
+                "pct_of_target": round(pct, 1),
+            })
+        rows.sort(key=lambda x: x["actual"], reverse=True)
+
+    tgt_f = float(target)
+    cvar = cust_actual - tgt_f
+    cpct = (cust_actual / tgt_f * 100) if tgt_f > 0 else 0.0
+    return {
+        "tenant_id": tenant_id,
+        "customer_name": customer_name.strip(),
+        "year_month": ym,
+        "period": {"start": start_str, "end": end_str},
+        "customer_target": round(tgt_f, 2),
+        "customer_actual": round(cust_actual, 2),
+        "customer_variance": round(cvar, 2),
+        "customer_pct_of_target": round(cpct, 1),
+        "material_groups": rows,
+    }
+
+
+@router.get("/reports/distributor-vs-target")
+def report_distributor_vs_target(
+    tenant_id: str = Query("default_elettro"),
+    customer_name: str = Query(..., description="Distributor / CUSTOMER_NAME"),
+    year_month: str = Query(..., description="YYYY-MM"),
+):
+    """
+    Compare actual sales vs saved monthly target for one customer.
+    Material-group targets = customer target × (group sales ÷ customer sales) for that month.
+    """
+    return build_distributor_vs_target_report(tenant_id, customer_name, year_month)
+
+
+@router.get("/reports/distributor-vs-target/pdf")
+def report_distributor_vs_target_pdf(
+    tenant_id: str = Query("default_elettro"),
+    customer_name: str = Query(..., description="Distributor / CUSTOMER_NAME"),
+    year_month: str = Query(..., description="YYYY-MM"),
+):
+    """PDF export of Distributor vs Target (same data as JSON report)."""
+    from .pdf_generator import generate_distributor_vs_target_pdf
+
+    data = build_distributor_vs_target_report(tenant_id, customer_name, year_month)
+    pdf_bytes = generate_distributor_vs_target_pdf(data)
+    safe_c = "".join(c if c.isalnum() or c in "-_" else "_" for c in customer_name.strip())[:40]
+    ym = year_month.strip().replace("/", "-")
+    fname = f"DistributorVsTarget_{safe_c}_{ym}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
 # ─── DASHBOARD (single-call for faster load) ───
 
 @router.get("/dashboard/summary")
@@ -816,11 +1060,13 @@ def get_dashboard_summary(
 ):
     """Single endpoint: summary + trend + material groups + top customers + previous-period comparison + optional goals."""
     def _empty(msg: str):
+        st = get_sales_targets(tenant_id)
         return {
             "summary": {"revenue": 0, "orders": 0, "customers": 0, "average_order_value": 0},
             "previous_summary": None,
             "comparison": None,
             "goals": None,
+            "sales_targets": {"revenue": st["revenue"], "orders": st["orders"]},
             "trend": [],
             "material_groups": [],
             "top_customers": [],
@@ -881,13 +1127,23 @@ def get_dashboard_summary(
             except Exception:
                 pass
 
+        db_targets = get_sales_targets(tenant_id)
+        eff_goal_rev = goal_revenue if goal_revenue is not None and goal_revenue > 0 else (
+            db_targets["revenue"] if db_targets.get("revenue") and db_targets["revenue"] > 0 else None
+        )
+        eff_goal_ord = goal_orders if goal_orders is not None and goal_orders > 0 else (
+            db_targets["orders"] if db_targets.get("orders") and db_targets["orders"] > 0 else None
+        )
         goals = None
-        if goal_revenue is not None and goal_revenue > 0:
-            goals = {"revenue_target": goal_revenue, "revenue_achievement_pct": round(revenue / goal_revenue * 100, 1)}
-        if goal_orders is not None and goal_orders > 0:
+        if eff_goal_rev is not None and eff_goal_rev > 0:
+            goals = {
+                "revenue_target": eff_goal_rev,
+                "revenue_achievement_pct": round(revenue / eff_goal_rev * 100, 1),
+            }
+        if eff_goal_ord is not None and eff_goal_ord > 0:
             goals = goals or {}
-            goals["orders_target"] = goal_orders
-            goals["orders_achievement_pct"] = round(orders / goal_orders * 100, 1)
+            goals["orders_target"] = eff_goal_ord
+            goals["orders_achievement_pct"] = round(orders / eff_goal_ord * 100, 1)
 
         trend = []
         date_col, amount_col = _date_amount_columns(df)
@@ -919,11 +1175,22 @@ def get_dashboard_summary(
         material_groups_list = []
         if grp_col in df.columns and amt_col is not None:
             mg = df.groupby(grp_col)[amt_col].sum().sort_values(ascending=False).head(material_limit).reset_index()
+            # Split total revenue target by each row's share of filtered sales (same logic for customers & materials)
+            if eff_goal_rev is not None and eff_goal_rev > 0 and revenue > 0:
+                mg["SHARE_PCT"] = (mg[amt_col] / revenue * 100).round(2)
+                mg["TARGET_REVENUE"] = (eff_goal_rev * mg[amt_col] / revenue).round(2)
+                _tr = mg["TARGET_REVENUE"]
+                mg["VS_TARGET_PCT"] = (mg[amt_col] / _tr * 100).where(_tr > 0, 0).round(1)
             material_groups_list = serialize_df(mg)
 
         top_customers_list = []
         if "CUSTOMER_NAME" in df.columns and amt_col is not None:
             tc = df.groupby("CUSTOMER_NAME")[amt_col].sum().sort_values(ascending=False).head(top_customers_limit).reset_index()
+            if eff_goal_rev is not None and eff_goal_rev > 0 and revenue > 0:
+                tc["SHARE_PCT"] = (tc[amt_col] / revenue * 100).round(2)
+                tc["TARGET_REVENUE"] = (eff_goal_rev * tc[amt_col] / revenue).round(2)
+                _trc = tc["TARGET_REVENUE"]
+                tc["VS_TARGET_PCT"] = (tc[amt_col] / _trc * 100).where(_trc > 0, 0).round(1)
             top_customers_list = serialize_df(tc)
 
         return {
@@ -931,6 +1198,7 @@ def get_dashboard_summary(
             "previous_summary": previous_summary,
             "comparison": comparison,
             "goals": goals,
+            "sales_targets": {"revenue": db_targets["revenue"], "orders": db_targets["orders"]},
             "trend": trend,
             "material_groups": material_groups_list,
             "top_customers": top_customers_list,

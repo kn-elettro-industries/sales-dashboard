@@ -317,6 +317,183 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
                 invalidate_tenant_cache(tenant_id)
             return new_records_count
     except Exception as e:
-        logging.error(f"Failed to update Postgres database: {e}")
+            logging.error(f"Failed to update Postgres database: {e}")
         return 0
+
+
+# ─── SALES TARGETS (per tenant, dashboard KPI vs target) ────────────────────
+
+def _ensure_sales_targets_table(conn) -> None:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS tenant_sales_targets (
+            tenant_id VARCHAR(128) PRIMARY KEY,
+            target_revenue NUMERIC(20, 2),
+            target_orders INTEGER,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    conn.commit()
+
+
+def get_sales_targets(tenant_id: str) -> dict:
+    """Return {revenue: float|None, orders: int|None} for the tenant."""
+    eng = get_engine()
+    if eng is None:
+        return {"revenue": None, "orders": None}
+    try:
+        with eng.connect() as conn:
+            _ensure_sales_targets_table(conn)
+            row = conn.execute(
+                text("SELECT target_revenue, target_orders FROM tenant_sales_targets WHERE tenant_id = :t"),
+                {"t": tenant_id},
+            ).fetchone()
+        if not row:
+            return {"revenue": None, "orders": None}
+        rev, ord_ = row[0], row[1]
+        return {
+            "revenue": float(rev) if rev is not None else None,
+            "orders": int(ord_) if ord_ is not None else None,
+        }
+    except Exception as e:
+        logging.error("get_sales_targets: %s", e)
+        return {"revenue": None, "orders": None}
+
+
+def set_sales_targets(tenant_id: str, target_revenue: Optional[float], target_orders: Optional[int]) -> bool:
+    """Upsert sales targets for tenant. None clears that field."""
+    eng = get_engine()
+    if eng is None:
+        return False
+    try:
+        with eng.connect() as conn:
+            _ensure_sales_targets_table(conn)
+            conn.execute(
+                text("""
+                    INSERT INTO tenant_sales_targets (tenant_id, target_revenue, target_orders, updated_at)
+                    VALUES (:tid, :rev, :ord, CURRENT_TIMESTAMP)
+                    ON CONFLICT (tenant_id) DO UPDATE SET
+                        target_revenue = EXCLUDED.target_revenue,
+                        target_orders = EXCLUDED.target_orders,
+                        updated_at = CURRENT_TIMESTAMP
+                """),
+                {"tid": tenant_id, "rev": target_revenue, "ord": target_orders},
+            )
+            conn.commit()
+        return True
+    except Exception as e:
+        logging.error("set_sales_targets: %s", e)
+        return False
+
+
+# ─── DISTRIBUTOR (CUSTOMER) MONTHLY TARGETS ─────────────────────────────────
+
+def _ensure_distributor_targets_table(conn) -> None:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS distributor_targets (
+            id SERIAL PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL,
+            customer_name VARCHAR(512) NOT NULL,
+            year_month VARCHAR(7) NOT NULL,
+            target_revenue NUMERIC(20, 2) NOT NULL,
+            allocation_pct_snapshot NUMERIC(8, 4),
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (tenant_id, customer_name, year_month)
+        )
+    """))
+    conn.commit()
+
+
+def get_distributor_target(tenant_id: str, customer_name: str, year_month: str) -> Optional[float]:
+    """Single monthly ₹ target for a distributor, or None."""
+    eng = get_engine()
+    if eng is None or not customer_name or not year_month:
+        return None
+    try:
+        with eng.connect() as conn:
+            _ensure_distributor_targets_table(conn)
+            row = conn.execute(
+                text("""
+                    SELECT target_revenue FROM distributor_targets
+                    WHERE tenant_id = :tid AND customer_name = :c AND year_month = :ym
+                """),
+                {"tid": tenant_id, "c": customer_name.strip(), "ym": year_month.strip()},
+            ).fetchone()
+        if not row or row[0] is None:
+            return None
+        return float(row[0])
+    except Exception as e:
+        logging.error("get_distributor_target: %s", e)
+        return None
+
+
+def list_distributor_targets(tenant_id: str, year_month: Optional[str] = None) -> list:
+    """All distributor rows for tenant, optionally filtered by YYYY-MM."""
+    eng = get_engine()
+    if eng is None:
+        return []
+    try:
+        with eng.connect() as conn:
+            _ensure_distributor_targets_table(conn)
+            if year_month:
+                rows = conn.execute(
+                    text("""
+                        SELECT customer_name, year_month, target_revenue, allocation_pct_snapshot
+                        FROM distributor_targets WHERE tenant_id = :t AND year_month = :ym
+                        ORDER BY customer_name
+                    """),
+                    {"t": tenant_id, "ym": year_month},
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    text("""
+                        SELECT customer_name, year_month, target_revenue, allocation_pct_snapshot
+                        FROM distributor_targets WHERE tenant_id = :t
+                        ORDER BY year_month DESC, customer_name
+                    """),
+                    {"t": tenant_id},
+                ).fetchall()
+        return [
+            {
+                "customer_name": r[0],
+                "year_month": r[1],
+                "target_revenue": float(r[2]) if r[2] is not None else None,
+                "allocation_pct_snapshot": float(r[3]) if r[3] is not None else None,
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logging.error("list_distributor_targets: %s", e)
+        return []
+
+
+def upsert_distributor_target(
+    tenant_id: str,
+    customer_name: str,
+    year_month: str,
+    target_revenue: float,
+    allocation_pct_snapshot: Optional[float] = None,
+) -> bool:
+    eng = get_engine()
+    if eng is None:
+        return False
+    try:
+        with eng.connect() as conn:
+            _ensure_distributor_targets_table(conn)
+            conn.execute(
+                text("""
+                    INSERT INTO distributor_targets
+                        (tenant_id, customer_name, year_month, target_revenue, allocation_pct_snapshot, updated_at)
+                    VALUES (:tid, :c, :ym, :rev, :pct, CURRENT_TIMESTAMP)
+                    ON CONFLICT (tenant_id, customer_name, year_month) DO UPDATE SET
+                        target_revenue = EXCLUDED.target_revenue,
+                        allocation_pct_snapshot = EXCLUDED.allocation_pct_snapshot,
+                        updated_at = CURRENT_TIMESTAMP
+                """),
+                {"tid": tenant_id, "c": customer_name.strip(), "ym": year_month.strip(), "rev": target_revenue, "pct": allocation_pct_snapshot},
+            )
+            conn.commit()
+        return True
+    except Exception as e:
+        logging.error("upsert_distributor_target: %s", e)
+        return False
 

@@ -78,6 +78,77 @@ def _pdf_text(value: object) -> str:
     return s.encode("latin-1", errors="replace").decode("latin-1")
 
 
+def generate_distributor_vs_target_pdf(report: dict) -> bytes:
+    """
+    One-page landscape PDF: customer summary + material group actual vs target.
+    `report` matches GET /reports/distributor-vs-target JSON.
+    """
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.set_margins(10, 10, 10)
+    pdf.set_auto_page_break(auto=True, margin=12)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 8, _pdf_text("Distributor vs Target Report"), ln=1)
+    pdf.set_font("Helvetica", "", 9)
+    cust = report.get("customer_name") or ""
+    ym = report.get("year_month") or ""
+    per = report.get("period") or {}
+    pdf.cell(
+        0,
+        5,
+        _pdf_text(f"Customer: {cust}  |  Month: {ym}  |  Period: {per.get('start', '')} to {per.get('end', '')}"),
+        ln=1,
+    )
+    pdf.ln(2)
+
+    msg = report.get("message")
+    if msg:
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.cell(0, 5, _pdf_text(str(msg)), ln=1)
+        pdf.ln(2)
+
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, _pdf_text("Customer summary"), ln=1)
+    pdf.set_font("Helvetica", "", 9)
+    ca = report.get("customer_actual", 0)
+    ct = report.get("customer_target", 0)
+    cv = report.get("customer_variance", 0)
+    cp = report.get("customer_pct_of_target", 0)
+    pdf.cell(0, 5, _pdf_text(f"Actual: {format_currency_pdf(ca)}  |  Target: {format_currency_pdf(ct)}  |  Variance: {format_currency_pdf(cv)}  |  % of target: {cp}%"), ln=1)
+    pdf.ln(3)
+
+    rows = report.get("material_groups") or []
+    if not rows:
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(0, 6, _pdf_text("No material group rows."), ln=1)
+        return _pdf_to_bytes(pdf)
+
+    pdf.set_font("Helvetica", "B", 9)
+    col_w = [78, 22, 32, 32, 32, 24]
+    headers = ["Material group", "Share %", "Actual", "Target", "Variance", "% target"]
+    for i, h in enumerate(headers):
+        pdf.cell(col_w[i], 7, _pdf_text(h), border=1, align="C")
+    pdf.ln()
+
+    pdf.set_font("Helvetica", "", 8)
+    for r in rows:
+        mg = str(r.get("material_group", ""))[:42]
+        sp = f"{float(r.get('share_of_customer_pct', 0)):.1f}%"
+        act = format_currency_pdf(r.get("actual", 0))
+        tgt = format_currency_pdf(r.get("target", 0))
+        var = format_currency_pdf(r.get("variance", 0))
+        pt = f"{float(r.get('pct_of_target', 0)):.0f}%"
+        pdf.cell(col_w[0], 6, _pdf_text(mg), border=1)
+        pdf.cell(col_w[1], 6, _pdf_text(sp), border=1, align="R")
+        pdf.cell(col_w[2], 6, _pdf_text(act), border=1, align="R")
+        pdf.cell(col_w[3], 6, _pdf_text(tgt), border=1, align="R")
+        pdf.cell(col_w[4], 6, _pdf_text(var), border=1, align="R")
+        pdf.cell(col_w[5], 6, _pdf_text(pt), border=1, align="R")
+        pdf.ln()
+
+    return _pdf_to_bytes(pdf)
+
+
 def _dim_to_col(df: pd.DataFrame, dim: str) -> Optional[str]:
     """
     Map a logical dimension key to a real dataframe column.

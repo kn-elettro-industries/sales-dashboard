@@ -84,6 +84,71 @@ export const fetchTopCustomers = (p?: FilterParams) => apiFetch("/charts/top-cus
 // Single dashboard payload (throws on failure so dashboard can show "slow/unreachable" + retry)
 export const fetchDashboardSummary = (p?: FilterParams) => apiFetch("/dashboard/summary", p);
 
+export type SalesTargetsPayload = { tenant_id: string; target_revenue: number | null; target_orders: number | null };
+
+export const fetchSalesTargets = (tenant: string) =>
+    fetchWithTimeout(`${API_BASE_URL}/settings/sales-targets?tenant_id=${encodeURIComponent(tenant)}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+
+export const saveSalesTargets = (body: SalesTargetsPayload) =>
+    fetchWithTimeout(`${API_BASE_URL}/settings/sales-targets`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    }).then((r) => {
+        if (!r.ok) return r.json().then((j) => Promise.reject(new Error(j.detail || r.statusText)));
+        return r.json();
+    });
+
+export type DistributorTargetPayload = {
+    tenant_id: string;
+    customer_name: string;
+    year_month: string;
+    target_revenue?: number | null;
+    allocation_pct_of_company_goal?: number | null;
+};
+
+export const saveDistributorTarget = (body: DistributorTargetPayload) =>
+    fetchWithTimeout(`${API_BASE_URL}/distributor/targets`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    }).then((r) => {
+        if (!r.ok) return r.json().then((j) => Promise.reject(new Error(Array.isArray(j.detail) ? j.detail[0] : j.detail || r.statusText)));
+        return r.json();
+    });
+
+export const fetchDistributorVsTarget = (tenant: string, customerName: string, yearMonth: string) => {
+    const q = new URLSearchParams({
+        tenant_id: tenant,
+        customer_name: customerName,
+        year_month: yearMonth,
+    });
+    return fetchWithTimeout(`${API_BASE_URL}/reports/distributor-vs-target?${q.toString()}`, { cache: "no-store" }).then((r) => {
+        if (!r.ok) return r.json().then((j) => Promise.reject(new Error(j.detail || r.statusText)));
+        return r.json();
+    });
+};
+
+export async function downloadDistributorVsTargetPdf(tenant: string, customerName: string, yearMonth: string): Promise<Blob> {
+    const q = new URLSearchParams({
+        tenant_id: tenant,
+        customer_name: customerName,
+        year_month: yearMonth,
+    });
+    const res = await fetchWithTimeout(`${API_BASE_URL}/reports/distributor-vs-target/pdf?${q.toString()}`, {
+        cache: "no-store",
+    });
+    if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        const d = j.detail;
+        const msg = Array.isArray(d) ? d[0] : d || res.statusText;
+        throw new Error(typeof msg === "string" ? msg : "PDF download failed");
+    }
+    return res.blob();
+}
+
 // Sales & Growth
 export const fetchMonthlySales = (p?: FilterParams) => apiFetch("/sales/monthly", p).then(d => d || []).catch(() => []);
 export const fetchDailySales = (days = 30, p?: FilterParams) => apiFetch(`/sales/daily${buildQueryString({ ...p, days: days.toString() })}`).then(d => d || []).catch(() => []);

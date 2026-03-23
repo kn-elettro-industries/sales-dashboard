@@ -55,9 +55,14 @@ def auth_signup_enabled():
 def _create_token(user: str, role: str, tenant: str) -> str:
     """Create a short-lived JWT for the logged-in user."""
     import jwt
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     secret = os.environ.get("JWT_SECRET", "elettro-dev-secret-change-in-production")
-    payload = {"user": user, "role": role, "tenant": tenant, "exp": datetime.utcnow() + timedelta(hours=24)}
+    payload = {
+        "user": user,
+        "role": role,
+        "tenant": tenant,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=24),
+    }
     return jwt.encode(payload, secret, algorithm="HS256")
 
 

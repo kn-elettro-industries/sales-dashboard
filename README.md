@@ -115,6 +115,11 @@ Set `SIGNUP_ENABLED=true` in Render environment to allow anyone to sign up at `/
 | `DATABASE_URL` | Supabase PostgreSQL connection string (backend + legacy ETL) |
 | `API_URL` | FastAPI base URL (legacy Streamlit, e.g. `http://localhost:8000`) |
 | `NEXT_PUBLIC_API_URL` | Full API base for Next.js (e.g. `http://localhost:8000/api`). Defaults to `http://localhost:8000/api` if unset. |
+| `TENANT_CACHE_MAXSIZE` | (Optional) Max tenants kept in RAM cache; default `10`. See [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md). |
+| `TENANT_CACHE_TTL_SECONDS` | (Optional) Tenant DataFrame cache TTL in seconds; default `14400` (4h). |
+| `EGRESS_MAX_YEARS` | (Optional) Limit DB read to last N years; `0` = load all (default). |
+
+Performance notes: **[docs/OPTIMIZATION.md](docs/OPTIMIZATION.md)** — indexes, tuning, backlog.
 
 ## Deploy
 

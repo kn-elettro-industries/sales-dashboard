@@ -42,7 +42,6 @@ export default function ReportsPage() {
     const [entityOptions, setEntityOptions] = useState<string[]>([]);
     const [customerOptions, setCustomerOptions] = useState<string[]>([]);
     const [stateOptions, setStateOptions] = useState<string[]>([]);
-    const [materialOptions, setMaterialOptions] = useState<string[]>([]);
     const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
     // Dynamic (Streamlit-like) builder state
@@ -148,7 +147,6 @@ export default function ReportsPage() {
                 const dataState = await fetchStateData({ tenant });
                 setStateOptions(dataState.map((s: any) => s.STATE).filter(Boolean).sort());
 
-                setMaterialOptions(["AIR FILTER", "SELF LOCKING PA 66 CABLE TIE", "JUNCTION BOXES", "POLYMIDE FLEXIBLE CONDUIT & SLITTED", "POLYAMIDE CONDUIT GLAND"]);
             } catch (e) {
                 console.error("Failed to fetch advanced context", e);
             }
@@ -468,49 +466,9 @@ export default function ReportsPage() {
                                 </div>
 
                                 <div className="pt-6 border-t border-[#30363d]">
-                                    <label className="block text-sm font-medium text-[#daa520] mb-3">
-                                        <Filter size={16} className="inline mr-2 -mt-0.5" />
-                                        3. Optional Advanced Context
-                                    </label>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Isolate by Customer</p>
-                                            <select
-                                                value={filterCustomer}
-                                                onChange={(e) => setFilterCustomer(e.target.value)}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                            >
-                                                <option value="All">All Customers</option>
-                                                {customerOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Isolate by State</p>
-                                            <select
-                                                value={filterState}
-                                                onChange={(e) => setFilterState(e.target.value)}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                            >
-                                                <option value="All">All States</option>
-                                                {stateOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Isolate by Material Category</p>
-                                            <select
-                                                value={filterMaterial}
-                                                onChange={(e) => setFilterMaterial(e.target.value)}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                            >
-                                                <option value="All">All Categories</option>
-                                                {materialOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-6 border-t border-[#30363d]">
+                                    <p className="text-xs text-gray-500 mb-3">
+                                        Respects <b className="text-gray-400">global filters</b> (date range, state, customer, material, etc.).
+                                    </p>
                                     <button
                                         onClick={handleDownload}
                                         disabled={downloading}
@@ -537,8 +495,11 @@ export default function ReportsPage() {
                                 </div>
 
                                 <div className="pt-6 border-t border-[#30363d]">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">4. Streamlit-like Dynamic Builder</label>
-                                    <p className="text-xs text-gray-500 mb-4">Build a report that adapts to your current cross-filters (breakdowns + top-N), not a fixed template.</p>
+                                    <label className="block text-sm font-medium text-[#daa520] mb-2 flex items-center gap-2">
+                                        <Filter size={16} className="flex-shrink-0" />
+                                        3. Advanced filter
+                                    </label>
+                                    <p className="text-xs text-gray-500 mb-4">Cross-filter breakdowns and top-N — adapts to your current global filters (same as interactive reports).</p>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>

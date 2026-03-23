@@ -49,8 +49,21 @@ def get_engine():
         logging.error(f"Failed to initialize PostgreSQL engine in Backend: {e}")
         return None
 
-# Cache up to 10 tenants' full DataFrames (4h TTL to reduce Supabase egress)
-tenant_cache = TTLCache(maxsize=10, ttl=4 * 3600)
+def _tenant_cache_from_env() -> TTLCache:
+    """In-memory cache for full tenant DataFrames. Tunable via env to reduce DB egress or support more tenants."""
+    try:
+        maxsize = int(os.environ.get("TENANT_CACHE_MAXSIZE", "10"))
+    except ValueError:
+        maxsize = 10
+    try:
+        ttl = int(os.environ.get("TENANT_CACHE_TTL_SECONDS", str(4 * 3600)))
+    except ValueError:
+        ttl = 4 * 3600
+    return TTLCache(maxsize=max(1, maxsize), ttl=max(60, ttl))
+
+
+# Default: 10 tenants, 4h TTL — see docs/OPTIMIZATION.md
+tenant_cache = _tenant_cache_from_env()
 
 
 def invalidate_tenant_cache(tenant_id: str) -> None:

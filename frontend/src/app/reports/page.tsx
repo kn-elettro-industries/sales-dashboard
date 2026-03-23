@@ -402,42 +402,47 @@ export default function ReportsPage() {
 
             {activeTab === 'export' && (
                 <div className="animate-in fade-in duration-300">
-                    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">1. Select Report Type</label>
-                                    <div className="grid gap-3">
-                                        {REPORT_TYPES.map((report) => (
-                                            <button
-                                                key={report.id}
-                                                onClick={() => setSelectedReport(report.id)}
-                                                className={`flex items-center p-4 rounded-lg border transition-all ${selectedReport === report.id
-                                                    ? 'bg-[#2a2414] border-[#daa520] text-[#daa520]'
-                                                    : 'bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500 hover:text-gray-200'
-                                                    }`}
-                                            >
-                                                <report.icon size={20} className="mr-3 flex-shrink-0" />
-                                                <span className="font-medium text-left">{report.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
+                    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 md:p-8">
+                        {/* Top row: step titles align on one baseline (desktop) */}
+                        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8 lg:mb-3">
+                            <span className="text-sm font-medium text-gray-300 leading-5">1. Select Report Type</span>
+                            <span className="text-sm font-medium text-gray-300 leading-5">2. Select Target Entity</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-8 items-start">
+                            {/* Column 1 — report types */}
+                            <div className="flex flex-col gap-3 min-w-0">
+                                <label className="lg:hidden text-sm font-medium text-gray-300 leading-5">1. Select Report Type</label>
+                                <div className="grid gap-3">
+                                    {REPORT_TYPES.map((report) => (
+                                        <button
+                                            key={report.id}
+                                            type="button"
+                                            onClick={() => setSelectedReport(report.id)}
+                                            className={`flex items-center p-4 rounded-lg border transition-all text-left min-h-[3.25rem] ${selectedReport === report.id
+                                                ? 'bg-[#2a2414] border-[#daa520] text-[#daa520]'
+                                                : 'bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500 hover:text-gray-200'
+                                                }`}
+                                        >
+                                            <report.icon size={20} className="mr-3 flex-shrink-0" />
+                                            <span className="font-medium">{report.label}</span>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
-                            <div className="space-y-6 flex flex-col justify-between">
+                            {/* Column 2 — entity, download, advanced (single vertical rhythm) */}
+                            <div className="flex flex-col gap-6 min-w-0">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        2. Select Target Entity
-                                    </label>
+                                    <label className="lg:hidden text-sm font-medium text-gray-300 leading-5 mb-2 block">2. Select Target Entity</label>
 
                                     {REPORT_TYPES.find(r => r.id === selectedReport)?.needsEntity ? (
-                                        <div className="space-y-3">
+                                        <div className="flex flex-col gap-3">
                                             <select
                                                 value={selectedEntity}
                                                 onChange={(e) => setSelectedEntity(e.target.value)}
                                                 disabled={isLoadingOptions || entityOptions.length === 0}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-3 outline-none focus:border-[#daa520] disabled:opacity-50"
+                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-3 outline-none focus:border-[#daa520] disabled:opacity-50 min-h-[3rem]"
                                             >
                                                 <option value="All">Summary (All {selectedReport.split(' ')[0]}s)</option>
                                                 {entityOptions.map(opt => (
@@ -446,64 +451,68 @@ export default function ReportsPage() {
                                             </select>
 
                                             {isLoadingOptions && (
-                                                <p className="text-sm text-[#daa520] flex items-center">
-                                                    <Loader2 size={14} className="animate-spin mr-2" />
+                                                <p className="text-sm text-[#daa520] flex items-center gap-2">
+                                                    <Loader2 size={14} className="animate-spin shrink-0" />
                                                     Loading options...
                                                 </p>
                                             )}
                                             {selectedEntity !== "All" && (
-                                                <div className="bg-[#2a2414] text-[#daa520] p-3 rounded text-sm flex items-start mt-4">
-                                                    <Filter size={16} className="mt-0.5 mr-2 flex-shrink-0" />
+                                                <div className="bg-[#2a2414] border border-[#daa520]/20 text-[#daa520] p-3 rounded-lg text-sm flex items-start gap-2 w-full">
+                                                    <Filter size={16} className="mt-0.5 shrink-0" />
                                                     <p>This report will be <b>exclusively filtered</b> for {selectedEntity}, rendering a 4-page deep dive.</p>
                                                 </div>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-6 text-center text-gray-500">
-                                            <p>The Executive Summary includes all data by default.<br />No specific entity required.</p>
+                                        <div className="bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-6 text-center text-gray-500 text-sm leading-relaxed">
+                                            <p>The Executive Summary includes all data by default.</p>
+                                            <p className="mt-1">No specific entity required.</p>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="pt-6 border-t border-[#30363d]">
-                                    <p className="text-xs text-gray-500 mb-3">
+                                <div className="border-t border-[#30363d] pt-6 space-y-3">
+                                    <p className="text-xs text-gray-500">
                                         Respects <b className="text-gray-400">global filters</b> (date range, state, customer, material, etc.).
                                     </p>
                                     <button
+                                        type="button"
                                         onClick={handleDownload}
                                         disabled={downloading}
-                                        className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center transition-all shadow-lg
+                                        className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg
                                             ${downloading
                                                 ? 'bg-[#30363d] text-gray-400 cursor-not-allowed shadow-none'
-                                                : 'bg-gradient-to-r from-[#b8860b] to-[#daa520] text-[#0d1117] hover:scale-[1.02] hover:shadow-[#daa520]/20'
+                                                : 'bg-gradient-to-r from-[#b8860b] to-[#daa520] text-[#0d1117] hover:scale-[1.01] hover:shadow-[#daa520]/20'
                                             }
                                         `}
                                     >
                                         {downloading ? (
                                             <>
-                                                <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                                                <Loader2 className="w-5 h-5 animate-spin shrink-0" />
                                                 Generating Dynamic PDF...
                                             </>
                                         ) : (
                                             <>
-                                                <Download className="w-5 h-5 mr-3" />
+                                                <Download className="w-5 h-5 shrink-0" />
                                                 Download Industrial Report
                                             </>
                                         )}
                                     </button>
-                                    <p className="text-xs text-gray-500 mt-2 text-center">Large reports may take 15–30 seconds.</p>
+                                    <p className="text-xs text-gray-500 text-center">Large reports may take 15–30 seconds.</p>
                                 </div>
 
-                                <div className="pt-6 border-t border-[#30363d]">
-                                    <label className="block text-sm font-medium text-[#daa520] mb-2 flex items-center gap-2">
-                                        <Filter size={16} className="flex-shrink-0" />
-                                        3. Advanced filter
-                                    </label>
-                                    <p className="text-xs text-gray-500 mb-4">Cross-filter breakdowns and top-N — adapts to your current global filters (same as interactive reports).</p>
+                                <div className="border-t border-[#30363d] pt-6 space-y-4">
+                                    <div>
+                                        <div className="flex items-center gap-2 text-sm font-medium text-[#daa520] mb-1">
+                                            <Filter size={16} className="shrink-0" />
+                                            <span>3. Advanced filter</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500">Cross-filter breakdowns and top-N — uses your current global filters.</p>
+                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Primary Breakdown</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xs text-gray-500">Primary Breakdown</span>
                                             <select
                                                 value={dynPrimary}
                                                 onChange={(e) => {
@@ -511,19 +520,19 @@ export default function ReportsPage() {
                                                     setDynPrimary(next);
                                                     if (dynSecondary === next) setDynSecondary("");
                                                 }}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
+                                                className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
                                             >
                                                 {DYNAMIC_DIMENSIONS.map(d => (
                                                     <option key={d.id} value={d.id}>{d.label}</option>
                                                 ))}
                                             </select>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Secondary Breakdown (optional)</p>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xs text-gray-500">Secondary Breakdown (optional)</span>
                                             <select
                                                 value={dynSecondary}
                                                 onChange={(e) => setDynSecondary(e.target.value)}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
+                                                className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
                                             >
                                                 <option value="">None</option>
                                                 {DYNAMIC_DIMENSIONS.filter(d => d.id !== dynPrimary).map(d => (
@@ -531,25 +540,25 @@ export default function ReportsPage() {
                                                 ))}
                                             </select>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Top N (3–50)</p>
-                                            <input
-                                                type="number"
-                                                min={3}
-                                                max={50}
-                                                value={dynTopN}
-                                                onChange={(e) => setDynTopN(Number(e.target.value))}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg p-2 outline-none focus:border-[#daa520] text-sm"
-                                            />
-                                        </div>
-                                        <div className="flex items-end">
-                                            <label className="flex items-center text-sm text-gray-300 select-none">
+                                        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-end">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-xs text-gray-500">Top N (3–50)</span>
+                                                <input
+                                                    type="number"
+                                                    min={3}
+                                                    max={50}
+                                                    value={dynTopN}
+                                                    onChange={(e) => setDynTopN(Number(e.target.value))}
+                                                    className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                />
+                                            </div>
+                                            <label className="flex items-center gap-2 text-sm text-gray-300 select-none pb-2 sm:pb-3">
                                                 <input
                                                     type="checkbox"
                                                     checked={dynIncludePivot}
                                                     onChange={(e) => setDynIncludePivot(e.target.checked)}
                                                     disabled={!dynSecondary}
-                                                    className="mr-2 accent-[#daa520]"
+                                                    className="accent-[#daa520] shrink-0"
                                                 />
                                                 Include Pivot Table
                                             </label>
@@ -557,9 +566,10 @@ export default function ReportsPage() {
                                     </div>
 
                                     <button
+                                        type="button"
                                         onClick={handleDynamicDownload}
                                         disabled={dynDownloading}
-                                        className={`w-full mt-4 py-3 rounded-lg font-bold text-base flex items-center justify-center transition-all border
+                                        className={`w-full py-3 rounded-lg font-bold text-base flex items-center justify-center gap-3 transition-all border
                                             ${dynDownloading
                                                 ? 'bg-[#30363d] text-gray-400 cursor-not-allowed border-[#30363d]'
                                                 : 'bg-[#0d1117] text-[#daa520] border-[#daa520]/40 hover:border-[#daa520] hover:bg-[#2a2414]'
@@ -568,12 +578,12 @@ export default function ReportsPage() {
                                     >
                                         {dynDownloading ? (
                                             <>
-                                                <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                                                <Loader2 className="w-5 h-5 animate-spin shrink-0" />
                                                 Generating Dynamic Report...
                                             </>
                                         ) : (
                                             <>
-                                                <Download className="w-5 h-5 mr-3" />
+                                                <Download className="w-5 h-5 shrink-0" />
                                                 Download Dynamic Report (Cross-Filter)
                                             </>
                                         )}

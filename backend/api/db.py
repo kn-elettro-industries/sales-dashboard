@@ -317,7 +317,7 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
                 invalidate_tenant_cache(tenant_id)
             return new_records_count
     except Exception as e:
-            logging.error(f"Failed to update Postgres database: {e}")
+        logging.error(f"Failed to update Postgres database: {e}")
         return 0
 
 

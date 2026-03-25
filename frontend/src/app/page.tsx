@@ -226,8 +226,12 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap p-4 bg-[#161b22] border border-[#30363d] rounded-xl">
                 <div>
                     <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
-                    <p className="text-xs text-gray-500 mt-1">
-                        Save a <strong className="text-gray-400">revenue target</strong> once — tables below split it by <strong className="text-gray-400">each row’s % of total</strong> sales (same idea for customers and material groups).
+                    <p className="text-xs text-gray-500 mt-1 max-w-3xl">
+                        <strong className="text-gray-400">Month or year?</strong> The app does not label targets as monthly vs yearly — it stores one revenue and one orders figure per tenant. They are compared to{" "}
+                        <strong className="text-gray-400">actual sales for your current filters</strong> (date range, months, fiscal year, etc. in the bar above). Set filters to the period you care about (e.g. one month or a full year), then enter targets that match <em>that</em> period.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1.5 max-w-3xl">
+                        Tables below split the revenue target by <strong className="text-gray-400">each row’s % of filtered total</strong> (customers and material groups).
                     </p>
                 </div>
                 <div className="flex flex-wrap items-end gap-3 w-full sm:w-auto">

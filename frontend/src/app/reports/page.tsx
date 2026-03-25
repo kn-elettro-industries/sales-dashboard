@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Download, FileText, ChevronRight, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp } from "lucide-react";
+import { Download, FileText, ChevronDown, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
 import { fetchAllCustomers, fetchStateData, fetchMonthlySales, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, API_BASE_URL } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
@@ -50,6 +50,8 @@ export default function ReportsPage() {
     const [dynTopN, setDynTopN] = useState<number>(12);
     const [dynIncludePivot, setDynIncludePivot] = useState<boolean>(false);
     const [dynDownloading, setDynDownloading] = useState(false);
+    /** Advanced cross-filter PDF — tucked away; rarely used */
+    const [advancedExportOpen, setAdvancedExportOpen] = useState(false);
 
     // Interactive State
     const [kpiData, setKpiData] = useState<any>(null);
@@ -429,9 +431,117 @@ export default function ReportsPage() {
                                         </button>
                                     ))}
                                 </div>
+
+                                <div className="mt-4 rounded-lg border border-[#30363d]/90 bg-[#0d1117]/40 overflow-hidden">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAdvancedExportOpen((o) => !o)}
+                                        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-gray-400 hover:text-gray-200 hover:bg-[#161b22]/80 transition-colors"
+                                        aria-expanded={advancedExportOpen}
+                                    >
+                                        <span>
+                                            <span className="text-gray-500 block text-xs font-normal mb-0.5">Optional</span>
+                                            <span className="font-medium text-gray-300">Dynamic cross-filter PDF</span>
+                                            <span className="block text-xs text-gray-600 mt-1 font-normal">Breakdown + top-N — only if you need it.</span>
+                                        </span>
+                                        <ChevronDown
+                                            className={`w-5 h-5 text-gray-500 shrink-0 transition-transform ${advancedExportOpen ? "rotate-180" : ""}`}
+                                        />
+                                    </button>
+                                    {advancedExportOpen && (
+                                        <div className="border-t border-[#30363d] px-3 py-4 space-y-4 bg-[#0d1117]">
+                                            <p className="text-xs text-gray-500 flex items-start gap-2">
+                                                <Filter size={14} className="mt-0.5 shrink-0 text-[#daa520]/80" />
+                                                Uses your current global filters. Choose primary/secondary dimensions and top-N.
+                                            </p>
+                                            <div className="grid grid-cols-1 gap-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-xs text-gray-500">Primary Breakdown</span>
+                                                    <select
+                                                        value={dynPrimary}
+                                                        onChange={(e) => {
+                                                            const next = e.target.value;
+                                                            setDynPrimary(next);
+                                                            if (dynSecondary === next) setDynSecondary("");
+                                                        }}
+                                                        className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                    >
+                                                        {DYNAMIC_DIMENSIONS.map((d) => (
+                                                            <option key={d.id} value={d.id}>
+                                                                {d.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-xs text-gray-500">Secondary Breakdown (optional)</span>
+                                                    <select
+                                                        value={dynSecondary}
+                                                        onChange={(e) => setDynSecondary(e.target.value)}
+                                                        className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                    >
+                                                        <option value="">None</option>
+                                                        {DYNAMIC_DIMENSIONS.filter((d) => d.id !== dynPrimary).map((d) => (
+                                                            <option key={d.id} value={d.id}>
+                                                                {d.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-xs text-gray-500">Top N (3–50)</span>
+                                                        <input
+                                                            type="number"
+                                                            min={3}
+                                                            max={50}
+                                                            value={dynTopN}
+                                                            onChange={(e) => setDynTopN(Number(e.target.value))}
+                                                            className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                        />
+                                                    </div>
+                                                    <label className="flex items-center gap-2 text-sm text-gray-300 select-none pb-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={dynIncludePivot}
+                                                            onChange={(e) => setDynIncludePivot(e.target.checked)}
+                                                            disabled={!dynSecondary}
+                                                            className="accent-[#daa520] shrink-0"
+                                                        />
+                                                        Include Pivot Table
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleDynamicDownload}
+                                                disabled={dynDownloading}
+                                                className={`w-full py-3 rounded-lg font-bold text-base flex items-center justify-center gap-3 transition-all border
+                                                    ${
+                                                        dynDownloading
+                                                            ? "bg-[#30363d] text-gray-400 cursor-not-allowed border-[#30363d]"
+                                                            : "bg-[#161b22] text-[#daa520] border-[#daa520]/40 hover:border-[#daa520] hover:bg-[#2a2414]"
+                                                    }
+                                                `}
+                                            >
+                                                {dynDownloading ? (
+                                                    <>
+                                                        <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                                                        Generating Dynamic Report...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Download className="w-5 h-5 shrink-0" />
+                                                        Download Dynamic Report (Cross-Filter)
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Column 2 — entity, download, advanced (single vertical rhythm) */}
+                            {/* Column 2 — entity + main download */}
                             <div className="flex flex-col gap-6 min-w-0">
                                 <div>
                                     <label className="lg:hidden text-sm font-medium text-gray-300 leading-5 mb-2 block">2. Select Target Entity</label>
@@ -499,95 +609,6 @@ export default function ReportsPage() {
                                         )}
                                     </button>
                                     <p className="text-xs text-gray-500 text-center">Large reports may take 15–30 seconds.</p>
-                                </div>
-
-                                <div className="border-t border-[#30363d] pt-6 space-y-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-sm font-medium text-[#daa520] mb-1">
-                                            <Filter size={16} className="shrink-0" />
-                                            <span>3. Advanced filter</span>
-                                        </div>
-                                        <p className="text-xs text-gray-500">Cross-filter breakdowns and top-N — uses your current global filters.</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-xs text-gray-500">Primary Breakdown</span>
-                                            <select
-                                                value={dynPrimary}
-                                                onChange={(e) => {
-                                                    const next = e.target.value;
-                                                    setDynPrimary(next);
-                                                    if (dynSecondary === next) setDynSecondary("");
-                                                }}
-                                                className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
-                                            >
-                                                {DYNAMIC_DIMENSIONS.map(d => (
-                                                    <option key={d.id} value={d.id}>{d.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-xs text-gray-500">Secondary Breakdown (optional)</span>
-                                            <select
-                                                value={dynSecondary}
-                                                onChange={(e) => setDynSecondary(e.target.value)}
-                                                className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
-                                            >
-                                                <option value="">None</option>
-                                                {DYNAMIC_DIMENSIONS.filter(d => d.id !== dynPrimary).map(d => (
-                                                    <option key={d.id} value={d.id}>{d.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-end">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-xs text-gray-500">Top N (3–50)</span>
-                                                <input
-                                                    type="number"
-                                                    min={3}
-                                                    max={50}
-                                                    value={dynTopN}
-                                                    onChange={(e) => setDynTopN(Number(e.target.value))}
-                                                    className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
-                                                />
-                                            </div>
-                                            <label className="flex items-center gap-2 text-sm text-gray-300 select-none pb-2 sm:pb-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={dynIncludePivot}
-                                                    onChange={(e) => setDynIncludePivot(e.target.checked)}
-                                                    disabled={!dynSecondary}
-                                                    className="accent-[#daa520] shrink-0"
-                                                />
-                                                Include Pivot Table
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={handleDynamicDownload}
-                                        disabled={dynDownloading}
-                                        className={`w-full py-3 rounded-lg font-bold text-base flex items-center justify-center gap-3 transition-all border
-                                            ${dynDownloading
-                                                ? 'bg-[#30363d] text-gray-400 cursor-not-allowed border-[#30363d]'
-                                                : 'bg-[#0d1117] text-[#daa520] border-[#daa520]/40 hover:border-[#daa520] hover:bg-[#2a2414]'
-                                            }
-                                        `}
-                                    >
-                                        {dynDownloading ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin shrink-0" />
-                                                Generating Dynamic Report...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Download className="w-5 h-5 shrink-0" />
-                                                Download Dynamic Report (Cross-Filter)
-                                            </>
-                                        )}
-                                    </button>
                                 </div>
                             </div>
                         </div>

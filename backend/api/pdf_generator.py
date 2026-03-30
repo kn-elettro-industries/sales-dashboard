@@ -78,6 +78,23 @@ def _pdf_text(value: object) -> str:
     return s.encode("latin-1", errors="replace").decode("latin-1")
 
 
+def _prepared_for_display_name(tenant_id: Optional[str]) -> str:
+    """
+    Text for PDF cover 'PREPARED FOR'. Avoids showing raw tenant slugs (e.g. default_elettro).
+    Set PDF_PREPARED_FOR or ORG_DISPLAY_NAME in the environment for a custom legal/brand name.
+    """
+    override = (os.environ.get("PDF_PREPARED_FOR") or os.environ.get("ORG_DISPLAY_NAME") or "").strip()
+    if override:
+        return override
+    tid = (tenant_id or "").strip()
+    if not tid:
+        return "Management Team"
+    key = tid.lower().replace(" ", "_")
+    if key == "default_elettro":
+        return "Elettro"
+    return tid.replace("_", " ").title()
+
+
 def generate_distributor_vs_target_pdf(report: dict) -> bytes:
     """
     One-page landscape PDF: customer summary + material group actual vs target.
@@ -224,7 +241,7 @@ def _generate_dynamic_pdf_report_inner(
     pdf.alias_nb_pages()
 
     # Cover
-    target_name = tenant.replace("_", " ").title() if tenant else "Management Team"
+    target_name = _prepared_for_display_name(tenant)
     pdf.create_cover_page(target_name, f"Dynamic Report: {title}")
 
     pdf.add_page()
@@ -246,7 +263,7 @@ def _generate_dynamic_pdf_report_inner(
     pdf.cell(0, 10, _pdf_text(title).upper(), 0, 1)
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 6, _pdf_text(f"Generated: {datetime.now().strftime('%d %B %Y')} | Tenant: {tenant}"), 0, 1)
+    pdf.cell(0, 6, _pdf_text(f"Generated: {datetime.now().strftime('%d %B %Y')} | Organization: {_prepared_for_display_name(tenant)}"), 0, 1)
     pdf.ln(3)
 
     pdf.set_font("Arial", "B", 12)
@@ -896,8 +913,8 @@ def _generate_pdf_report_inner(
     pdf = PDF()
     pdf.alias_nb_pages()
     
-    # Optional Cover Page
-    target_name = tenant.replace('_', ' ').title() if tenant else "Management Team"
+    # Optional Cover Page (entity deep dive overrides org name)
+    target_name = _prepared_for_display_name(tenant)
     if specific_entity and specific_entity != "All":
         target_name = str(specific_entity)
 

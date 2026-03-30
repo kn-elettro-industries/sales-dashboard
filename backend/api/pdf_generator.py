@@ -210,6 +210,14 @@ def _normalize_fy_caption_token(s: str) -> str:
     return f"FY {t}"
 
 
+def _fmt_cover_month_only(value) -> str:
+    """Cover timeline: month + year only (no day), PDF-safe ASCII month names."""
+    dt = pd.to_datetime(value, errors="coerce")
+    if pd.isna(dt):
+        return str(value)[:16]
+    return dt.strftime("%b %Y")
+
+
 def _cover_timeline_from_params(
     start_date: Optional[str],
     end_date: Optional[str],
@@ -243,27 +251,26 @@ def _cover_timeline_from_params(
 
     if sd and ed:
         try:
-            s = pd.to_datetime(str(sd)[:10]).strftime("%d %b %Y")
-            e = pd.to_datetime(str(ed)[:10]).strftime("%d %b %Y")
+            s = _fmt_cover_month_only(str(sd)[:10])
+            e = _fmt_cover_month_only(str(ed)[:10])
             left, right = s, e
-            # ASCII separator — FPDF/latin-1 mangles Unicode em dash as "?"
-            caption_parts.append(f"{s} - {e}")
+            caption_parts.append(f"{s} - {e}" if s != e else s)
         except Exception:
-            left, right = str(sd)[:18], str(ed)[:18]
+            left, right = str(sd)[:12], str(ed)[:12]
             caption_parts.append(f"{left} - {right}")
     elif sd:
         try:
-            left = pd.to_datetime(str(sd)[:10]).strftime("%d %b %Y")
+            left = _fmt_cover_month_only(str(sd)[:10])
             caption_parts.append(f"From {left}")
         except Exception:
-            left = str(sd)[:22]
+            left = str(sd)[:16]
             caption_parts.append(f"From {left}")
     elif ed:
         try:
-            right = pd.to_datetime(str(ed)[:10]).strftime("%d %b %Y")
+            right = _fmt_cover_month_only(str(ed)[:10])
             caption_parts.append(f"Through {right}")
         except Exception:
-            right = str(ed)[:22]
+            right = str(ed)[:16]
             caption_parts.append(f"Through {right}")
 
     if months and str(months).strip():

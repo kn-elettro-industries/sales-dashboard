@@ -697,6 +697,8 @@ def download_pdf_report(
                 material_groups=material_groups,
                 months=months,
                 fiscal_years=fiscal_years,
+                start_date=start_date,
+                end_date=end_date,
             )
             entity_name = str(specific_entity).replace(' ', '_') if specific_entity and specific_entity != "All" else "Summary"
 
@@ -766,6 +768,8 @@ def download_dynamic_report(req: DynamicReportRequest):
             material_groups=req.material_groups,
             months=req.months,
             fiscal_years=req.fiscal_years,
+            start_date=req.start_date,
+            end_date=req.end_date,
         )
 
         safe_title = (req.spec.title or "Dynamic_Report").replace(" ", "_")

@@ -1080,8 +1080,8 @@ def _generate_pdf_report_inner(
     pdf.set_auto_page_break(auto=True, margin=15)
     
     title_text = f"Report: {report_type}"
-    sub_title = "Fiscal Year Overview"
-    
+    sub_title = "Performance Overview" if report_type == "Executive Summary" else "Fiscal Year Overview"
+
     if specific_entity and specific_entity != "All":
         title_text = f"Profile: {str(specific_entity)[:50]}"
         sub_title = f"{report_type} Deep Dive"
@@ -1289,8 +1289,8 @@ def _generate_pdf_report_inner(
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(5)
 
-    # --- Page 3: YoY & Deep Dive ---
-    if "FINANCIAL_YEAR" in df.columns:
+    # --- Page 3: YoY & Deep Dive (omitted for Executive Summary PDF) ---
+    if report_type != "Executive Summary" and "FINANCIAL_YEAR" in df.columns:
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, "5. Fiscal Year (FY) Analysis", 0, 1)
@@ -1305,52 +1305,52 @@ def _generate_pdf_report_inner(
         pdf.cell(50, 10, "Total Revenue", 0, 0, 'C', 1)
         pdf.cell(40, 10, "Total Orders", 0, 0, 'C', 1)
         pdf.cell(50, 10, "YoY Growth", 0, 1, 'C', 1)
-        
+
         pdf.set_font("Arial", '', 10)
         pdf.set_text_color(0, 0, 0)
-        
+
         prev_rev = 0
         fill = False
         for fy, row in fy_stats.iterrows():
             pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-            growth = ((row['Revenue'] - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
+            growth = ((row["Revenue"] - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
             growth_str = f"{growth:+.1f}%" if prev_rev > 0 else "-"
-            
-            pdf.cell(40, 8, fy, 0, 0, 'C', fill)
-            pdf.cell(50, 8, format_currency_pdf(row['Revenue']), 0, 0, 'R', fill)
-            pdf.cell(40, 8, str(row['Orders']), 0, 0, 'C', fill)
-            pdf.cell(50, 8, growth_str, 0, 1, 'C', fill)
-            prev_rev = row['Revenue']
+
+            pdf.cell(40, 8, fy, 0, 0, "C", fill)
+            pdf.cell(50, 8, format_currency_pdf(row["Revenue"]), 0, 0, "R", fill)
+            pdf.cell(40, 8, str(row["Orders"]), 0, 0, "C", fill)
+            pdf.cell(50, 8, growth_str, 0, 1, "C", fill)
+            prev_rev = row["Revenue"]
             fill = not fill
         pdf.ln(5)
 
         # FY Comparison Chart (Multi-line Year-over-Year)
         if "MONTH" in df.columns and "DATE" in df.columns:
             try:
-                df['Month_Num'] = pd.to_datetime(df['DATE']).dt.month
-                df['Month_Name'] = pd.to_datetime(df['DATE']).dt.strftime('%b')
-                
-                fy_trend = df.groupby(['FINANCIAL_YEAR', 'Month_Num', 'Month_Name'])['AMOUNT'].sum().reset_index()
-                fy_trend.sort_values('Month_Num', inplace=True)
-                
+                df["Month_Num"] = pd.to_datetime(df["DATE"]).dt.month
+                df["Month_Name"] = pd.to_datetime(df["DATE"]).dt.strftime("%b")
+
+                fy_trend = df.groupby(["FINANCIAL_YEAR", "Month_Num", "Month_Name"])["AMOUNT"].sum().reset_index()
+                fy_trend.sort_values("Month_Num", inplace=True)
+
                 fig = Figure(figsize=(10, 5))
                 canvas = FigureCanvas(fig)
                 ax = fig.add_subplot(111)
-                fig.patch.set_facecolor('white')
-                ax.set_facecolor('white')
-                
-                for fy in fy_trend['FINANCIAL_YEAR'].unique():
-                    fy_data = fy_trend[fy_trend['FINANCIAL_YEAR'] == fy]
-                    ax.plot(fy_data['Month_Name'], fy_data['AMOUNT'], marker='o', label=fy, linewidth=2.5, markersize=6)
-                
-                ax.set_title("Year-Over-Year Revenue Trends", fontsize=14, fontweight='bold', pad=15)
+                fig.patch.set_facecolor("white")
+                ax.set_facecolor("white")
+
+                for fy in fy_trend["FINANCIAL_YEAR"].unique():
+                    fy_data = fy_trend[fy_trend["FINANCIAL_YEAR"] == fy]
+                    ax.plot(fy_data["Month_Name"], fy_data["AMOUNT"], marker="o", label=fy, linewidth=2.5, markersize=6)
+
+                ax.set_title("Year-Over-Year Revenue Trends", fontsize=14, fontweight="bold", pad=15)
                 ax.legend(fontsize=10)
-                ax.set_xlabel("Month", fontsize=11, fontweight='bold')
-                ax.set_ylabel("Revenue", fontsize=11, fontweight='bold')
-                ax.tick_params(axis='x', rotation=45)
-                
+                ax.set_xlabel("Month", fontsize=11, fontweight="bold")
+                ax.set_ylabel("Revenue", fontsize=11, fontweight="bold")
+                ax.tick_params(axis="x", rotation=45)
+
                 img_path = create_chart(fig)
-                
+
                 pdf.image(img_path, x=10, w=185)
                 os.remove(img_path)
                 pdf.ln(5)

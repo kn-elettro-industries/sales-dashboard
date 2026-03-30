@@ -78,21 +78,104 @@ def _pdf_text(value: object) -> str:
     return s.encode("latin-1", errors="replace").decode("latin-1")
 
 
-def _prepared_for_display_name(tenant_id: Optional[str]) -> str:
-    """
-    Text for PDF cover 'PREPARED FOR'. Avoids showing raw tenant slugs (e.g. default_elettro).
-    Set PDF_PREPARED_FOR or ORG_DISPLAY_NAME in the environment for a custom legal/brand name.
-    """
-    override = (os.environ.get("PDF_PREPARED_FOR") or os.environ.get("ORG_DISPLAY_NAME") or "").strip()
-    if override:
-        return override
+def _split_csv_param(s: Optional[str]) -> list:
+    if not s or not str(s).strip():
+        return []
+    return [p.strip() for p in str(s).split(",") if p.strip()]
+
+
+def _pdf_brand_fallback(tenant_id: Optional[str]) -> str:
+    """Default cover name when no customer / filter context (not the raw tenant slug)."""
     tid = (tenant_id or "").strip()
     if not tid:
-        return "Management Team"
+        return "Elettro"
     key = tid.lower().replace(" ", "_")
     if key == "default_elettro":
         return "Elettro"
     return tid.replace("_", " ").title()
+
+
+def _pdf_brand_with_env(tenant_id: Optional[str]) -> str:
+    """No filter context: optional env legal/brand name, else Elettro / humanized tenant slug."""
+    override = (os.environ.get("PDF_PREPARED_FOR") or os.environ.get("ORG_DISPLAY_NAME") or "").strip()
+    if override:
+        return override
+    return _pdf_brand_fallback(tenant_id)
+
+
+def _pdf_prepared_for_line(
+    tenant_id: str,
+    *,
+    specific_entity: Optional[str] = None,
+    filter_customer: Optional[str] = None,
+    filter_state: Optional[str] = None,
+    filter_material: Optional[str] = None,
+    customers: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    material_groups: Optional[str] = None,
+    months: Optional[str] = None,
+    fiscal_years: Optional[str] = None,
+) -> str:
+    """
+    Cover 'PREPARED FOR': use selected customer or other global filters when present;
+    otherwise company brand (Elettro for default tenant), or PDF_PREPARED_FOR when nothing is selected.
+    """
+    se = (specific_entity or "").strip()
+    if se and se.lower() != "all":
+        return se
+
+    if filter_customer and str(filter_customer).strip() and filter_customer != "All":
+        return str(filter_customer).strip()
+
+    custs = _split_csv_param(customers)
+    if len(custs) == 1:
+        return custs[0]
+    if len(custs) > 1:
+        head = ", ".join(custs[:4])
+        return f"{head} (+{len(custs) - 4} more)" if len(custs) > 4 else head
+
+    if filter_state and filter_state != "All":
+        return str(filter_state).strip()
+
+    sts = _split_csv_param(states)
+    if len(sts) == 1:
+        return sts[0]
+    if len(sts) > 1:
+        head = ", ".join(sts[:3])
+        return f"{head} (+{len(sts) - 3} more)" if len(sts) > 3 else head
+
+    if filter_material and filter_material != "All":
+        return str(filter_material).strip()
+
+    mgs = _split_csv_param(material_groups)
+    if len(mgs) == 1:
+        return mgs[0]
+    if len(mgs) > 1:
+        head = ", ".join(mgs[:3])
+        return f"{head} (+{len(mgs) - 3} more)" if len(mgs) > 3 else head
+
+    cits = _split_csv_param(cities)
+    if len(cits) == 1:
+        return cits[0]
+    if len(cits) > 1:
+        return f"{len(cits)} cities"
+
+    mos = _split_csv_param(months)
+    if len(mos) == 1:
+        return mos[0]
+    if len(mos) > 1:
+        head = ", ".join(mos[:4])
+        return f"{head} (+{len(mos) - 4} more)" if len(mos) > 4 else head
+
+    fys = _split_csv_param(fiscal_years)
+    if len(fys) == 1:
+        return fys[0]
+    if len(fys) > 1:
+        head = ", ".join(fys[:3])
+        return f"{head} (+{len(fys) - 3} more)" if len(fys) > 3 else head
+
+    return _pdf_brand_with_env(tenant_id)
 
 
 def generate_distributor_vs_target_pdf(report: dict) -> bytes:
@@ -214,6 +297,12 @@ def generate_dynamic_pdf_report(
     include_share: bool = True,
     include_top_table: bool = True,
     include_pivot: bool = False,
+    customers: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    material_groups: Optional[str] = None,
+    months: Optional[str] = None,
+    fiscal_years: Optional[str] = None,
 ) -> bytes:
     """
     Streamlit-like dynamic report: content adapts to selected dimensions + cross-filters.
@@ -221,28 +310,69 @@ def generate_dynamic_pdf_report(
     """
     _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
-     return _generate_dynamic_pdf_report_inner(
-        df=df, title=title, tenant=tenant, primary_dimension=primary_dimension,
-        secondary_dimension=secondary_dimension, top_n=top_n,
-        include_trend=include_trend, include_share=include_share,
-        include_top_table=include_top_table, include_pivot=include_pivot,
-        Figure=Figure, FigureCanvas=FigureCanvas, cm=cm,
-     )
+        return _generate_dynamic_pdf_report_inner(
+            df=df,
+            title=title,
+            tenant=tenant,
+            primary_dimension=primary_dimension,
+            secondary_dimension=secondary_dimension,
+            top_n=top_n,
+            include_trend=include_trend,
+            include_share=include_share,
+            include_top_table=include_top_table,
+            include_pivot=include_pivot,
+            customers=customers,
+            states=states,
+            cities=cities,
+            material_groups=material_groups,
+            months=months,
+            fiscal_years=fiscal_years,
+            Figure=Figure,
+            FigureCanvas=FigureCanvas,
+            cm=cm,
+        )
     finally:
         gc.collect()
 
 
 def _generate_dynamic_pdf_report_inner(
-    df, title, tenant, primary_dimension, secondary_dimension, top_n,
-    include_trend, include_share, include_top_table, include_pivot,
-    Figure, FigureCanvas, cm,
+    df,
+    title,
+    tenant,
+    primary_dimension,
+    secondary_dimension,
+    top_n,
+    include_trend,
+    include_share,
+    include_top_table,
+    include_pivot,
+    customers,
+    states,
+    cities,
+    material_groups,
+    months,
+    fiscal_years,
+    Figure,
+    FigureCanvas,
+    cm,
 ) -> bytes:
     pdf = PDF()
     pdf.alias_nb_pages()
 
-    # Cover
-    target_name = _prepared_for_display_name(tenant)
-    pdf.create_cover_page(target_name, f"Dynamic Report: {title}")
+    prepared = _pdf_prepared_for_line(
+        tenant,
+        specific_entity=None,
+        filter_customer=None,
+        filter_state=None,
+        filter_material=None,
+        customers=customers,
+        states=states,
+        cities=cities,
+        material_groups=material_groups,
+        months=months,
+        fiscal_years=fiscal_years,
+    )
+    pdf.create_cover_page(prepared, f"Dynamic Report: {title}")
 
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -263,7 +393,7 @@ def _generate_dynamic_pdf_report_inner(
     pdf.cell(0, 10, _pdf_text(title).upper(), 0, 1)
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 6, _pdf_text(f"Generated: {datetime.now().strftime('%d %B %Y')} | Organization: {_prepared_for_display_name(tenant)}"), 0, 1)
+    pdf.cell(0, 6, _pdf_text(f"Generated: {datetime.now().strftime('%d %B %Y')} | Prepared for: {prepared}"), 0, 1)
     pdf.ln(3)
 
     pdf.set_font("Arial", "B", 12)
@@ -848,7 +978,13 @@ def generate_pdf_report(
     specific_entity: str = None,
     filter_customer: str = None,
     filter_state: str = None,
-    filter_material: str = None
+    filter_material: str = None,
+    customers: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    material_groups: Optional[str] = None,
+    months: Optional[str] = None,
+    fiscal_years: Optional[str] = None,
 ) -> bytes:
     _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
@@ -856,6 +992,8 @@ def generate_pdf_report(
             df=df, report_type=report_type, tenant=tenant,
             specific_entity=specific_entity, filter_customer=filter_customer,
             filter_state=filter_state, filter_material=filter_material,
+            customers=customers, states=states, cities=cities,
+            material_groups=material_groups, months=months, fiscal_years=fiscal_years,
             Figure=Figure, FigureCanvas=FigureCanvas, cm=cm,
         )
     finally:
@@ -870,6 +1008,12 @@ def _generate_pdf_report_inner(
     filter_customer,
     filter_state,
     filter_material,
+    customers,
+    states,
+    cities,
+    material_groups,
+    months,
+    fiscal_years,
     Figure, FigureCanvas, cm,
 ) -> bytes:
     import sys
@@ -913,10 +1057,20 @@ def _generate_pdf_report_inner(
     pdf = PDF()
     pdf.alias_nb_pages()
     
-    # Optional Cover Page (entity deep dive overrides org name)
-    target_name = _prepared_for_display_name(tenant)
-    if specific_entity and specific_entity != "All":
-        target_name = str(specific_entity)
+    # Cover: report entity + global filters → name; else Elettro (or env when no selection)
+    target_name = _pdf_prepared_for_line(
+        tenant,
+        specific_entity=specific_entity,
+        filter_customer=filter_customer,
+        filter_state=filter_state,
+        filter_material=filter_material,
+        customers=customers,
+        states=states,
+        cities=cities,
+        material_groups=material_groups,
+        months=months,
+        fiscal_years=fiscal_years,
+    )
 
     print("PDF_GEN - Creating cover page...", flush=True); sys.stdout.flush()
     pdf.create_cover_page(target_name, f"Report Type: {report_type}")

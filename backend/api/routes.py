@@ -684,8 +684,19 @@ def download_pdf_report(
             entity_name = str(customer_name).replace(" ", "_")
         else:
             pdf_bytes = generate_pdf_report(
-                df, report_type, tenant_id, specific_entity,
-                filter_customer, filter_state, filter_material
+                df,
+                report_type,
+                tenant_id,
+                specific_entity,
+                filter_customer,
+                filter_state,
+                filter_material,
+                customers=customers,
+                states=states,
+                cities=cities,
+                material_groups=material_groups,
+                months=months,
+                fiscal_years=fiscal_years,
             )
             entity_name = str(specific_entity).replace(' ', '_') if specific_entity and specific_entity != "All" else "Summary"
 
@@ -749,6 +760,12 @@ def download_dynamic_report(req: DynamicReportRequest):
             include_share=req.spec.include_share,
             include_top_table=req.spec.include_top_table,
             include_pivot=req.spec.include_pivot,
+            customers=req.customers,
+            states=req.states,
+            cities=req.cities,
+            material_groups=req.material_groups,
+            months=req.months,
+            fiscal_years=req.fiscal_years,
         )
 
         safe_title = (req.spec.title or "Dynamic_Report").replace(" ", "_")

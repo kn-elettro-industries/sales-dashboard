@@ -66,8 +66,11 @@ def _pdf_text(value: object) -> str:
     replacements = {
         "→": "->",
         "₹": "Rs.",
+        "\u2014": " - ",  # em dash (not in latin-1; was showing as ? in PDFs)
+        "\u2013": "-",  # en dash
         "–": "-",
         "-": "-",
+        "\u2026": "...",  # ellipsis
         "“": "\"",
         "”": "\"",
         "’": "'",
@@ -178,6 +181,35 @@ def _pdf_prepared_for_line(
     return _pdf_brand_with_env(tenant_id)
 
 
+def _sort_month_labels_chronological(month_labels: list) -> list:
+    """Sort MON-YY style labels oldest-first for timeline captions."""
+    if not month_labels:
+        return []
+    keyed = []
+    for raw in month_labels:
+        m = str(raw).strip()
+        try:
+            norm = m.title() if len(m) > 2 else m
+            dt = pd.to_datetime(norm, format="%b-%y", errors="coerce")
+            if pd.isna(dt):
+                dt = pd.to_datetime(norm, errors="coerce")
+            keyed.append((dt if pd.notna(dt) else pd.Timestamp.min, m))
+        except Exception:
+            keyed.append((pd.Timestamp.min, m))
+    keyed.sort(key=lambda x: x[0])
+    return [x[1] for x in keyed]
+
+
+def _normalize_fy_caption_token(s: str) -> str:
+    """Avoid 'FY FY25-26' when data already includes an FY prefix."""
+    t = str(s).strip()
+    if not t:
+        return t
+    if t.upper().startswith("FY"):
+        return t
+    return f"FY {t}"
+
+
 def _cover_timeline_from_params(
     start_date: Optional[str],
     end_date: Optional[str],
@@ -214,10 +246,11 @@ def _cover_timeline_from_params(
             s = pd.to_datetime(str(sd)[:10]).strftime("%d %b %Y")
             e = pd.to_datetime(str(ed)[:10]).strftime("%d %b %Y")
             left, right = s, e
-            caption_parts.append(f"{s} — {e}")
+            # ASCII separator — FPDF/latin-1 mangles Unicode em dash as "?"
+            caption_parts.append(f"{s} - {e}")
         except Exception:
             left, right = str(sd)[:18], str(ed)[:18]
-            caption_parts.append(f"{left} — {right}")
+            caption_parts.append(f"{left} - {right}")
     elif sd:
         try:
             left = pd.to_datetime(str(sd)[:10]).strftime("%d %b %Y")
@@ -236,14 +269,20 @@ def _cover_timeline_from_params(
     if months and str(months).strip():
         mo = [x.strip() for x in str(months).split(",") if x.strip()]
         if mo:
-            caption_parts.append("Months: " + ", ".join(mo[:5]) + ("…" if len(mo) > 5 else ""))
+            mo = _sort_month_labels_chronological(mo)
+            caption_parts.append(
+                "Months: " + ", ".join(mo[:5]) + (" ..." if len(mo) > 5 else "")
+            )
 
     if fiscal_years and str(fiscal_years).strip():
         fy = [x.strip() for x in str(fiscal_years).split(",") if x.strip()]
         if fy:
-            caption_parts.append("FY " + ", ".join(fy[:4]) + (f" (+{len(fy) - 4})" if len(fy) > 4 else ""))
+            fy_disp = [_normalize_fy_caption_token(x) for x in fy[:4]]
+            extra = f" (+{len(fy) - 4} more)" if len(fy) > 4 else ""
+            caption_parts.append(", ".join(fy_disp) + extra)
 
-    caption = " · ".join(caption_parts) if caption_parts else "Period: active dashboard filters"
+    # Use " | " separators — all ASCII-safe for fpdf latin-1
+    caption = " | ".join(caption_parts) if caption_parts else "Period: active dashboard filters"
     return caption, left, right
 
 

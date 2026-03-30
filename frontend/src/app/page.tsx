@@ -228,7 +228,7 @@ export default function DashboardPage() {
                     <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
                     <p className="text-xs text-gray-500 mt-1 max-w-3xl">
                         <strong className="text-gray-400">Month or year?</strong> The app does not label targets as monthly vs yearly — it stores one revenue and one orders figure per tenant. They are compared to{" "}
-                        <strong className="text-gray-400">actual sales for your current filters</strong> (date range, months, fiscal year, etc. in the bar above). Set filters to the period you care about (e.g. one month or a full year), then enter targets that match <em>that</em> period.
+                        <strong className="text-gray-400">actual sales for your current filters</strong> (date range, months, fiscal year, etc. in the bar above). Fiscal year runs <strong className="text-gray-400">April to March</strong>. Set filters to the period you care about, then enter targets that match <em>that</em> period.
                     </p>
                     <p className="text-xs text-gray-500 mt-1.5 max-w-3xl">
                         Tables below split the revenue target by <strong className="text-gray-400">each row’s % of filtered total</strong> (customers and material groups).

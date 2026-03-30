@@ -334,6 +334,7 @@ def _coalesce_state_region(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def calculate_fy(date):
+    """Indian FY label: April -> March (e.g. Apr 2025-Mar 2026 is FY25-26)."""
     if pd.isna(date): return "UNKNOWN"
     if date.month >= 4: return f"FY{date.year % 100}-{(date.year + 1) % 100}"
     else: return f"FY{(date.year - 1) % 100}-{date.year % 100}"

@@ -6,6 +6,8 @@ import gc
 import numpy as np
 from typing import Optional
 
+from .fiscal_year import fy_selection_to_timeline_month_labels
+
 # ── fpdf2 guard ───────────────────────────────────────────────────────────────
 # fpdf and fpdf2 share the same module name. Force fpdf2 2.x.
 import fpdf as _fpdf_pkg
@@ -226,17 +228,30 @@ def _cover_timeline_from_params(
     df: Optional[pd.DataFrame] = None,
 ) -> tuple[str, Optional[str], Optional[str]]:
     """
-    Build cover timeline caption and optional start/end labels for a horizontal bar.
-    Infers date span from filtered data when API dates are missing.
+    Build cover timeline caption and bar labels.
+    When fiscal year filters are set, uses April-March FY boundaries (same as data FINANCIAL_YEAR).
+    Otherwise uses calendar date range (month-only) or inferred data span.
     """
     caption_parts: list = []
     left: Optional[str] = None
     right: Optional[str] = None
 
+    fy_list = _split_csv_param(fiscal_years)
+    fy_bar = fy_selection_to_timeline_month_labels(fy_list) if fy_list else None
+    used_fy_timeline = False
+
+    if fy_bar:
+        left, right = fy_bar
+        caption_parts.append(f"{left} - {right}")
+        fy_disp = [_normalize_fy_caption_token(x) for x in fy_list[:4]]
+        extra = f" (+{len(fy_list) - 4})" if len(fy_list) > 4 else ""
+        caption_parts.append(", ".join(fy_disp) + extra)
+        used_fy_timeline = True
+
     sd = (start_date or "").strip() or None
     ed = (end_date or "").strip() or None
 
-    if df is not None and not df.empty and (not sd or not ed):
+    if not used_fy_timeline and df is not None and not df.empty and (not sd or not ed):
         date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
         if date_col:
             try:
@@ -249,29 +264,30 @@ def _cover_timeline_from_params(
             except Exception:
                 pass
 
-    if sd and ed:
-        try:
-            s = _fmt_cover_month_only(str(sd)[:10])
-            e = _fmt_cover_month_only(str(ed)[:10])
-            left, right = s, e
-            caption_parts.append(f"{s} - {e}" if s != e else s)
-        except Exception:
-            left, right = str(sd)[:12], str(ed)[:12]
-            caption_parts.append(f"{left} - {right}")
-    elif sd:
-        try:
-            left = _fmt_cover_month_only(str(sd)[:10])
-            caption_parts.append(f"From {left}")
-        except Exception:
-            left = str(sd)[:16]
-            caption_parts.append(f"From {left}")
-    elif ed:
-        try:
-            right = _fmt_cover_month_only(str(ed)[:10])
-            caption_parts.append(f"Through {right}")
-        except Exception:
-            right = str(ed)[:16]
-            caption_parts.append(f"Through {right}")
+    if not used_fy_timeline:
+        if sd and ed:
+            try:
+                s = _fmt_cover_month_only(str(sd)[:10])
+                e = _fmt_cover_month_only(str(ed)[:10])
+                left, right = s, e
+                caption_parts.append(f"{s} - {e}" if s != e else s)
+            except Exception:
+                left, right = str(sd)[:12], str(ed)[:12]
+                caption_parts.append(f"{left} - {right}")
+        elif sd:
+            try:
+                left = _fmt_cover_month_only(str(sd)[:10])
+                caption_parts.append(f"From {left}")
+            except Exception:
+                left = str(sd)[:16]
+                caption_parts.append(f"From {left}")
+        elif ed:
+            try:
+                right = _fmt_cover_month_only(str(ed)[:10])
+                caption_parts.append(f"Through {right}")
+            except Exception:
+                right = str(ed)[:16]
+                caption_parts.append(f"Through {right}")
 
     if months and str(months).strip():
         mo = [x.strip() for x in str(months).split(",") if x.strip()]
@@ -280,13 +296,6 @@ def _cover_timeline_from_params(
             caption_parts.append(
                 "Months: " + ", ".join(mo[:5]) + (" ..." if len(mo) > 5 else "")
             )
-
-    if fiscal_years and str(fiscal_years).strip():
-        fy = [x.strip() for x in str(fiscal_years).split(",") if x.strip()]
-        if fy:
-            fy_disp = [_normalize_fy_caption_token(x) for x in fy[:4]]
-            extra = f" (+{len(fy) - 4} more)" if len(fy) > 4 else ""
-            caption_parts.append(", ".join(fy_disp) + extra)
 
     # Use " | " separators — all ASCII-safe for fpdf latin-1
     caption = " | ".join(caption_parts) if caption_parts else "Period: active dashboard filters"
@@ -858,6 +867,9 @@ class PDF(FPDF):
         self.set_font("Arial", "B", 9)
         self.set_text_color(140, 140, 140)
         self.cell(120, 5, "TIMELINE", 0, 1)
+        self.set_font("Arial", "I", 7)
+        self.set_text_color(150, 150, 150)
+        self.cell(120, 3, "Financial year: April to March", 0, 1)
         self.set_font("Arial", "", 10)
         self.set_text_color(65, 65, 65)
         cap = timeline_caption or "Period: active dashboard filters"

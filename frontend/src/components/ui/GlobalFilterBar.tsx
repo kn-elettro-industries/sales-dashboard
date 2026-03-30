@@ -299,7 +299,7 @@ export default function GlobalFilterBar() {
                 <div className="px-4 pb-4 border-t border-[#30363d] pt-3">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                         <div>
-                            <label className="text-xs text-gray-500 mb-1 block">Fiscal Year</label>
+                            <label className="text-xs text-gray-500 mb-1 block">Fiscal Year (Apr–Mar)</label>
                             <MultiSelect label="FY" options={options.fiscal_years} selected={selectedFiscalYears} onChange={setSelectedFiscalYears} />
                         </div>
                         <div>

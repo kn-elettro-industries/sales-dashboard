@@ -582,7 +582,9 @@ def _generate_dynamic_pdf_report_inner(
         ax = fig.add_subplot(111)
         ax.plot(trend["LABEL"], trend["AMOUNT"], marker="o", color="#B8860B", linewidth=2, markersize=4)
         ax.set_title("Revenue (Last 24 months)", fontsize=12, fontweight="bold", pad=10)
+        ax.set_ylabel("Revenue", fontsize=10, fontweight="bold")
         ax.tick_params(axis="x", rotation=45, labelsize=8)
+        _configure_matplotlib_revenue_ticks(ax, "y")
         img = create_chart(fig)
         pdf.image(img, x=10, w=185)
         os.remove(img)
@@ -1003,12 +1005,52 @@ def _get_matplotlib():
     return matplotlib, Figure, FigureCanvas, cm
 
 
+def _configure_matplotlib_revenue_ticks(ax, axis: str = "y") -> None:
+    """
+    Avoid matplotlib's scientific offset (1e6 / 1e7) on revenue axes; show L/Cr-style ticks.
+    axis: 'y' for line charts, 'x' for horizontal bar charts.
+    """
+    from matplotlib.ticker import FuncFormatter, MaxNLocator
+
+    def _inr_tick(x, _pos):
+        try:
+            v = float(x)
+        except (TypeError, ValueError):
+            return ""
+        av = abs(v)
+        if av < 0.5:
+            return "0"
+        if av >= 1e7:
+            return f"{v / 1e7:.2f} Cr"
+        if av >= 1e5:
+            return f"{v / 1e5:.1f} L"
+        if av >= 1e3:
+            return f"{v / 1e3:.0f} K"
+        return f"{v:.0f}"
+
+    fmt = FuncFormatter(_inr_tick)
+    loc = MaxNLocator(nbins=8)
+    if axis == "x":
+        ax.xaxis.set_major_formatter(fmt)
+        ax.xaxis.set_major_locator(loc)
+        ax.xaxis.offsetText.set_visible(False)
+    else:
+        ax.yaxis.set_major_formatter(fmt)
+        ax.yaxis.set_major_locator(loc)
+        ax.yaxis.offsetText.set_visible(False)
+
+
 def create_chart(fig):
     for ax in fig.get_axes():
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.grid(True, linestyle='--', alpha=0.6, color='#dddddd')
         ax.tick_params(axis='both', which='major', labelsize=10)
+        try:
+            ax.yaxis.offsetText.set_visible(False)
+            ax.xaxis.offsetText.set_visible(False)
+        except Exception:
+            pass
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
         fig.savefig(tmp.name, bbox_inches='tight', dpi=150, facecolor='white')
@@ -1364,6 +1406,7 @@ def _generate_pdf_report_inner(
         ax.set_xlabel("Month", fontsize=10, fontweight='bold')
         ax.set_ylabel("Revenue", fontsize=10, fontweight='bold')
         ax.tick_params(axis='x', rotation=45, labelsize=9)
+        _configure_matplotlib_revenue_ticks(ax, "y")
         for label in ax.get_xticklabels():
             label.set_ha('right')
             label.set_rotation_mode('anchor')
@@ -1441,8 +1484,9 @@ def _generate_pdf_report_inner(
     ax.set_yticklabels([str(label)[:40] for label in sorted_items.index])
     
     ax.set_title(f"Top 10 Performers by Revenue", fontsize=14, fontweight='bold', pad=15)
-    ax.set_xlabel("Revenue (INR)", fontsize=11, fontweight='bold')
+    ax.set_xlabel("Revenue", fontsize=11, fontweight='bold')
     ax.set_ylabel(None)
+    _configure_matplotlib_revenue_ticks(ax, "x")
     for i, v in enumerate(sorted_items.values):
         ax.text(v + (max(sorted_items.values) * 0.01), i, format_currency_pdf(v), va='center', fontsize=9)
         
@@ -1548,6 +1592,7 @@ def _generate_pdf_report_inner(
                 ax.set_xlabel("Month", fontsize=11, fontweight="bold")
                 ax.set_ylabel("Revenue", fontsize=11, fontweight="bold")
                 ax.tick_params(axis="x", rotation=45)
+                _configure_matplotlib_revenue_ticks(ax, "y")
 
                 img_path = create_chart(fig)
 

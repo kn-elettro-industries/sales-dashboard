@@ -245,6 +245,14 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
     except Exception as e:
         logging.error(f"get_tenant_data date filter: %s", e)
         df = pd.DataFrame()
+
+    try:
+        from .customer_geo_overrides import apply_customer_geo_overrides as _geo_fix
+
+        df = _geo_fix(df)
+    except Exception as e:
+        logging.warning("apply_customer_geo_overrides: %s", e)
+
     return df
 
 

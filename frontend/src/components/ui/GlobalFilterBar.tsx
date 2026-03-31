@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useFilter } from "../FilterContext";
 import { Calendar as CalendarIcon, Filter, Building2, Download, ChevronDown, X, Bookmark, FolderOpen } from "lucide-react";
 import { format, subDays, startOfYear } from "date-fns";
@@ -20,6 +20,8 @@ const datePresets = [
 interface FilterOptions {
     states: string[];
     cities: string[];
+    /** When states are selected, city picklist is limited to cities that appear with those states in data. */
+    cities_by_state: Record<string, string[]>;
     customers: string[];
     material_groups: string[];
     fiscal_years: string[];
@@ -112,7 +114,7 @@ export default function GlobalFilterBar() {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     const [options, setOptions] = useState<FilterOptions>({
-        states: [], cities: [], customers: [], material_groups: [], fiscal_years: [], months: [], items: []
+        states: [], cities: [], cities_by_state: {}, customers: [], material_groups: [], fiscal_years: [], months: [], items: []
     });
     const [exporting, setExporting] = useState(false);
 
@@ -125,9 +127,11 @@ export default function GlobalFilterBar() {
             })
             .then((data: FilterOptions | null) => {
                 if (data && typeof data === "object" && !("error" in data)) {
+                    const cbs = data.cities_by_state;
                     setOptions({
                         states: Array.isArray(data.states) ? data.states : [],
                         cities: Array.isArray(data.cities) ? data.cities : [],
+                        cities_by_state: cbs && typeof cbs === "object" && !Array.isArray(cbs) ? (cbs as Record<string, string[]>) : {},
                         customers: Array.isArray(data.customers) ? data.customers : [],
                         material_groups: Array.isArray(data.material_groups) ? data.material_groups : [],
                         fiscal_years: Array.isArray(data.fiscal_years) ? data.fiscal_years : [],
@@ -138,6 +142,31 @@ export default function GlobalFilterBar() {
             })
             .catch(() => { });
     }, [tenant]);
+
+    const cityOptionsForFilter = useMemo(() => {
+        const all = options.cities;
+        const byState = options.cities_by_state;
+        if (selectedStates.length === 0 || !byState || Object.keys(byState).length === 0) {
+            return all;
+        }
+        const set = new Set<string>();
+        for (const s of selectedStates) {
+            const list = byState[s];
+            if (Array.isArray(list)) {
+                list.forEach((c) => set.add(c));
+            }
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [options.cities, options.cities_by_state, selectedStates]);
+
+    useEffect(() => {
+        if (selectedStates.length === 0) return;
+        const allowed = new Set(cityOptionsForFilter);
+        const next = selectedCities.filter((c) => allowed.has(c));
+        if (next.length !== selectedCities.length) {
+            setSelectedCities(next);
+        }
+    }, [selectedStates, cityOptionsForFilter, selectedCities, setSelectedCities]);
 
     const activeFilterCount = selectedStates.length + selectedCities.length + selectedCustomers.length + selectedMaterialGroups.length + selectedFiscalYears.length + selectedMonths.length + selectedItems.length;
 
@@ -315,9 +344,9 @@ export default function GlobalFilterBar() {
                             <MultiSelect label="States" options={options.states} selected={selectedStates} onChange={setSelectedStates} />
                         </div>
                         <div>
-                            <label className="text-xs text-gray-500 mb-1 block">City</label>
+                            <label className="text-xs text-gray-500 mb-1 block">City {selectedStates.length > 0 ? "(linked to selected states)" : ""}</label>
                             <MultiSelect label="Cities"
-                                options={options.cities}
+                                options={cityOptionsForFilter}
                                 selected={selectedCities} onChange={setSelectedCities}
                             />
                         </div>

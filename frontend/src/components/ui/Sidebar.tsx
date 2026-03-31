@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus, Target } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 
 const navItems = [
@@ -21,7 +21,6 @@ const navItems = [
             { href: "/risk", label: "Risk Management", icon: ShieldAlert },
             { href: "/data", label: "Cloud Data Uploader", icon: Database },
             { href: "/reports", label: "Industrial Reporting", icon: FileText },
-            { href: "/distributor", label: "Distributor vs Target", icon: Target },
         ]
     },
 ];
@@ -48,8 +47,8 @@ export default function Sidebar() {
         <aside className="w-64 bg-[#161b22] border-r border-[#30363d] flex flex-col h-screen sticky top-0">
             <div className="p-5 border-b border-[#30363d] flex flex-col items-start">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="ELETTRO" className="h-10 object-contain" />
-                <span className="text-[#daa520] text-xs font-semibold uppercase tracking-[0.25em] mt-2">Intelligence</span>
+                <img src="/logo.png" alt="KN Elettro" className="h-10 object-contain" />
+                <span className="text-[#daa520] text-xs font-semibold uppercase tracking-[0.25em] mt-2">KN Elettro Intelligence</span>
             </div>
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

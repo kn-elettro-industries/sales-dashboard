@@ -20,8 +20,12 @@ from .db import (
     list_distributor_targets,
     upsert_distributor_target,
 )
+from .customer_geo_overrides import apply_customer_geo_overrides
 
 router = APIRouter()
+
+# Download filenames (PDF/CSV) — was ELETTRO_; use brand-aligned prefix.
+REPORT_FILE_PREFIX = "KN_Elettro_Intelligence"
 
 # Keyword-based exclusion: row excluded if material group CONTAINS any of these (case-insensitive).
 # Kept in sync with legacy/config.py EXCLUDE_KEYWORDS.
@@ -454,6 +458,7 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
 
         # 2. Enrich from customer master (STATE/CITY)
         df = _merge_customer_master(df, tenant_id)
+        df = apply_customer_geo_overrides(df)
 
         # 3. Enrich Dates
         if "DATE" in df.columns:
@@ -708,7 +713,7 @@ def download_pdf_report(
             )
             entity_name = str(specific_entity).replace(' ', '_') if specific_entity and specific_entity != "All" else "Summary"
 
-        filename = f"ELETTRO_{report_type.replace(' ', '_')}_{entity_name}_{tenant_id}.pdf"
+        filename = f"{REPORT_FILE_PREFIX}_{report_type.replace(' ', '_')}_{entity_name}_{tenant_id}.pdf"
 
         return Response(
             content=pdf_bytes,
@@ -780,7 +785,7 @@ def download_dynamic_report(req: DynamicReportRequest):
         )
 
         safe_title = (req.spec.title or "Dynamic_Report").replace(" ", "_")
-        filename = f"ELETTRO_Dynamic_{safe_title}_{req.tenant_id}.pdf"
+        filename = f"{REPORT_FILE_PREFIX}_Dynamic_{safe_title}_{req.tenant_id}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
@@ -820,7 +825,7 @@ def get_filter_options(tenant_id: str = "default_elettro"):
     """Returns all unique filter values for the sidebar multi-selects."""
     df = get_tenant_data(tenant_id)
     if df.empty:
-        return {"states": [], "cities": [], "customers": [], "material_groups": [], "fiscal_years": [], "months": [], "items": []}
+        return {"states": [], "cities": [], "cities_by_state": {}, "customers": [], "material_groups": [], "fiscal_years": [], "months": [], "items": []}
 
     # Exclude "State Not Found" / "STATE NOT FOUND ⚠️" from filter options so only real states appear (no duplicate region placeholders)
     raw_states = df["STATE"].dropna().unique().tolist() if "STATE" in df.columns else []
@@ -849,9 +854,24 @@ def get_filter_options(tenant_id: str = "default_elettro"):
         raw_items = raw_items[raw_items != ""]
         item_names = sorted(raw_items.unique().tolist())[:_ITEM_CAP]
 
+    cities_by_state: dict = {}
+    if "STATE" in df.columns and "CITY" in df.columns:
+        for st in df["STATE"].dropna().unique():
+            st_s = str(st).strip()
+            if not st_s or "NOT FOUND" in st_s.upper():
+                continue
+            sub = df[df["STATE"].astype(str).str.strip() == st_s]["CITY"].dropna().astype(str).str.strip()
+            sub = sub[sub != ""]
+            clist = sorted(
+                {c for c in sub.unique() if "NOT FOUND" not in c.upper() and "UNKNOWN" not in c.upper()}
+            )
+            if clist:
+                cities_by_state[st_s] = clist
+
     return {
         "states": states,
         "cities": cities,
+        "cities_by_state": cities_by_state,
         "customers": customers,
         "material_groups": material_groups,
         "fiscal_years": fiscal_years,
@@ -1067,7 +1087,7 @@ def report_distributor_vs_target_pdf(
     pdf_bytes = generate_distributor_vs_target_pdf(data)
     safe_c = "".join(c if c.isalnum() or c in "-_" else "_" for c in customer_name.strip())[:40]
     ym = year_month.strip().replace("/", "-")
-    fname = f"DistributorVsTarget_{safe_c}_{ym}.pdf"
+    fname = f"{REPORT_FILE_PREFIX}_DistributorVsTarget_{safe_c}_{ym}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -1567,7 +1587,7 @@ def export_filtered_data(
     else:
         csv_bytes = df.to_csv(index=False).encode("utf-8-sig")
 
-    filename = f"ELETTRO_Export_{tenant_id}.csv"
+    filename = f"{REPORT_FILE_PREFIX}_Export_{tenant_id}.csv"
     return Response(
         content=csv_bytes,
         media_type="text/csv",

@@ -27,7 +27,7 @@ const DYNAMIC_DIMENSIONS = [
 ];
 
 export default function ReportsPage() {
-    const { tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'interactive' | 'export'>('interactive');
@@ -76,6 +76,7 @@ export default function ReportsPage() {
                     materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
                     fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
                     months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+                    items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
                 };
 
                 const [kpis, mats, items] = await Promise.all([
@@ -95,7 +96,7 @@ export default function ReportsPage() {
         };
 
         loadDocs();
-    }, [activeTab, tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [activeTab, tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     // Fetch dynamic options based on selected report type
     useEffect(() => {
@@ -217,6 +218,7 @@ export default function ReportsPage() {
             if (selectedMaterialGroups.length > 0) queryParams.append("material_groups", selectedMaterialGroups.join(','));
             if (selectedFiscalYears.length > 0) queryParams.append("fiscal_years", selectedFiscalYears.join(','));
             if (selectedMonths.length > 0) queryParams.append("months", selectedMonths.join(','));
+            if (selectedItems.length > 0) queryParams.append("items", selectedItems.join(','));
 
             if (dateRange?.from) queryParams.append("start_date", format(dateRange.from, "yyyy-MM-dd"));
             if (dateRange?.to) queryParams.append("end_date", format(dateRange.to, "yyyy-MM-dd"));
@@ -231,7 +233,7 @@ export default function ReportsPage() {
             }
             const blob = await res.blob();
             const disposition = res.headers.get("Content-Disposition");
-            const filename = disposition?.match(/filename="?([^";]+)"?/)?.[1] || "ELETTRO_Report.pdf";
+            const filename = disposition?.match(/filename="?([^";]+)"?/)?.[1] || "KN_Elettro_Intelligence_Report.pdf";
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
             a.download = filename;
@@ -261,6 +263,7 @@ export default function ReportsPage() {
                 material_groups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(",") : undefined,
                 fiscal_years: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(",") : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(",") : undefined,
+                items: selectedItems.length > 0 ? selectedItems.join(",") : undefined,
                 spec: {
                     title: "Cross-Filter Report",
                     primary_dimension: dynPrimary,
@@ -287,7 +290,7 @@ export default function ReportsPage() {
 
             const blob = await res.blob();
             const disposition = res.headers.get("Content-Disposition");
-            const filename = disposition?.match(/filename=\"?([^\";]+)\"?/)?.[1] || "ELETTRO_Dynamic_Report.pdf";
+            const filename = disposition?.match(/filename=\"?([^\";]+)\"?/)?.[1] || "KN_Elettro_Intelligence_Dynamic_Report.pdf";
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
             a.download = filename;

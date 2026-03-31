@@ -1480,8 +1480,8 @@ def get_city_data(tenant_id: str = "default_elettro", limit: int = 20, start_dat
 def get_material_performance(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
-    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
-    if df.empty or grp_col not in df.columns:
+    grp_col = _material_group_column(df)
+    if df.empty or grp_col is None:
         return []
     perf = df.groupby(grp_col).agg(
         Revenue=("AMOUNT", "sum"),
@@ -1489,6 +1489,9 @@ def get_material_performance(tenant_id: str = "default_elettro", start_date: Opt
         Customers=("CUSTOMER_NAME", "nunique"),
         AvgPrice=("AMOUNT", "mean")
     ).sort_values("Revenue", ascending=False).reset_index()
+    # Stable JSON key for UIs (many datasets use MATERIALGROUP only; reports table expects ITEM_NAME_GROUP)
+    if grp_col != "ITEM_NAME_GROUP":
+        perf = perf.rename(columns={grp_col: "ITEM_NAME_GROUP"})
     total = perf["Revenue"].sum()
     perf["Share"] = (perf["Revenue"] / total * 100).round(1)
     perf["CumulativeShare"] = perf["Share"].cumsum().round(1)

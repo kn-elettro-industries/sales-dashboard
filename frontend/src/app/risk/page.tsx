@@ -10,7 +10,7 @@ import { formatAmount } from "@/lib/format";
 import { DataTable } from "@/components/ui/DataTable";
 
 export default function RiskPage() {
-    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ customers: [] });
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +42,7 @@ export default function RiskPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const validCustomers = Array.isArray(data.customers) ? data.customers : [];
     const fmt = formatAmount;

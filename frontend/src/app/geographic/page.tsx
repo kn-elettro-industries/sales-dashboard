@@ -16,7 +16,7 @@ import dynamic from "next/dynamic";
 const IndiaMap = dynamic(() => import("@/components/ui/IndiaMap"), { ssr: false });
 
 export default function GeographicPage() {
-    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ states: [], cities: [] });
     const [loading, setLoading] = useState(true);
     const [drilldownState, setDrilldownState] = useState<string | null>(null);
@@ -34,6 +34,7 @@ export default function GeographicPage() {
                 materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
                 fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+                items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
             };
 
             try {
@@ -50,7 +51,7 @@ export default function GeographicPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const validStates = Array.isArray(data.states) ? data.states : [];
     const validCities = Array.isArray(data.cities) ? data.cities : [];

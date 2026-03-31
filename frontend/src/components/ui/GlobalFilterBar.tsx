@@ -24,6 +24,7 @@ interface FilterOptions {
     material_groups: string[];
     fiscal_years: string[];
     months: string[];
+    items: string[];
 }
 
 function MultiSelect({ label, options, selected, onChange }: {
@@ -98,6 +99,7 @@ export default function GlobalFilterBar() {
         selectedMaterialGroups, setSelectedMaterialGroups,
         selectedFiscalYears, setSelectedFiscalYears,
         selectedMonths, setSelectedMonths,
+        selectedItems, setSelectedItems,
         saveCurrentView,
         loadView,
         savedViewNames,
@@ -110,7 +112,7 @@ export default function GlobalFilterBar() {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     const [options, setOptions] = useState<FilterOptions>({
-        states: [], cities: [], customers: [], material_groups: [], fiscal_years: [], months: []
+        states: [], cities: [], customers: [], material_groups: [], fiscal_years: [], months: [], items: []
     });
     const [exporting, setExporting] = useState(false);
 
@@ -130,13 +132,14 @@ export default function GlobalFilterBar() {
                         material_groups: Array.isArray(data.material_groups) ? data.material_groups : [],
                         fiscal_years: Array.isArray(data.fiscal_years) ? data.fiscal_years : [],
                         months: Array.isArray(data.months) ? data.months : [],
+                        items: Array.isArray(data.items) ? data.items : [],
                     });
                 }
             })
             .catch(() => { });
     }, [tenant]);
 
-    const activeFilterCount = selectedStates.length + selectedCities.length + selectedCustomers.length + selectedMaterialGroups.length + selectedFiscalYears.length + selectedMonths.length;
+    const activeFilterCount = selectedStates.length + selectedCities.length + selectedCustomers.length + selectedMaterialGroups.length + selectedFiscalYears.length + selectedMonths.length + selectedItems.length;
 
     const handleExportData = () => {
         try {
@@ -151,6 +154,7 @@ export default function GlobalFilterBar() {
             if (selectedMaterialGroups.length > 0) params.append("material_groups", selectedMaterialGroups.join(","));
             if (selectedFiscalYears.length > 0) params.append("fiscal_years", selectedFiscalYears.join(","));
             if (selectedMonths.length > 0) params.append("months", selectedMonths.join(","));
+            if (selectedItems.length > 0) params.append("items", selectedItems.join(","));
 
             const url = `${API_BASE}/export/data?${params.toString()}`;
             const a = document.createElement("a");
@@ -297,7 +301,7 @@ export default function GlobalFilterBar() {
             {/* Advanced Filters Row */}
             {showAdvanced && (
                 <div className="px-4 pb-4 border-t border-[#30363d] pt-3">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                         <div>
                             <label className="text-xs text-gray-500 mb-1 block">Fiscal Year (Apr–Mar)</label>
                             <MultiSelect label="FY" options={options.fiscal_years} selected={selectedFiscalYears} onChange={setSelectedFiscalYears} />
@@ -324,6 +328,10 @@ export default function GlobalFilterBar() {
                         <div>
                             <label className="text-xs text-gray-500 mb-1 block">Material Group</label>
                             <MultiSelect label="Groups" options={options.material_groups} selected={selectedMaterialGroups} onChange={setSelectedMaterialGroups} />
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 mb-1 block">Item (SKU)</label>
+                            <MultiSelect label="Items" options={options.items} selected={selectedItems} onChange={setSelectedItems} />
                         </div>
                     </div>
                     {activeFilterCount > 0 && (
@@ -364,7 +372,13 @@ export default function GlobalFilterBar() {
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedMonths(selectedMonths.filter(x => x !== m))} />
                                 </span>
                             ))}
-                            <button onClick={() => { setSelectedStates([]); setSelectedCities([]); setSelectedCustomers([]); setSelectedMaterialGroups([]); setSelectedFiscalYears([]); setSelectedMonths([]); }}
+                            {selectedItems.map(it => (
+                                <span key={it} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full max-w-[240px]">
+                                    <span className="truncate" title={it}>Item: {it}</span>
+                                    <X className="h-3 w-3 ml-1 cursor-pointer shrink-0 hover:text-[#daa520]" onClick={() => setSelectedItems(selectedItems.filter(x => x !== it))} />
+                                </span>
+                            ))}
+                            <button onClick={() => { setSelectedStates([]); setSelectedCities([]); setSelectedCustomers([]); setSelectedMaterialGroups([]); setSelectedFiscalYears([]); setSelectedMonths([]); setSelectedItems([]); }}
                                 className="text-xs text-[#daa520] hover:underline ml-2">
                                 Clear all filters
                             </button>

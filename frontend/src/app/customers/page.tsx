@@ -19,7 +19,7 @@ const SEGMENT_COLORS: Record<string, string> = {
 };
 
 export default function CustomersPage() {
-    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ customers: [], rfm: [] });
     const [loading, setLoading] = useState(true);
 
@@ -52,7 +52,7 @@ export default function CustomersPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const validCustomers = Array.isArray(data.customers) ? data.customers : [];
     const validRfm = Array.isArray(data.rfm) ? data.rfm : [];

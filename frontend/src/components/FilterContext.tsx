@@ -26,6 +26,8 @@ interface FilterContextType {
     setSelectedFiscalYears: (v: string[]) => void;
     selectedMonths: string[];
     setSelectedMonths: (v: string[]) => void;
+    selectedItems: string[];
+    setSelectedItems: (v: string[]) => void;
     saveCurrentView: (name: string) => void;
     loadView: (name: string) => void;
     savedViewNames: string[];
@@ -43,6 +45,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     const [selectedMaterialGroups, setSelectedMaterialGroups] = useState<string[]>([]);
     const [selectedFiscalYears, setSelectedFiscalYears] = useState<string[]>([]);
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+    const [selectedItems, setSelectedItems] = useState<string[]>([]);
     const [savedViewNames, setSavedViewNames] = useState<string[]>([]);
     const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -51,7 +54,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         try {
             const raw = localStorage.getItem(FILTER_STORAGE_KEY + "_current");
             if (raw) {
-                const stored = JSON.parse(raw) as Partial<{ tenant: string; states: string[]; cities: string[]; customers: string[]; materialGroups: string[]; fiscalYears: string[]; months: string[]; dateFrom: string; dateTo: string }>;
+                const stored = JSON.parse(raw) as Partial<{ tenant: string; states: string[]; cities: string[]; customers: string[]; materialGroups: string[]; fiscalYears: string[]; months: string[]; items: string[]; dateFrom: string; dateTo: string }>;
                 if (stored.tenant) setTenant(stored.tenant);
                 if (Array.isArray(stored.states)) setSelectedStates(stored.states);
                 if (Array.isArray(stored.cities)) setSelectedCities(stored.cities);
@@ -59,6 +62,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
                 if (Array.isArray(stored.materialGroups)) setSelectedMaterialGroups(stored.materialGroups);
                 if (Array.isArray(stored.fiscalYears)) setSelectedFiscalYears(stored.fiscalYears);
                 if (Array.isArray(stored.months)) setSelectedMonths(stored.months);
+                if (Array.isArray(stored.items)) setSelectedItems(stored.items);
                 if (stored.dateFrom || stored.dateTo) setDateRange({ from: stored.dateFrom ? new Date(stored.dateFrom) : undefined, to: stored.dateTo ? new Date(stored.dateTo) : undefined });
             }
             const listRaw = localStorage.getItem(FILTER_STORAGE_KEY + "_list");
@@ -82,6 +86,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
             materialGroups: selectedMaterialGroups,
             fiscalYears: selectedFiscalYears,
             months: selectedMonths,
+            items: selectedItems,
             dateFrom: dateRange?.from?.toISOString?.()?.slice(0, 10),
             dateTo: dateRange?.to?.toISOString?.()?.slice(0, 10),
         };
@@ -90,7 +95,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
     const saveCurrentView = useCallback((name: string) => {
         if (typeof window === "undefined" || !name.trim()) return;
-        const payload = { name: name.trim(), tenant, states: selectedStates, cities: selectedCities, customers: selectedCustomers, materialGroups: selectedMaterialGroups, fiscalYears: selectedFiscalYears, months: selectedMonths, dateFrom: dateRange?.from?.toISOString?.()?.slice(0, 10), dateTo: dateRange?.to?.toISOString?.()?.slice(0, 10) };
+        const payload = { name: name.trim(), tenant, states: selectedStates, cities: selectedCities, customers: selectedCustomers, materialGroups: selectedMaterialGroups, fiscalYears: selectedFiscalYears, months: selectedMonths, items: selectedItems, dateFrom: dateRange?.from?.toISOString?.()?.slice(0, 10), dateTo: dateRange?.to?.toISOString?.()?.slice(0, 10) };
         const key = FILTER_STORAGE_KEY + "_" + name.trim();
         localStorage.setItem(key, JSON.stringify(payload));
         setSavedViewNames((prev) => {
@@ -98,7 +103,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
             localStorage.setItem(FILTER_STORAGE_KEY + "_list", JSON.stringify(list));
             return list;
         });
-    }, [tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const loadView = useCallback((name: string) => {
         if (typeof window === "undefined") return;
@@ -113,6 +118,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
             setSelectedMaterialGroups(Array.isArray(p.materialGroups) ? p.materialGroups : []);
             setSelectedFiscalYears(Array.isArray(p.fiscalYears) ? p.fiscalYears : []);
             setSelectedMonths(Array.isArray(p.months) ? p.months : []);
+            setSelectedItems(Array.isArray(p.items) ? p.items : []);
             setDateRange({ from: p.dateFrom ? new Date(p.dateFrom) : undefined, to: p.dateTo ? new Date(p.dateTo) : undefined });
         } catch {
             // ignore
@@ -129,6 +135,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
             selectedMaterialGroups, setSelectedMaterialGroups,
             selectedFiscalYears, setSelectedFiscalYears,
             selectedMonths, setSelectedMonths,
+            selectedItems, setSelectedItems,
             saveCurrentView,
             loadView,
             savedViewNames,

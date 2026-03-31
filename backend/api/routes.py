@@ -228,8 +228,8 @@ def _exclude_material_groups(df: pd.DataFrame) -> pd.DataFrame:
         mask = mask | norm.str.contains(keyword, case=False, na=False)
     return df[~mask]
 
-def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, material_groups=None, fiscal_years=None, months=None) -> pd.DataFrame:
-    """Apply granular filters to a dataframe. Ignores empty or whitespace-only filter strings."""
+def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, material_groups=None, fiscal_years=None, months=None, items=None) -> pd.DataFrame:
+    """Apply granular filters to a dataframe. Ignores empty or whitespace-only filter strings. `items` filters ITEMNAME (item-wise)."""
     if df is None or not isinstance(df, pd.DataFrame):
         return pd.DataFrame()
     if df.empty:
@@ -268,6 +268,10 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
         month_list = [m.strip() for m in months.split(",") if m.strip()]
         if "MONTH" in df.columns and month_list:
             df = df[df["MONTH"].isin(month_list)]
+    if items and str(items).strip():
+        item_list = [x.strip() for x in str(items).split(",") if x.strip()]
+        if "ITEMNAME" in df.columns and item_list:
+            df = df[df["ITEMNAME"].astype(str).str.strip().isin(item_list)]
     return df
 
 # Single canonical placeholder for missing state/region (avoids "State Not Found" vs "STATE NOT FOUND ⚠️")
@@ -614,13 +618,14 @@ def download_pdf_report(
     customers: Optional[str] = None,
     material_groups: Optional[str] = None,
     fiscal_years: Optional[str] = None,
-    months: Optional[str] = None
+    months: Optional[str] = None,
+    items: Optional[str] = None,
 ):
     try:
         from .pdf_generator import generate_pdf_report, generate_dynamic_pdf_report, generate_distributor_strategy_pdf
         df = get_tenant_data(tenant_id, start_date, end_date)
         logging.info(f"REPORT: raw rows={len(df)}, cols={list(df.columns)[:10]}")
-        df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+        df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
         logging.info(f"REPORT: after filters rows={len(df)}, report_type={report_type}, entity={specific_entity}, months={months}")
 
         if df.empty:
@@ -740,6 +745,7 @@ class DynamicReportRequest(BaseModel):
     material_groups: Optional[str] = None
     fiscal_years: Optional[str] = None
     months: Optional[str] = None
+    items: Optional[str] = None
     spec: DynamicReportSpec
 
 
@@ -748,7 +754,7 @@ def download_dynamic_report(req: DynamicReportRequest):
     try:
         from .pdf_generator import generate_dynamic_pdf_report
         df = get_tenant_data(req.tenant_id, req.start_date, req.end_date)
-        df = apply_filters(df, req.states, req.cities, req.customers, req.material_groups, req.fiscal_years, req.months)
+        df = apply_filters(df, req.states, req.cities, req.customers, req.material_groups, req.fiscal_years, req.months, req.items)
         if df.empty:
             raise HTTPException(status_code=404, detail="No data for the selected filters and date range.")
 
@@ -814,7 +820,7 @@ def get_filter_options(tenant_id: str = "default_elettro"):
     """Returns all unique filter values for the sidebar multi-selects."""
     df = get_tenant_data(tenant_id)
     if df.empty:
-        return {"states": [], "cities": [], "customers": [], "material_groups": [], "fiscal_years": [], "months": []}
+        return {"states": [], "cities": [], "customers": [], "material_groups": [], "fiscal_years": [], "months": [], "items": []}
 
     # Exclude "State Not Found" / "STATE NOT FOUND ⚠️" from filter options so only real states appear (no duplicate region placeholders)
     raw_states = df["STATE"].dropna().unique().tolist() if "STATE" in df.columns else []
@@ -835,14 +841,22 @@ def get_filter_options(tenant_id: str = "default_elettro"):
             months = month_df.sort_values("SortKey")["MONTH"].tolist()
         except:
             months = sorted(df["MONTH"].dropna().unique().tolist())
-    
+
+    _ITEM_CAP = 4000
+    item_names: list = []
+    if "ITEMNAME" in df.columns:
+        raw_items = df["ITEMNAME"].dropna().astype(str).str.strip()
+        raw_items = raw_items[raw_items != ""]
+        item_names = sorted(raw_items.unique().tolist())[:_ITEM_CAP]
+
     return {
         "states": states,
         "cities": cities,
         "customers": customers,
         "material_groups": material_groups,
         "fiscal_years": fiscal_years,
-        "months": months
+        "months": months,
+        "items": item_names,
     }
 
 # ─── SALES TARGETS (Neon / Postgres) ───
@@ -1074,6 +1088,7 @@ def get_dashboard_summary(
     material_groups: Optional[str] = None,
     fiscal_years: Optional[str] = None,
     months: Optional[str] = None,
+    items: Optional[str] = None,
     trend_limit: int = 36,
     material_limit: int = 10,
     top_customers_limit: int = 10,
@@ -1096,7 +1111,7 @@ def get_dashboard_summary(
         }
     try:
         df = get_tenant_data(tenant_id, start_date, end_date)
-        df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+        df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
         if df is None or not isinstance(df, pd.DataFrame) or df.empty:
             return _empty("No rows in database for this tenant. Upload data from the Data page (Cloud Data Uploader).")
         # Coerce numeric/date so DB string or tz-aware types never raise
@@ -1128,7 +1143,7 @@ def get_dashboard_summary(
                 prev_start_str = prev_start.strftime("%Y-%m-%d")
                 prev_end_str = prev_end.strftime("%Y-%m-%d")
                 df_prev = get_tenant_data(tenant_id, prev_start_str, prev_end_str)
-                df_prev = apply_filters(df_prev, states, cities, customers, material_groups, fiscal_years, months)
+                df_prev = apply_filters(df_prev, states, cities, customers, material_groups, fiscal_years, months, items)
                 if not df_prev.empty:
                     _amt = next((c for c in df_prev.columns if str(c).upper() == "AMOUNT"), None)
                     pr = float(df_prev[_amt].sum()) if _amt is not None else 0.0
@@ -1236,9 +1251,9 @@ def get_dashboard_summary(
 # ─── EXECUTIVE SUMMARY ───
 
 @router.get("/metrics/summary")
-def get_kpi_summary(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_kpi_summary(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty:
         raise HTTPException(status_code=404, detail="No data found.")
     revenue = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
@@ -1252,9 +1267,9 @@ def get_kpi_summary(tenant_id: str = "default_elettro", start_date: Optional[str
     }
 
 @router.get("/charts/trend")
-def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     amount_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
     date_col, _ = _date_amount_columns(df)
     if not amount_col:
@@ -1285,9 +1300,9 @@ def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str
     return []
 
 @router.get("/charts/material-groups")
-def get_material_groups(tenant_id: str = "default_elettro", limit: int = 10, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_material_groups(tenant_id: str = "default_elettro", limit: int = 10, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
     if df.empty or grp_col not in df.columns:
         return []
@@ -1295,9 +1310,9 @@ def get_material_groups(tenant_id: str = "default_elettro", limit: int = 10, sta
     return serialize_df(merged)
 
 @router.get("/charts/top-customers")
-def get_top_customers(tenant_id: str = "default_elettro", limit: int = 10, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_top_customers(tenant_id: str = "default_elettro", limit: int = 10, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "CUSTOMER_NAME" not in df.columns:
         return []
     merged = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(limit).reset_index()
@@ -1306,9 +1321,9 @@ def get_top_customers(tenant_id: str = "default_elettro", limit: int = 10, start
 # ─── SALES & GROWTH ───
 
 @router.get("/sales/monthly")
-def get_monthly_sales(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_monthly_sales(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "DATE" not in df.columns:
         return []
     df["MONTH"] = df["DATE"].dt.to_period("M").astype(str)
@@ -1320,9 +1335,9 @@ def get_monthly_sales(tenant_id: str = "default_elettro", start_date: Optional[s
     return serialize_df(monthly)
 
 @router.get("/sales/daily")
-def get_daily_sales(tenant_id: str = "default_elettro", days: int = 30, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_daily_sales(tenant_id: str = "default_elettro", days: int = 30, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "DATE" not in df.columns:
         return []
     df["DAY"] = df["DATE"].dt.strftime("%Y-%m-%d")
@@ -1333,9 +1348,9 @@ def get_daily_sales(tenant_id: str = "default_elettro", days: int = 30, start_da
     return serialize_df(daily)
 
 @router.get("/sales/growth")
-def get_growth_metrics(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_growth_metrics(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "DATE" not in df.columns:
         return {"mom_growth": 0, "current_month_rev": 0, "prev_month_rev": 0}
     df["MONTH"] = df["DATE"].dt.to_period("M")
@@ -1350,9 +1365,9 @@ def get_growth_metrics(tenant_id: str = "default_elettro", start_date: Optional[
 # ─── CUSTOMER INTELLIGENCE ───
 
 @router.get("/customers/all")
-def get_all_customers(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_all_customers(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "CUSTOMER_NAME" not in df.columns:
         return []
     cust = df.groupby("CUSTOMER_NAME").agg(
@@ -1365,9 +1380,9 @@ def get_all_customers(tenant_id: str = "default_elettro", start_date: Optional[s
     return serialize_df(cust)
 
 @router.get("/customers/rfm")
-def get_rfm_segments(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_rfm_segments(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "CUSTOMER_NAME" not in df.columns or "DATE" not in df.columns:
         return []
     max_date = df["DATE"].max()
@@ -1392,9 +1407,9 @@ def get_rfm_segments(tenant_id: str = "default_elettro", start_date: Optional[st
 # ─── GEOGRAPHIC ───
 
 @router.get("/geographic/states")
-def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "STATE" not in df.columns:
         return []
     # Exclude placeholder so map/region only show real states (avoids "no state found" / duplicate region)
@@ -1426,9 +1441,9 @@ def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str]
     return serialize_df(state)
 
 @router.get("/geographic/cities")
-def get_city_data(tenant_id: str = "default_elettro", limit: int = 20, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_city_data(tenant_id: str = "default_elettro", limit: int = 20, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     col = "CITY" if "CITY" in df.columns else "STATE"
     if df.empty or col not in df.columns:
         return []
@@ -1441,9 +1456,9 @@ def get_city_data(tenant_id: str = "default_elettro", limit: int = 20, start_dat
 # ─── MATERIAL PERFORMANCE ───
 
 @router.get("/materials/performance")
-def get_material_performance(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_material_performance(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
     if df.empty or grp_col not in df.columns:
         return []
@@ -1459,9 +1474,9 @@ def get_material_performance(tenant_id: str = "default_elettro", start_date: Opt
     return serialize_df(perf)
 
 @router.get("/materials/pareto")
-def get_pareto_data(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None):
+def get_pareto_data(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
     if df.empty or grp_col not in df.columns:
         return []
@@ -1484,10 +1499,11 @@ def get_item_details(
     customers: Optional[str] = None, 
     material_groups: Optional[str] = None, 
     fiscal_years: Optional[str] = None, 
-    months: Optional[str] = None
+    months: Optional[str] = None,
+    items: Optional[str] = None,
 ):
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     
     if df.empty:
         return []
@@ -1507,9 +1523,9 @@ def get_item_details(
     if qty_col:
         aggs[qty_col] = "sum"
         
-    items = df.groupby([item_col, grp_col]).agg(aggs).reset_index()
+    item_rows = df.groupby([item_col, grp_col]).agg(aggs).reset_index()
     
-    items.rename(columns={
+    item_rows.rename(columns={
         item_col: "Item",
         grp_col: "Category",
         "AMOUNT": "Revenue",
@@ -1517,11 +1533,11 @@ def get_item_details(
     }, inplace=True)
     
     if qty_col:
-        items.rename(columns={qty_col: "Quantity"}, inplace=True)
+        item_rows.rename(columns={qty_col: "Quantity"}, inplace=True)
     else:
-        items["Quantity"] = 0
+        item_rows["Quantity"] = 0
         
-    return serialize_df(items.sort_values("Revenue", ascending=False))
+    return serialize_df(item_rows.sort_values("Revenue", ascending=False))
 
 
 # ─── DATA EXPORT ───
@@ -1537,12 +1553,13 @@ def export_filtered_data(
     material_groups: Optional[str] = None,
     fiscal_years: Optional[str] = None, 
     months: Optional[str] = None,
+    items: Optional[str] = None,
 ):
     """
     Export the currently filtered dataset as CSV for use by the frontend Export Data button.
     """
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
 
     if df.empty:
         # Return a valid but empty CSV so the download still works
@@ -1588,11 +1605,12 @@ def get_anomalies(
     material_groups: Optional[str] = None,
     fiscal_years: Optional[str] = None,
     months: Optional[str] = None,
+    items: Optional[str] = None,
     drop_threshold_pct: float = 20.0,
 ):
     """Returns customers or entities with revenue drop vs previous period (for alerts / dashboard)."""
     df = get_tenant_data(tenant_id, start_date, end_date)
-    df = apply_filters(df, states, None, customers, material_groups, fiscal_years, months)
+    df = apply_filters(df, states, None, customers, material_groups, fiscal_years, months, items)
     if df.empty or "CUSTOMER_NAME" not in df.columns or "DATE" not in df.columns:
         return {"anomalies": [], "period": "current"}
 
@@ -1606,7 +1624,7 @@ def get_anomalies(
         prev_end = start_dt - pd.Timedelta(days=1)
         prev_start = prev_end - delta
         df_prev = get_tenant_data(tenant_id, prev_start.strftime("%Y-%m-%d"), prev_end.strftime("%Y-%m-%d"))
-        df_prev = apply_filters(df_prev, states, None, customers, material_groups, fiscal_years, months)
+        df_prev = apply_filters(df_prev, states, None, customers, material_groups, fiscal_years, months, items)
     except Exception:
         return {"anomalies": [], "period": "current"}
 

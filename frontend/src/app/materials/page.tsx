@@ -11,7 +11,7 @@ import { Package, Award, Layers } from "lucide-react";
 import { formatAmount } from "@/lib/format";
 
 export default function MaterialsPage() {
-    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [revenueChartView, setRevenueChartView] = useState<"treemap" | "bar">("treemap");
     const [data, setData] = useState<any>({ performance: [], pareto: [] });
     const [loading, setLoading] = useState(true);
@@ -29,6 +29,7 @@ export default function MaterialsPage() {
                 materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
                 fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+                items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
             };
 
             try {
@@ -45,7 +46,7 @@ export default function MaterialsPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const validPerf = Array.isArray(data.performance) ? data.performance : [];
     const validPareto = Array.isArray(data.pareto) ? data.pareto : [];

@@ -15,7 +15,7 @@ import { formatAmount } from "@/lib/format";
 const MATERIAL_META = new Set(["AMOUNT", "SHARE_PCT", "TARGET_REVENUE", "VS_TARGET_PCT"]);
 
 export default function DashboardPage() {
-    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ summary: null, trend: [], materials: [], customers: [], comparison: null, goals: null, sales_targets: null, message: null });
     const [anomalies, setAnomalies] = useState<{ entity: string; change_pct: number; current_revenue: number }[]>([]);
     const [loading, setLoading] = useState(true);
@@ -65,6 +65,7 @@ export default function DashboardPage() {
                 materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
                 fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+                items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
             };
 
             const anomalyParams = {
@@ -76,6 +77,7 @@ export default function DashboardPage() {
                 materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(",") : undefined,
                 fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(",") : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(",") : undefined,
+                items: selectedItems.length > 0 ? selectedItems.join(",") : undefined,
                 dropThresholdPct: 20,
             };
 
@@ -153,7 +155,7 @@ export default function DashboardPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, refreshKey]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems, refreshKey]);
 
     const handleSaveSalesTargets = async () => {
         setSavingTargets(true);

@@ -39,6 +39,8 @@ type FilterParams = {
     materialGroups?: string;
     fiscalYears?: string;
     months?: string;
+    /** Comma-separated ITEMNAME values (item-wise global filter). */
+    items?: string;
     goalRevenue?: number;
     goalOrders?: number;
 };
@@ -55,6 +57,7 @@ function buildQueryString(params: FilterParams = {}) {
     if (params.materialGroups) query.append("material_groups", params.materialGroups);
     if (params.fiscalYears) query.append("fiscal_years", params.fiscalYears);
     if (params.months) query.append("months", params.months);
+    if (params.items) query.append("items", params.items);
     if (params.goalRevenue != null && params.goalRevenue > 0) query.append("goal_revenue", String(params.goalRevenue));
     if (params.goalOrders != null && params.goalOrders > 0) query.append("goal_orders", String(params.goalOrders));
 
@@ -186,6 +189,7 @@ export const fetchAnomalies = (p?: FilterParams & { dropThresholdPct?: number })
     if (p?.materialGroups) params.append("material_groups", p.materialGroups);
     if (p?.fiscalYears) params.append("fiscal_years", p.fiscalYears);
     if (p?.months) params.append("months", p.months);
+    if (p?.items) params.append("items", p.items);
     if (p?.dropThresholdPct != null) params.append("drop_threshold_pct", String(p.dropThresholdPct));
     const url = `${API_BASE_URL}/analytics/anomalies?${params.toString()}`;
     return fetchWithTimeout(url, { cache: "no-store" })

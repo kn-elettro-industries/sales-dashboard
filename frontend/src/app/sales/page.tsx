@@ -11,7 +11,7 @@ import { TrendingUp, ArrowUpRight, ArrowDownRight, DollarSign } from "lucide-rea
 import { formatAmount } from "@/lib/format";
 
 export default function SalesPage() {
-    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths } = useFilter();
+    const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ monthly: [], daily: [], growth: null });
     const [loading, setLoading] = useState(true);
 
@@ -45,7 +45,7 @@ export default function SalesPage() {
         }
 
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const fmt = formatAmount;
     const g = data.growth || { mom_growth: 0, current_month_rev: 0, prev_month_rev: 0 };

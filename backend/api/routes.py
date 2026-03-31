@@ -20,7 +20,7 @@ from .db import (
     list_distributor_targets,
     upsert_distributor_target,
 )
-from .customer_geo_overrides import apply_customer_geo_overrides
+from .customer_geo_overrides import apply_customer_geo_overrides, apply_customer_name_canonical
 
 router = APIRouter()
 
@@ -458,6 +458,7 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
 
         # 2. Enrich from customer master (STATE/CITY)
         df = _merge_customer_master(df, tenant_id)
+        df = apply_customer_name_canonical(df)
         df = apply_customer_geo_overrides(df)
 
         # 3. Enrich Dates

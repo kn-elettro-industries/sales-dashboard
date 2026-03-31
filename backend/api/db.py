@@ -247,11 +247,15 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
         df = pd.DataFrame()
 
     try:
-        from .customer_geo_overrides import apply_customer_geo_overrides as _geo_fix
+        from .customer_geo_overrides import (
+            apply_customer_name_canonical as _name_fix,
+            apply_customer_geo_overrides as _geo_fix,
+        )
 
+        df = _name_fix(df)
         df = _geo_fix(df)
     except Exception as e:
-        logging.warning("apply_customer_geo_overrides: %s", e)
+        logging.warning("apply_customer_overrides: %s", e)
 
     return df
 

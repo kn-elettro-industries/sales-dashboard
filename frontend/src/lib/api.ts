@@ -172,6 +172,22 @@ export const fetchParetoData = (p?: FilterParams) => apiFetch("/materials/pareto
 // Reports
 export const fetchItemDetails = (p?: FilterParams) => apiFetch("/reports/item-details", p).then(d => d || []).catch(() => []);
 
+/** FY comparison: same filters as reports but fiscal year filter is omitted so multiple FYs show in range. */
+export type FyComparisonRow = {
+    fiscal_year: string;
+    revenue: number;
+    orders: number;
+    customers: number;
+    avg_order_value: number;
+    revenue_yoy_pct: number | null;
+};
+
+export const fetchFyComparison = (p?: FilterParams): Promise<{ rows: FyComparisonRow[]; message?: string }> =>
+    apiFetch("/reports/fy-comparison", p ? { ...p, fiscalYears: undefined } : p).then((d: { rows?: FyComparisonRow[]; message?: string }) => ({
+        rows: Array.isArray(d?.rows) ? d.rows : [],
+        message: d?.message,
+    })).catch(() => ({ rows: [] as FyComparisonRow[], message: undefined }));
+
 // Data quality (with timeout)
 export const fetchDataHealth = (tenant?: string) =>
     fetchWithTimeout(`${API_BASE_URL}/data/health?tenant_id=${tenant || "default_elettro"}`, { cache: "no-store" })

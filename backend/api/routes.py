@@ -1564,6 +1564,77 @@ def get_item_details(
     return serialize_df(item_rows.sort_values("Revenue", ascending=False))
 
 
+def _fy_chronological_sort_key(fy_label: str) -> tuple:
+    """Sort Indian FY labels like FY24-25, FY25-26 in time order."""
+    s = str(fy_label).strip().upper().replace("FY", "")
+    parts = [p.strip() for p in s.split("-") if p.strip()]
+    try:
+        if len(parts) >= 2:
+            return (int(parts[0]), int(parts[1]))
+        return (int(parts[0]), 0)
+    except (ValueError, TypeError, IndexError):
+        return (9999, 9999)
+
+
+@router.get("/reports/fy-comparison")
+def get_fy_comparison(
+    tenant_id: str = "default_elettro",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    customers: Optional[str] = None,
+    material_groups: Optional[str] = None,
+    months: Optional[str] = None,
+    items: Optional[str] = None,
+):
+    """
+    Metrics by FINANCIAL_YEAR for Reports. Uses the same filters as other report APIs but **does not**
+    apply the global fiscal-year filter, so multiple FYs can appear within the selected date range.
+    """
+    df = get_tenant_data(tenant_id, start_date, end_date)
+    df = apply_filters(df, states, cities, customers, material_groups, None, months, items)
+    if df.empty:
+        return {"rows": []}
+    if "FINANCIAL_YEAR" not in df.columns:
+        return {"rows": [], "message": "FINANCIAL_YEAR not available for this dataset."}
+    amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
+    if amt_col is None:
+        return {"rows": [], "message": "AMOUNT column missing."}
+
+    fy_series = df["FINANCIAL_YEAR"].astype(str).str.strip()
+    df = df.assign(_fy=fy_series)
+    df = df[df["_fy"].ne("") & df["_fy"].ne("nan") & df["_fy"].ne("None")]
+
+    if df.empty:
+        return {"rows": []}
+
+    rows_out: list = []
+    for fy, part in df.groupby("_fy", sort=False):
+        rev = float(pd.to_numeric(part[amt_col], errors="coerce").fillna(0).sum())
+        orders = int(part["INVOICE_NO"].nunique()) if "INVOICE_NO" in part.columns else int(len(part))
+        cust = int(part["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in part.columns else 0
+        aov = rev / orders if orders > 0 else 0.0
+        rows_out.append({
+            "fiscal_year": str(fy),
+            "revenue": round(rev, 2),
+            "orders": orders,
+            "customers": cust,
+            "avg_order_value": round(aov, 2),
+        })
+
+    rows_out.sort(key=lambda r: _fy_chronological_sort_key(r["fiscal_year"]))
+    prev_rev: Optional[float] = None
+    for r in rows_out:
+        if prev_rev is not None and prev_rev > 0:
+            r["revenue_yoy_pct"] = round((r["revenue"] - prev_rev) / prev_rev * 100, 1)
+        else:
+            r["revenue_yoy_pct"] = None
+        prev_rev = r["revenue"]
+
+    return {"rows": rows_out}
+
+
 # ─── DATA EXPORT ───
 
 @router.get("/export/data")

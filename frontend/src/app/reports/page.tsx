@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { Download, FileText, ChevronDown, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp } from "lucide-react";
+import { Download, FileText, ChevronDown, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp, GitCompare } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
-import { fetchAllCustomers, fetchStateData, fetchMonthlySales, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, API_BASE_URL } from "@/lib/api";
+import { fetchAllCustomers, fetchStateData, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, fetchFyComparison, type FyComparisonRow, API_BASE_URL } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatAmount, formatCr } from "@/lib/format";
@@ -58,6 +58,60 @@ export default function ReportsPage() {
     const [materialData, setMaterialData] = useState<any[]>([]);
     const [itemData, setItemData] = useState<any[]>([]);
     const [isLoadingInteractive, setIsLoadingInteractive] = useState(false);
+    const [fyComparisonRows, setFyComparisonRows] = useState<FyComparisonRow[]>([]);
+    const [fyComparisonMessage, setFyComparisonMessage] = useState<string | undefined>(undefined);
+    const [isLoadingFyComparison, setIsLoadingFyComparison] = useState(false);
+
+    const baseReportParams = useMemo(
+        () => ({
+            tenant,
+            startDate: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+            endDate: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+            states: selectedStates.length > 0 ? selectedStates.join(",") : undefined,
+            cities: selectedCities.length > 0 ? selectedCities.join(",") : undefined,
+            customers: selectedCustomers.length > 0 ? selectedCustomers.join(",") : undefined,
+            materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(",") : undefined,
+            fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(",") : undefined,
+            months: selectedMonths.length > 0 ? selectedMonths.join(",") : undefined,
+            items: selectedItems.length > 0 ? selectedItems.join(",") : undefined,
+        }),
+        [
+            tenant,
+            dateRange,
+            selectedStates,
+            selectedCities,
+            selectedCustomers,
+            selectedMaterialGroups,
+            selectedFiscalYears,
+            selectedMonths,
+            selectedItems,
+        ]
+    );
+
+    // FY comparison (all report tabs): ignores global FY filter so multiple FYs appear in range
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setIsLoadingFyComparison(true);
+            try {
+                const res = await fetchFyComparison(baseReportParams);
+                if (!cancelled) {
+                    setFyComparisonRows(res.rows);
+                    setFyComparisonMessage(res.message);
+                }
+            } catch {
+                if (!cancelled) {
+                    setFyComparisonRows([]);
+                    setFyComparisonMessage(undefined);
+                }
+            } finally {
+                if (!cancelled) setIsLoadingFyComparison(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [baseReportParams]);
 
     // Load Interactive Data
     useEffect(() => {
@@ -66,23 +120,10 @@ export default function ReportsPage() {
         const loadDocs = async () => {
             setIsLoadingInteractive(true);
             try {
-                const params = {
-                    tenant,
-                    startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
-                    endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
-                    states: selectedStates.length > 0 ? selectedStates.join(',') : undefined,
-                    cities: selectedCities.length > 0 ? selectedCities.join(',') : undefined,
-                    customers: selectedCustomers.length > 0 ? selectedCustomers.join(',') : undefined,
-                    materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
-                    fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
-                    months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
-                    items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
-                };
-
                 const [kpis, mats, items] = await Promise.all([
-                    fetchKpiSummary(params),
-                    fetchMaterialPerformance(params),
-                    fetchItemDetails(params)
+                    fetchKpiSummary(baseReportParams),
+                    fetchMaterialPerformance(baseReportParams),
+                    fetchItemDetails(baseReportParams),
                 ]);
 
                 setKpiData(kpis);
@@ -96,7 +137,7 @@ export default function ReportsPage() {
         };
 
         loadDocs();
-    }, [activeTab, tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
+    }, [activeTab, baseReportParams]);
 
     // Fetch dynamic options based on selected report type
     useEffect(() => {
@@ -344,6 +385,67 @@ export default function ReportsPage() {
                     <FileBarChart size={16} className="mr-2" />
                     Export PDF Report
                 </button>
+            </div>
+
+            {/* FY Comparison: same filters as PDFs, but FY multi-select is ignored so multiple FYs show */}
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 md:p-6">
+                <h3 className="text-[#daa520] font-medium mb-2 flex items-center gap-2">
+                    <GitCompare size={18} className="shrink-0" />
+                    FY Comparison
+                </h3>
+                <p className="text-xs text-gray-500 mb-4 max-w-4xl">
+                    Side-by-side metrics by financial year (Apr–Mar). Respects date range, state, city, customer, material group, month, and item filters.
+                    The global <strong className="text-gray-400">Fiscal Year</strong> filter is <strong className="text-gray-400">not</strong> applied here so you can compare all FYs that fall in your selected period.
+                </p>
+                {isLoadingFyComparison ? (
+                    <div className="h-40 flex items-center justify-center rounded-lg border border-[#30363d]/50 bg-[#0d1117]/30">
+                        <Loader2 className="w-8 h-8 animate-spin text-[#daa520]" />
+                    </div>
+                ) : fyComparisonMessage && fyComparisonRows.length === 0 ? (
+                    <p className="text-sm text-gray-500">{fyComparisonMessage}</p>
+                ) : fyComparisonRows.length === 0 ? (
+                    <p className="text-sm text-gray-500">No fiscal-year data for the current filters. Widen the date range or clear other filters.</p>
+                ) : (
+                    <DataTable<FyComparisonRow>
+                        columns={[
+                            { header: "Fiscal Year", accessorKey: "fiscal_year" },
+                            {
+                                header: "Revenue",
+                                accessorKey: "revenue",
+                                align: "right",
+                                cell: (item) => <span className="text-white font-medium">{fmtCr(item.revenue)}</span>,
+                            },
+                            { header: "Orders", accessorKey: "orders", align: "right" },
+                            { header: "Customers", accessorKey: "customers", align: "right" },
+                            {
+                                header: "Avg order",
+                                accessorKey: "avg_order_value",
+                                align: "right",
+                                cell: (item) => fmt(item.avg_order_value),
+                            },
+                            {
+                                header: "YoY revenue",
+                                accessorKey: "revenue_yoy_pct",
+                                align: "right",
+                                cell: (item) =>
+                                    item.revenue_yoy_pct == null ? (
+                                        <span className="text-gray-500">—</span>
+                                    ) : (
+                                        <span
+                                            className={
+                                                item.revenue_yoy_pct >= 0 ? "text-emerald-400" : "text-red-400"
+                                            }
+                                        >
+                                            {item.revenue_yoy_pct > 0 ? "+" : ""}
+                                            {item.revenue_yoy_pct}%
+                                        </span>
+                                    ),
+                            },
+                        ]}
+                        data={fyComparisonRows}
+                        defaultPageSize={12}
+                    />
+                )}
             </div>
 
             {activeTab === 'interactive' && (

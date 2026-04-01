@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { Download, FileText, ChevronDown, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp, GitCompare } from "lucide-react";
+import { Download, FileText, ChevronDown, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp, GitCompare, ArrowLeftRight } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
-import { fetchAllCustomers, fetchStateData, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, fetchFyComparison, type FyComparisonRow, API_BASE_URL } from "@/lib/api";
+import { fetchAllCustomers, fetchStateData, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, fetchFyComparison, fetchDashboardSummary, type FyComparisonRow, API_BASE_URL } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatAmount, formatCr } from "@/lib/format";
@@ -25,6 +25,13 @@ const DYNAMIC_DIMENSIONS = [
     { id: "month", label: "Month" },
     { id: "fiscal_year", label: "Fiscal Year" },
 ];
+
+type PeriodComparison = {
+    revenue_pct: number;
+    orders_pct: number;
+    customers_pct: number;
+    average_order_value_pct: number;
+};
 
 export default function ReportsPage() {
     const { tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
@@ -61,6 +68,8 @@ export default function ReportsPage() {
     const [fyComparisonRows, setFyComparisonRows] = useState<FyComparisonRow[]>([]);
     const [fyComparisonMessage, setFyComparisonMessage] = useState<string | undefined>(undefined);
     const [isLoadingFyComparison, setIsLoadingFyComparison] = useState(false);
+    const [periodComparison, setPeriodComparison] = useState<PeriodComparison | null>(null);
+    const [loadingPeriodComparison, setLoadingPeriodComparison] = useState(false);
 
     const baseReportParams = useMemo(
         () => ({
@@ -106,6 +115,31 @@ export default function ReportsPage() {
                 }
             } finally {
                 if (!cancelled) setIsLoadingFyComparison(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [baseReportParams]);
+
+    // vs previous period (same-length window) — same logic as Executive Summary dashboard
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setLoadingPeriodComparison(true);
+            try {
+                const res = await fetchDashboardSummary(baseReportParams);
+                if (cancelled) return;
+                const msg = res?.message ? String(res.message) : "";
+                if (msg.toLowerCase().includes("backend error")) {
+                    setPeriodComparison(null);
+                    return;
+                }
+                setPeriodComparison(res?.comparison ?? null);
+            } catch {
+                if (!cancelled) setPeriodComparison(null);
+            } finally {
+                if (!cancelled) setLoadingPeriodComparison(false);
             }
         })();
         return () => {
@@ -387,16 +421,64 @@ export default function ReportsPage() {
                 </button>
             </div>
 
-            {/* FY Comparison: same filters as PDFs, but FY multi-select is ignored so multiple FYs show */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 md:p-6">
-                <h3 className="text-[#daa520] font-medium mb-2 flex items-center gap-2">
-                    <GitCompare size={18} className="shrink-0" />
-                    FY Comparison
+            {/* YoY + period analysis: visible on both Interactive and Export tabs */}
+            <div className="bg-[#161b22] border-2 border-[#daa520]/35 rounded-xl p-4 md:p-6 shadow-lg shadow-black/20">
+                <h3 className="text-lg text-[#daa520] font-semibold mb-1 flex items-center gap-2 flex-wrap">
+                    <GitCompare size={22} className="shrink-0" />
+                    YoY &amp; period comparison
                 </h3>
                 <p className="text-xs text-gray-500 mb-4 max-w-4xl">
-                    Side-by-side metrics by financial year (Apr–Mar). Respects date range, state, city, customer, material group, month, and item filters.
-                    The global <strong className="text-gray-400">Fiscal Year</strong> filter is <strong className="text-gray-400">not</strong> applied here so you can compare all FYs that fall in your selected period.
+                    <strong className="text-gray-400">Period</strong> compares your selected date range to the <strong className="text-gray-400">immediately preceding period</strong> of the same length (needs start + end dates).
+                    <strong className="text-gray-400"> Fiscal years</strong> below ignore the global FY filter so multiple FYs can appear; <strong className="text-gray-400">YoY revenue</strong> compares each FY to the prior FY in the table (needs two or more FY rows).
                 </p>
+
+                {/* vs previous calendar period */}
+                <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                        <ArrowLeftRight size={16} className="text-[#daa520]" />
+                        Selected period vs previous period
+                    </h4>
+                    {loadingPeriodComparison ? (
+                        <div className="h-16 flex items-center justify-center rounded-lg border border-[#30363d]/50 bg-[#0d1117]/30">
+                            <Loader2 className="w-6 h-6 animate-spin text-[#daa520]" />
+                        </div>
+                    ) : periodComparison ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {(
+                                [
+                                    ["Revenue", periodComparison.revenue_pct],
+                                    ["Orders", periodComparison.orders_pct],
+                                    ["Customers", periodComparison.customers_pct],
+                                    ["Avg order value", periodComparison.average_order_value_pct],
+                                ] as const
+                            ).map(([label, pct]) => (
+                                <div
+                                    key={label}
+                                    className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-center"
+                                >
+                                    <div className="text-[10px] uppercase tracking-wide text-gray-500">{label}</div>
+                                    <div
+                                        className={`text-lg font-semibold ${
+                                            pct >= 0 ? "text-emerald-400" : "text-red-400"
+                                        }`}
+                                    >
+                                        {pct > 0 ? "+" : ""}
+                                        {pct}%
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 rounded-lg border border-dashed border-[#30363d] bg-[#0d1117]/40 px-3 py-3">
+                            Set a <strong className="text-gray-400">start and end date</strong> in the global filter bar (top of the page) to see percentage change vs the previous period of equal length.
+                        </p>
+                    )}
+                </div>
+
+                <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                    <TrendingUp size={16} className="text-[#daa520]" />
+                    Fiscal year breakdown &amp; YoY
+                </h4>
                 {isLoadingFyComparison ? (
                     <div className="h-40 flex items-center justify-center rounded-lg border border-[#30363d]/50 bg-[#0d1117]/30">
                         <Loader2 className="w-8 h-8 animate-spin text-[#daa520]" />
@@ -404,7 +486,9 @@ export default function ReportsPage() {
                 ) : fyComparisonMessage && fyComparisonRows.length === 0 ? (
                     <p className="text-sm text-gray-500">{fyComparisonMessage}</p>
                 ) : fyComparisonRows.length === 0 ? (
-                    <p className="text-sm text-gray-500">No fiscal-year data for the current filters. Widen the date range or clear other filters.</p>
+                    <p className="text-sm text-gray-500">
+                        No fiscal-year rows for the current filters. Try <strong className="text-gray-400">All Time</strong> or a wider date range, or check that uploaded data includes dates.
+                    </p>
                 ) : (
                     <DataTable<FyComparisonRow>
                         columns={[

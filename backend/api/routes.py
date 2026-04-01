@@ -1597,7 +1597,15 @@ def get_fy_comparison(
     if df.empty:
         return {"rows": []}
     if "FINANCIAL_YEAR" not in df.columns:
-        return {"rows": [], "message": "FINANCIAL_YEAR not available for this dataset."}
+        date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
+        if date_col is not None:
+            df = df.copy()
+            dt = pd.to_datetime(df[date_col], errors="coerce")
+            df["FINANCIAL_YEAR"] = dt.apply(lambda x: calculate_fy(x) if pd.notna(x) else None)
+        else:
+            return {"rows": [], "message": "FINANCIAL_YEAR not available for this dataset."}
+    if df.empty:
+        return {"rows": []}
     amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
     if amt_col is None:
         return {"rows": [], "message": "AMOUNT column missing."}

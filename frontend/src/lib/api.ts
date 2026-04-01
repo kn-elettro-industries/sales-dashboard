@@ -182,11 +182,23 @@ export type FyComparisonRow = {
     revenue_yoy_pct: number | null;
 };
 
-export const fetchFyComparison = (p?: FilterParams): Promise<{ rows: FyComparisonRow[]; message?: string }> =>
-    apiFetch("/reports/fy-comparison", p ? { ...p, fiscalYears: undefined } : p).then((d: { rows?: FyComparisonRow[]; message?: string }) => ({
-        rows: Array.isArray(d?.rows) ? d.rows : [],
-        message: d?.message,
-    })).catch(() => ({ rows: [] as FyComparisonRow[], message: undefined }));
+/** FY comparison — not cached so filters always fetch fresh rows. */
+export const fetchFyComparison = (p?: FilterParams): Promise<{ rows: FyComparisonRow[]; message?: string }> => {
+    const qs = buildQueryString(p ? { ...p, fiscalYears: undefined } : {});
+    const url = `${API_BASE_URL}/reports/fy-comparison${qs}`;
+    return fetchWithTimeout(url, { cache: "no-store" })
+        .then(async (r) => {
+            if (!r.ok) {
+                return { rows: [] as FyComparisonRow[], message: `Could not load FY comparison (${r.status})` };
+            }
+            const d = (await r.json()) as { rows?: FyComparisonRow[]; message?: string };
+            return {
+                rows: Array.isArray(d?.rows) ? d.rows : [],
+                message: d?.message,
+            };
+        })
+        .catch(() => ({ rows: [] as FyComparisonRow[], message: undefined }));
+};
 
 // Data quality (with timeout)
 export const fetchDataHealth = (tenant?: string) =>

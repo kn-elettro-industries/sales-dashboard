@@ -29,8 +29,13 @@ interface FilterOptions {
     items: string[];
 }
 
-function MultiSelect({ label, options, selected, onChange }: {
-    label: string; options: string[]; selected: string[]; onChange: (v: string[]) => void;
+function MultiSelect({ label, options, selected, onChange, longLabels = false }: {
+    label: string;
+    options: string[];
+    selected: string[];
+    onChange: (v: string[]) => void;
+    /** Wider panel + wrap long text (e.g. SKU / item names). */
+    longLabels?: boolean;
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -38,37 +43,65 @@ function MultiSelect({ label, options, selected, onChange }: {
     const safeOptions = Array.isArray(options) ? options : [];
     const filtered = safeOptions.filter(o => o.toLowerCase().includes(search.toLowerCase()));
 
+    const summary =
+        selected.length === 0
+            ? `All ${label}`
+            : selected.length === 1 && longLabels
+              ? selected[0]
+              : `${selected.length} ${label} selected`;
+
     return (
         <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
             <Popover.Trigger asChild>
-                <button className="flex items-center justify-between w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 hover:border-gray-500 transition-colors text-sm text-gray-200 min-h-[36px]">
-                    <span className="truncate">
-                        {selected.length === 0 ? `All ${label}` : `${selected.length} ${label} selected`}
+                <button
+                    type="button"
+                    title={longLabels && selected.length > 0 ? selected.join("\n") : undefined}
+                    className={`flex w-full items-start justify-between gap-2 bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 hover:border-gray-500 transition-colors text-sm text-gray-200 min-h-[36px] text-left ${
+                        longLabels ? "min-w-0" : ""
+                    }`}
+                >
+                    <span className={longLabels ? "break-words whitespace-normal leading-snug min-w-0 flex-1" : "truncate"}>
+                        {summary}
                     </span>
-                    <ChevronDown className="h-3 w-3 ml-2 text-gray-400 shrink-0" />
+                    <ChevronDown className="h-3 w-3 mt-0.5 text-gray-400 shrink-0" />
                 </button>
             </Popover.Trigger>
             <Popover.Portal>
                 <Popover.Content
-                    className="bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl w-64 max-h-72 overflow-hidden mt-1 z-50"
-                    sideOffset={5} align="start"
+                    className={
+                        longLabels
+                            ? "bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl min-w-[min(100vw-1rem,28rem)] max-w-[min(100vw-1rem,42rem)] max-h-72 overflow-hidden mt-1 z-50"
+                            : "bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl w-64 max-h-72 overflow-hidden mt-1 z-50"
+                    }
+                    sideOffset={5}
+                    align="start"
                 >
                     <div className="p-2 border-b border-[#30363d]">
                         <input
-                            type="text" placeholder={`Search ${label}...`} value={search}
+                            type="text"
+                            placeholder={`Search ${label}...`}
+                            value={search}
                             onChange={e => setSearch(e.target.value)}
                             className="w-full bg-[#0d1117] border border-[#30363d] text-gray-200 rounded px-2 py-1.5 text-xs outline-none focus:border-[#daa520]"
                         />
                     </div>
                     {selected.length > 0 && (
-                        <button onClick={() => onChange([])}
-                            className="w-full text-left text-xs text-[#daa520] px-3 py-1.5 hover:bg-[#2d333b] border-b border-[#30363d]">
+                        <button
+                            type="button"
+                            onClick={() => onChange([])}
+                            className="w-full text-left text-xs text-[#daa520] px-3 py-1.5 hover:bg-[#2d333b] border-b border-[#30363d]"
+                        >
                             Clear all
                         </button>
                     )}
                     <div className="overflow-y-auto max-h-48 p-1">
                         {filtered.map(opt => (
-                            <label key={opt} className="flex items-center px-2 py-1.5 hover:bg-[#2d333b] rounded cursor-pointer text-sm text-gray-300">
+                            <label
+                                key={opt}
+                                className={`flex gap-2 px-2 py-1.5 hover:bg-[#2d333b] rounded cursor-pointer text-sm text-gray-300 ${
+                                    longLabels ? "items-start" : "items-center"
+                                }`}
+                            >
                                 <input
                                     type="checkbox"
                                     checked={selected.includes(opt)}
@@ -79,9 +112,17 @@ function MultiSelect({ label, options, selected, onChange }: {
                                                 : [...selected, opt]
                                         );
                                     }}
-                                    className="mr-2 accent-[#daa520]"
+                                    className="mr-0 mt-1 accent-[#daa520] shrink-0"
                                 />
-                                <span className="truncate">{opt}</span>
+                                <span
+                                    className={
+                                        longLabels
+                                            ? "break-words whitespace-normal leading-snug min-w-0"
+                                            : "truncate"
+                                    }
+                                >
+                                    {opt}
+                                </span>
                             </label>
                         ))}
                         {filtered.length === 0 && <div className="text-xs text-gray-500 p-2">No results</div>}
@@ -330,38 +371,44 @@ export default function GlobalFilterBar() {
             {/* Advanced Filters Row */}
             {showAdvanced && (
                 <div className="px-4 pb-4 border-t border-[#30363d] pt-3">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-                        <div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                        <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">Fiscal Year (Apr–Mar)</label>
                             <MultiSelect label="FY" options={options.fiscal_years} selected={selectedFiscalYears} onChange={setSelectedFiscalYears} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">Month</label>
                             <MultiSelect label="Months" options={options.months} selected={selectedMonths} onChange={setSelectedMonths} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">State / Region</label>
                             <MultiSelect label="States" options={options.states} selected={selectedStates} onChange={setSelectedStates} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">City {selectedStates.length > 0 ? "(linked to selected states)" : ""}</label>
                             <MultiSelect label="Cities"
                                 options={cityOptionsForFilter}
                                 selected={selectedCities} onChange={setSelectedCities}
                             />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">Customer</label>
                             <MultiSelect label="Customers" options={options.customers} selected={selectedCustomers} onChange={setSelectedCustomers} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">Material Group</label>
                             <MultiSelect label="Groups" options={options.material_groups} selected={selectedMaterialGroups} onChange={setSelectedMaterialGroups} />
                         </div>
-                        <div>
-                            <label className="text-xs text-gray-500 mb-1 block">Item (SKU)</label>
-                            <MultiSelect label="Items" options={options.items} selected={selectedItems} onChange={setSelectedItems} />
-                        </div>
+                    </div>
+                    <div className="mt-3 min-w-0">
+                        <label className="text-xs text-gray-500 mb-1 block">Item (SKU)</label>
+                        <MultiSelect
+                            longLabels
+                            label="Items"
+                            options={options.items}
+                            selected={selectedItems}
+                            onChange={setSelectedItems}
+                        />
                     </div>
                     {activeFilterCount > 0 && (
                         <div className="flex items-center gap-2 mt-3 flex-wrap">
@@ -402,9 +449,18 @@ export default function GlobalFilterBar() {
                                 </span>
                             ))}
                             {selectedItems.map(it => (
-                                <span key={it} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full max-w-[240px]">
-                                    <span className="truncate" title={it}>Item: {it}</span>
-                                    <X className="h-3 w-3 ml-1 cursor-pointer shrink-0 hover:text-[#daa520]" onClick={() => setSelectedItems(selectedItems.filter(x => x !== it))} />
+                                <span
+                                    key={it}
+                                    title={it}
+                                    className="inline-flex items-start gap-1 max-w-full sm:max-w-xl bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-lg"
+                                >
+                                    <span className="break-words whitespace-normal leading-snug min-w-0">
+                                        Item: {it}
+                                    </span>
+                                    <X
+                                        className="h-3 w-3 mt-0.5 cursor-pointer shrink-0 hover:text-[#daa520]"
+                                        onClick={() => setSelectedItems(selectedItems.filter(x => x !== it))}
+                                    />
                                 </span>
                             ))}
                             <button onClick={() => { setSelectedStates([]); setSelectedCities([]); setSelectedCustomers([]); setSelectedMaterialGroups([]); setSelectedFiscalYears([]); setSelectedMonths([]); setSelectedItems([]); }}

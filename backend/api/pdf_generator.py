@@ -1533,8 +1533,8 @@ def _generate_pdf_report_inner(
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(5)
 
-    # --- Page 3: YoY & Deep Dive (omitted for Executive Summary PDF) ---
-    if report_type != "Executive Summary" and "FINANCIAL_YEAR" in df.columns:
+    # --- Page 3: FY comparison table + YoY chart (all report types, including Executive Summary) ---
+    if "FINANCIAL_YEAR" in df.columns:
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
         pdf.cell(0, 10, "5. Fiscal Year (FY) Analysis", 0, 1)

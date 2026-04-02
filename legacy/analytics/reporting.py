@@ -151,7 +151,6 @@ class PDF(FPDF):
         self.set_text_color(80, 80, 80)
         fy_str = " | ".join(fy_list)
         self.cell(120, 10, f"Analysis Period: {fy_str}", 0, 1)
-        self.cell(120, 8, f"Generated: {datetime.now().strftime('%d %B %Y')}", 0, 1)
         
         # Intelligence branding in dark strip
         self.set_xy(145, 100)
@@ -227,7 +226,7 @@ def generate_pdf(df, report_type, specific_entity=None):
     
     pdf.set_font("Arial", '', 11)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 8, f"{sub_title} | Generated: {datetime.now().strftime('%d %B %Y')}", 0, 1, 'L')
+    pdf.cell(0, 8, sub_title, 0, 1, 'L')
     pdf.ln(5)
 
     # 2. KPI Grid (Material Design Cards)
@@ -749,8 +748,6 @@ def generate_pdf(df, report_type, specific_entity=None):
         top_state = df.groupby("STATE")["AMOUNT"].sum().idxmax() if not df.empty else "N/A"
         insights.append(f"GEOGRAPHY: Active across {num_states} states. Top state: {top_state}.")
     
-    insights.append(f"Generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
-    
     for insight in insights:
         pdf.set_font("Arial", '', 9)
         marker = insight.split(":")[0] if ":" in insight else ""
@@ -1238,7 +1235,7 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
     
     pdf.set_font("Arial", '', 10)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(content_width, 6, f"Period: {' | '.join(fy_list)}  |  Generated: {datetime.now().strftime('%d-%b-%Y')}", 0, 1, 'L')
+    pdf.cell(content_width, 6, f"Period: {' | '.join(fy_list)}", 0, 1, 'L')
     
     # Draw Line
     pdf.set_draw_color(255, 215, 0) # Gold
@@ -1504,7 +1501,6 @@ def generate_distributor_strategy_report(df, customer_name, fy_list):
         else:
             s_insights.append(f"ORDER SIZE: Avg order value {format_currency_pdf(avg_order)} - strong per-order commitment.")
     s_insights.append(f"OPPORTUNITY: {opp_txt}")
-    s_insights.append(f"Generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
     
     for s_insight in s_insights:
         pdf.set_font("Arial", 'B', 9)

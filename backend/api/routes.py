@@ -595,7 +595,6 @@ def test_pdf():
     pdf.cell(0, 8, f"fpdf version: {fpdf_version}", 0, 1, "L")
     pdf.cell(0, 8, f"fpdf path: {fpdf_path[:80]}", 0, 1, "L")
     pdf.cell(0, 8, f"cell() uses 'text=' param: {uses_text_param}", 0, 1, "L")
-    pdf.cell(0, 8, f"Generated: {datetime.now().isoformat()}", 0, 1, "L")
     pdf.ln(5)
     pdf.set_font("Helvetica", "B", 12)
     # Test text= kwarg - will be blank on old PyFPDF

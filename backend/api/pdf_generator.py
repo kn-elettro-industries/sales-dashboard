@@ -779,7 +779,7 @@ def _generate_dynamic_pdf_report_inner(
     pdf.cell(0, 10, _pdf_text(title).upper(), 0, 1)
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 6, _pdf_text(f"Generated: {datetime.now().strftime('%d %B %Y')} | Prepared for: {prepared}"), 0, 1)
+    pdf.cell(0, 6, _pdf_text(f"Prepared for: {prepared}"), 0, 1)
     pdf.ln(3)
 
     pdf.set_font("Arial", "B", 12)
@@ -1174,8 +1174,6 @@ class PDF(FPDF):
         self.set_font("Arial", '', 12)
         self.set_text_color(80, 80, 80)
         self.cell(120, 10, sub_title, 0, 1)
-        self.set_x(10)
-        self.cell(120, 8, f"Generated: {datetime.now().strftime('%d %B %Y')}", 0, 1)
         
         # Intelligence branding
         self.set_xy(145, 100)
@@ -1250,8 +1248,6 @@ class PDF(FPDF):
         self.set_font("Arial", "", 10)
         self.set_xy(0, 152)
         self.cell(0, 6, f"Analysis Period: {_pdf_text(analysis_period)}", 0, 1, "C")
-        self.set_xy(0, 160)
-        self.cell(0, 6, f"Generated: {datetime.now().strftime('%d %B %Y, %I:%M %p')}", 0, 1, "C")
 
         # Subtle footer note (must stay above page-break threshold)
         self.set_text_color(140, 140, 140)
@@ -1447,15 +1443,58 @@ def _generate_distributor_strategy_pdf_inner(
     pdf.ln(3)
 
     recs = []
+    # Partner-facing notes: actionable, order-focused (typical distributor communication)
     if grp_col in df.columns and total_rev > 0:
         top_cat = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(1)
         if len(top_cat) == 1:
-            cat_name = _pdf_text(top_cat.index[0])
+            cat_name = _pdf_text(str(top_cat.index[0]))
             cat_share = float(top_cat.iloc[0]) / total_rev * 100.0 if total_rev > 0 else 0.0
-            recs.append(f"BALANCED MIX: Well-diversified product portfolio with '{cat_name[:40]}' leading at {cat_share:.1f}%.")
-    recs.append(f"ORDER SIZE: Strong per-order commitment at {format_currency_pdf(avg_order)}.")
-    recs.append(f"ENGAGEMENT: {total_orders} orders placed during {_pdf_text(analysis_period)}. Maintain regular follow-ups to sustain purchase frequency.")
-    recs.append(f"Report generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
+            recs.append(
+                f"PRIORITY LINES: Your highest share category is '{cat_name[:45]}' "
+                f"(about {cat_share:.1f}% of value in this report). Keep healthy stock on this block "
+                f"and add adjacent items from the table above to increase basket size on each dispatch."
+            )
+    if use_fy_breakdown and len(fy_compare) == 2 and "FINANCIAL_YEAR" in df_work.columns:
+        fy0, fy1 = fy_compare[0], fy_compare[1]
+        dfw = df_work.copy()
+        dfw["_FY"] = dfw["FINANCIAL_YEAR"].astype(str).str.strip()
+        t0 = float(dfw.loc[dfw["_FY"] == fy0, "AMOUNT"].sum())
+        t1 = float(dfw.loc[dfw["_FY"] == fy1, "AMOUNT"].sum())
+        if t0 > 0:
+            chg = (t1 - t0) / t0 * 100.0
+            if chg >= 2.0:
+                recs.append(
+                    f"TREND: Billed value from {fy0} to {fy1} is up about {chg:.1f}%. "
+                    f"Thank you for the momentum — let's firm up the next month's forecast so we can hold stock for you."
+                )
+            elif chg <= -2.0:
+                recs.append(
+                    f"TREND: Billed value from {fy0} to {fy1} is lower by about {abs(chg):.1f}%. "
+                    f"Please speak with our sales team about schemes, credit days, or SKU mix — we want to help you recover volume."
+                )
+            else:
+                recs.append(
+                    f"TREND: Billed value is broadly steady between {fy0} and {fy1}. "
+                    f"Share your sales plan so we can suggest the right product push for the next quarter."
+                )
+        elif t1 > 0:
+            recs.append(
+                f"TREND: We see activity in {fy1}. Regular ordering helps us plan inventory and pricing for you — confirm your upcoming requirement."
+            )
+    elif total_rev > 0:
+        recs.append(
+            "REVIEW THE MIX: Use the category table to pick one or two extra lines for your next indent — "
+            "we can advise on fast movers and availability."
+        )
+    recs.append(
+        f"ORDER SIZE: Your average order value is {format_currency_pdf(avg_order)}. "
+        f"Where it works for your warehouse, combining requirements into planned purchases can save freight and improve supply security."
+    )
+    recs.append(
+        f"NEXT ORDER: You placed {total_orders:,} purchase cycles in this analysis window "
+        f"({_pdf_text(analysis_period)}). To avoid gaps on fast movers, please confirm your next requirement "
+        f"with our sales representative and schedule your next delivery."
+    )
 
     for r in recs:
         pdf.set_x(10)
@@ -1600,7 +1639,7 @@ def _generate_pdf_report_inner(
     
     pdf.set_font("Arial", '', 11)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 8, f"{sub_title} | Generated: {datetime.now().strftime('%d %B %Y')}", 0, 1, 'L')
+    pdf.cell(0, 8, sub_title, 0, 1, 'L')
     pdf.ln(5)
 
     if df.empty:
@@ -2109,8 +2148,6 @@ def _generate_pdf_report_inner(
         num_states = df["STATE"].nunique()
         top_state = df.groupby("STATE")["AMOUNT"].sum().idxmax()
         insights.append(f"GEOGRAPHY: Active across {num_states} states. Top state: {top_state}.")
-    
-    insights.append(f"Generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
 
     for insight in insights:
         pdf.set_font("Arial", 'B', 9)

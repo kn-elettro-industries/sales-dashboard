@@ -674,6 +674,7 @@ def download_pdf_report(
                 )
                 if len(uniq_months) == 1:
                     effective_months = uniq_months[0]
+            fy_parts = []
             if fiscal_years:
                 fy_parts = [p.strip() for p in str(fiscal_years).split(",") if p.strip()]
                 analysis_period = fy_parts[0] if len(fy_parts) == 1 else (fiscal_years if isinstance(fiscal_years, str) else "YTD")
@@ -692,7 +693,9 @@ def download_pdf_report(
                     shown = ", ".join(month_parts[:6])
                     suffix = f"Months: {shown}{'...' if len(month_parts) > 6 else ''}"
                 analysis_period = f"{analysis_period} | {suffix}" if analysis_period else suffix
-            pdf_bytes = generate_distributor_strategy_pdf(df, customer_name, analysis_period)
+            pdf_bytes = generate_distributor_strategy_pdf(
+                df, customer_name, analysis_period, selected_fiscal_years=fy_parts
+            )
             entity_name = str(customer_name).replace(" ", "_")
         else:
             pdf_bytes = generate_pdf_report(

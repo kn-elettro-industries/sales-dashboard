@@ -4,9 +4,9 @@ import os
 import tempfile
 import gc
 import numpy as np
-from typing import Optional
+from typing import List, Optional
 
-from .fiscal_year import fy_selection_to_timeline_month_labels
+from .fiscal_year import fy_selection_to_timeline_month_labels, parse_fy_label_to_apr_mar_years
 
 # ── fpdf2 guard ───────────────────────────────────────────────────────────────
 # fpdf and fpdf2 share the same module name. Force fpdf2 2.x.
@@ -87,6 +87,38 @@ def _split_csv_param(s: Optional[str]) -> list:
     if not s or not str(s).strip():
         return []
     return [p.strip() for p in str(s).split(",") if p.strip()]
+
+
+def _sort_fy_labels_chronologically(fy_labels: List[str]) -> List[str]:
+    """Oldest Indian FY first. Labels that do not parse sort last."""
+
+    def _key(fy: str):
+        p = parse_fy_label_to_apr_mar_years(fy)
+        return (p[0], p[1]) if p else (9999, 9999)
+
+    return sorted([f for f in fy_labels if f and str(f).strip()], key=_key)
+
+
+def _ensure_financial_year_column(df: pd.DataFrame) -> pd.DataFrame:
+    """Match apply_filters / FY comparison: derive FINANCIAL_YEAR from DATE when missing."""
+    if df.empty or "FINANCIAL_YEAR" in df.columns:
+        return df
+    if "DATE" not in df.columns:
+        return df
+    from .routes import calculate_fy
+
+    out = df.copy()
+    dt = pd.to_datetime(out["DATE"], errors="coerce")
+    out["FINANCIAL_YEAR"] = dt.apply(lambda x: calculate_fy(x) if pd.notna(x) else None)
+    return out
+
+
+def _rev_yoy_pct(prev_rev: float, curr_rev: float) -> str:
+    if prev_rev > 0:
+        return f"{((curr_rev - prev_rev) / prev_rev * 100.0):+.1f}%"
+    if curr_rev > 0:
+        return "new"
+    return "—"
 
 
 def _pdf_brand_fallback(tenant_id: Optional[str]) -> str:
@@ -1061,14 +1093,18 @@ def generate_distributor_strategy_pdf(
     df: pd.DataFrame,
     customer_name: str,
     analysis_period: str = "YTD",
+    selected_fiscal_years: Optional[List[str]] = None,
 ) -> bytes:
     """
     Generates the usual Distributor Strategy Report: cover (DISTRIBUTOR STRATEGY REPORT + customer + FY),
     Efficiency & Consolidation (scatter + zone + Top 10 table), Executive Summary (KPIs, Top Material Groups, Insights).
+    When ``selected_fiscal_years`` has 2+ entries, product mix is split by FY (revenue + share per FY + YoY).
     matplotlib is lazy-loaded and freed after generation to save RAM."""
     _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
-        return _generate_distributor_strategy_pdf_inner(df, customer_name, analysis_period, Figure, FigureCanvas, cm)
+        return _generate_distributor_strategy_pdf_inner(
+            df, customer_name, analysis_period, Figure, FigureCanvas, cm, selected_fiscal_years
+        )
     finally:
         gc.collect()
 
@@ -1078,6 +1114,7 @@ def _generate_distributor_strategy_pdf_inner(
     customer_name: str,
     analysis_period: str,
     Figure, FigureCanvas, cm,
+    selected_fiscal_years: Optional[List[str]] = None,
 ) -> bytes:
     """Inner implementation — matplotlib symbols passed in as arguments.
     """
@@ -1138,37 +1175,136 @@ def _generate_distributor_strategy_pdf_inner(
         pdf.cell(box_w - 64, row_h, _pdf_text(val), 0, 1, "R", False)
     pdf.ln(6)
 
+    df_work = _ensure_financial_year_column(df)
+    fy_compare = _sort_fy_labels_chronologically(
+        [x for x in (selected_fiscal_years or []) if x and str(x).strip()]
+    )
+    use_fy_breakdown = (
+        len(fy_compare) >= 2
+        and "FINANCIAL_YEAR" in df_work.columns
+        and grp_col in df_work.columns
+        and "AMOUNT" in df_work.columns
+    )
+
     # Product mix analysis
     pdf.set_font("Arial", "B", 12)
     pdf.set_fill_color(33, 37, 41)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(0, 9, "  PRODUCT MIX ANALYSIS", 0, 1, "L", 1)
+    mix_heading = "  PRODUCT MIX ANALYSIS (BY FINANCIAL YEAR)" if use_fy_breakdown else "  PRODUCT MIX ANALYSIS"
+    pdf.cell(0, 9, mix_heading, 0, 1, "L", 1)
     pdf.ln(2)
 
     pdf.set_font("Arial", "B", 9)
     pdf.set_fill_color(218, 165, 32)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(10, 8, "#", 1, 0, "C", True)
-    pdf.cell(115, 8, "Product Category", 1, 0, "L", True)
-    pdf.cell(35, 8, "Revenue", 1, 0, "R", True)
-    pdf.cell(25, 8, "Share %", 1, 1, "R", True)
-
-    pdf.set_font("Arial", "", 9)
-    pdf.set_text_color(0, 0, 0)
     fill = False
-    if grp_col in df.columns and total_rev > 0:
-        mix = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(9)
-        for i, (cat, amt) in enumerate(mix.items(), 1):
-            share = (float(amt) / total_rev * 100.0) if total_rev > 0 else 0.0
-            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-            pdf.cell(10, 7, str(i), 1, 0, "C", fill)
-            pdf.cell(115, 7, _pdf_text(str(cat))[:55], 1, 0, "L", fill)
-            pdf.cell(35, 7, format_currency_pdf(float(amt)), 1, 0, "R", fill)
-            pdf.cell(25, 7, f"{share:.1f}%", 1, 1, "R", fill)
-            fill = not fill
+
+    if use_fy_breakdown and len(fy_compare) == 2:
+        fy0, fy1 = fy_compare[0], fy_compare[1]
+        df_mix = df_work.copy()
+        df_mix["_FY"] = df_mix["FINANCIAL_YEAR"].astype(str).str.strip()
+        fy_totals = {
+            fy: float(df_mix.loc[df_mix["_FY"] == fy, "AMOUNT"].sum()) for fy in (fy0, fy1)
+        }
+        mix = df_mix.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(9)
+        w_num, w_cat, w_r1, w_s1, w_r2, w_s2, w_y = 7, 60, 27, 15, 27, 15, 20
+        pdf.set_font("Arial", "B", 7)
+        pdf.cell(w_num, 9, "#", 1, 0, "C", True)
+        pdf.cell(w_cat, 9, "Product Category", 1, 0, "L", True)
+        pdf.cell(w_r1, 9, _pdf_text(f"{fy0} Rev")[:24], 1, 0, "R", True)
+        pdf.cell(w_s1, 9, _pdf_text(f"{fy0} %")[:12], 1, 0, "R", True)
+        pdf.cell(w_r2, 9, _pdf_text(f"{fy1} Rev")[:24], 1, 0, "R", True)
+        pdf.cell(w_s2, 9, _pdf_text(f"{fy1} %")[:12], 1, 0, "R", True)
+        pdf.cell(w_y, 9, "YoY Rev %", 1, 1, "R", True)
+        pdf.set_font("Arial", "", 8)
+        pdf.set_text_color(0, 0, 0)
+        if not mix.empty and sum(fy_totals.values()) > 0:
+            for i, cat in enumerate(mix.index, 1):
+                r0 = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == fy0), "AMOUNT"].sum())
+                r1 = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == fy1), "AMOUNT"].sum())
+                s0 = (r0 / fy_totals[fy0] * 100.0) if fy_totals.get(fy0, 0) > 0 else 0.0
+                s1 = (r1 / fy_totals[fy1] * 100.0) if fy_totals.get(fy1, 0) > 0 else 0.0
+                yoy = _rev_yoy_pct(r0, r1)
+                pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                pdf.cell(w_num, 7, str(i), 1, 0, "C", fill)
+                pdf.cell(w_cat, 7, _pdf_text(str(cat))[:48], 1, 0, "L", fill)
+                pdf.cell(w_r1, 7, format_currency_pdf(r0), 1, 0, "R", fill)
+                pdf.cell(w_s1, 7, f"{s0:.1f}%", 1, 0, "R", fill)
+                pdf.cell(w_r2, 7, format_currency_pdf(r1), 1, 0, "R", fill)
+                pdf.cell(w_s2, 7, f"{s1:.1f}%", 1, 0, "R", fill)
+                pdf.cell(w_y, 7, _pdf_text(yoy), 1, 1, "R", fill)
+                fill = not fill
+        else:
+            pdf.set_font("Arial", "", 9)
+            pdf.set_fill_color(255, 255, 255)
+            pdf.cell(w_num + w_cat + w_r1 + w_s1 + w_r2 + w_s2 + w_y, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
+
+    elif use_fy_breakdown and len(fy_compare) >= 3:
+        df_mix = df_work.copy()
+        df_mix["_FY"] = df_mix["FINANCIAL_YEAR"].astype(str).str.strip()
+        fy_totals = {fy: float(df_mix.loc[df_mix["_FY"] == fy, "AMOUNT"].sum()) for fy in fy_compare}
+        mix = df_mix.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(9)
+        w_num = 6
+        w_yoy = 18
+        nfy = len(fy_compare)
+        w_cat = 38
+        rem = 187 - w_num - w_cat - w_yoy
+        w_rev_each = max(18, rem / max(nfy, 1))
+        pdf.set_font("Arial", "B", 6)
+        pdf.cell(w_num, 9, "#", 1, 0, "C", True)
+        pdf.cell(w_cat, 9, "Product Category", 1, 0, "L", True)
+        for fy in fy_compare:
+            pdf.cell(w_rev_each, 9, _pdf_text(f"{fy} Rev")[:18], 1, 0, "R", True)
+        pdf.cell(w_yoy, 9, "YoY (last vs prev)", 1, 1, "R", True)
+        pdf.set_font("Arial", "", 7)
+        pdf.set_text_color(0, 0, 0)
+        f_prev, f_last = fy_compare[-2], fy_compare[-1]
+        if not mix.empty and sum(fy_totals.values()) > 0:
+            for i, cat in enumerate(mix.index, 1):
+                pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                pdf.cell(w_num, 7, str(i), 1, 0, "C", fill)
+                pdf.cell(w_cat, 7, _pdf_text(str(cat))[:36], 1, 0, "L", fill)
+                rv_prev = float(
+                    df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == f_prev), "AMOUNT"].sum()
+                )
+                rv_last = float(
+                    df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == f_last), "AMOUNT"].sum()
+                )
+                for fy in fy_compare:
+                    r = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == fy), "AMOUNT"].sum())
+                    pdf.cell(w_rev_each, 7, format_currency_pdf(r), 1, 0, "R", fill)
+                yoy = _rev_yoy_pct(rv_prev, rv_last)
+                pdf.cell(w_yoy, 7, _pdf_text(yoy), 1, 1, "R", fill)
+                fill = not fill
+        else:
+            pdf.set_font("Arial", "", 9)
+            pdf.set_fill_color(255, 255, 255)
+            pdf.cell(187, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
+
     else:
-        pdf.set_fill_color(255, 255, 255)
-        pdf.cell(185, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
+        pdf.set_font("Arial", "B", 9)
+        pdf.set_fill_color(218, 165, 32)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(10, 8, "#", 1, 0, "C", True)
+        pdf.cell(115, 8, "Product Category", 1, 0, "L", True)
+        pdf.cell(35, 8, "Revenue", 1, 0, "R", True)
+        pdf.cell(25, 8, "Share %", 1, 1, "R", True)
+
+        pdf.set_font("Arial", "", 9)
+        pdf.set_text_color(0, 0, 0)
+        if grp_col in df.columns and total_rev > 0:
+            mix = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(9)
+            for i, (cat, amt) in enumerate(mix.items(), 1):
+                share = (float(amt) / total_rev * 100.0) if total_rev > 0 else 0.0
+                pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                pdf.cell(10, 7, str(i), 1, 0, "C", fill)
+                pdf.cell(115, 7, _pdf_text(str(cat))[:55], 1, 0, "L", fill)
+                pdf.cell(35, 7, format_currency_pdf(float(amt)), 1, 0, "R", fill)
+                pdf.cell(25, 7, f"{share:.1f}%", 1, 1, "R", fill)
+                fill = not fill
+        else:
+            pdf.set_fill_color(255, 255, 255)
+            pdf.cell(185, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
 
     pdf.ln(6)
 

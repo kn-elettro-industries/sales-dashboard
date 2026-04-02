@@ -141,14 +141,29 @@ def _pdf_draw_aggregate_material_mix_table(
     fill = False
     if grp_col in df.columns and total_rev > 0:
         mix = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(max_rows)
+        sub_sum = 0.0
         for i, (cat, amt) in enumerate(mix.items(), 1):
             share = (float(amt) / total_rev * 100.0) if total_rev > 0 else 0.0
+            sub_sum += float(amt)
             pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(10, 7, str(i), 1, 0, "C", fill)
             pdf.cell(115, 7, _pdf_text(str(cat))[:55], 1, 0, "L", fill)
             pdf.cell(35, 7, format_currency_pdf(float(amt)), 1, 0, "R", fill)
             pdf.cell(25, 7, f"{share:.1f}%", 1, 1, "R", fill)
             fill = not fill
+        pdf.set_font("Arial", "B", 9)
+        pdf.set_fill_color(255, 248, 220)
+        pdf.cell(10, 7, "", 1, 0, "C", True)
+        pdf.cell(115, 7, _pdf_text("Subtotal (rows above)"), 1, 0, "L", True)
+        pdf.cell(35, 7, format_currency_pdf(sub_sum), 1, 0, "R", True)
+        agg_pct = (sub_sum / total_rev * 100.0) if total_rev > 0 else 0.0
+        pdf.cell(25, 7, f"{agg_pct:.1f}%", 1, 1, "R", True)
+        pdf.set_fill_color(218, 235, 242)
+        pdf.cell(10, 7, "", 1, 0, "C", True)
+        pdf.cell(115, 7, _pdf_text("Total (all categories)"), 1, 0, "L", True)
+        pdf.cell(35, 7, format_currency_pdf(total_rev), 1, 0, "R", True)
+        pdf.cell(25, 7, "100.0%", 1, 1, "R", True)
+        pdf.set_font("Arial", "", 9)
     else:
         pdf.set_fill_color(255, 255, 255)
         pdf.cell(185, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
@@ -207,6 +222,35 @@ def _pdf_draw_fy_material_group_table(
                 pdf.cell(w_s2, 7, f"{s1:.1f}%", 1, 0, "R", fill)
                 pdf.cell(w_y, 7, _pdf_text(yoy), 1, 1, "R", fill)
                 fill = not fill
+            # Subtotal = sum of rows shown; aggregate % = share of each FY total captured by those rows
+            cats = list(mix.index)
+            sub0 = float(
+                df_mix.loc[df_mix[grp_col].isin(cats) & (df_mix["_FY"] == fy0), "AMOUNT"].sum()
+            )
+            sub1 = float(
+                df_mix.loc[df_mix[grp_col].isin(cats) & (df_mix["_FY"] == fy1), "AMOUNT"].sum()
+            )
+            ss0 = (sub0 / fy_totals[fy0] * 100.0) if fy_totals.get(fy0, 0) > 0 else 0.0
+            ss1 = (sub1 / fy_totals[fy1] * 100.0) if fy_totals.get(fy1, 0) > 0 else 0.0
+            pdf.set_font("Arial", "B", 8)
+            pdf.set_fill_color(255, 248, 220)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(w_num, 7, "", 1, 0, "C", True)
+            pdf.cell(w_cat, 7, _pdf_text(f"Subtotal (top {len(cats)} categories)"), 1, 0, "L", True)
+            pdf.cell(w_r1, 7, format_currency_pdf(sub0), 1, 0, "R", True)
+            pdf.cell(w_s1, 7, f"{ss0:.1f}%", 1, 0, "R", True)
+            pdf.cell(w_r2, 7, format_currency_pdf(sub1), 1, 0, "R", True)
+            pdf.cell(w_s2, 7, f"{ss1:.1f}%", 1, 0, "R", True)
+            pdf.cell(w_y, 7, _pdf_text(_rev_yoy_pct(sub0, sub1)), 1, 1, "R", True)
+            pdf.set_fill_color(218, 235, 242)
+            pdf.cell(w_num, 7, "", 1, 0, "C", True)
+            pdf.cell(w_cat, 7, _pdf_text("Total (FY revenue, all categories)"), 1, 0, "L", True)
+            pdf.cell(w_r1, 7, format_currency_pdf(fy_totals[fy0]), 1, 0, "R", True)
+            pdf.cell(w_s1, 7, "100.0%", 1, 0, "R", True)
+            pdf.cell(w_r2, 7, format_currency_pdf(fy_totals[fy1]), 1, 0, "R", True)
+            pdf.cell(w_s2, 7, "100.0%", 1, 0, "R", True)
+            pdf.cell(w_y, 7, _pdf_text(_rev_yoy_pct(fy_totals[fy0], fy_totals[fy1])), 1, 1, "R", True)
+            pdf.set_font("Arial", "", 8)
         else:
             pdf.set_font("Arial", "", 9)
             pdf.set_fill_color(255, 255, 255)
@@ -246,6 +290,46 @@ def _pdf_draw_fy_material_group_table(
             yoy = _rev_yoy_pct(rv_prev, rv_last)
             pdf.cell(w_yoy, 7, _pdf_text(yoy), 1, 1, "R", fill)
             fill = not fill
+        cats = list(mix.index)
+        pdf.set_font("Arial", "B", 7)
+        pdf.set_fill_color(255, 248, 220)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(w_num, 7, "", 1, 0, "C", True)
+        pdf.cell(w_cat, 7, _pdf_text(f"Subtotal (top {len(cats)} categories)"), 1, 0, "L", True)
+        sub_by_fy = {
+            fy: float(
+                df_mix.loc[df_mix[grp_col].isin(cats) & (df_mix["_FY"] == fy), "AMOUNT"].sum()
+            )
+            for fy in fy_compare
+        }
+        for fy in fy_compare:
+            pdf.cell(w_rev_each, 7, format_currency_pdf(sub_by_fy[fy]), 1, 0, "R", True)
+        pdf.cell(w_yoy, 7, _pdf_text(_rev_yoy_pct(sub_by_fy[f_prev], sub_by_fy[f_last])), 1, 1, "R", True)
+        pdf.set_fill_color(218, 235, 242)
+        pdf.cell(w_num, 7, "", 1, 0, "C", True)
+        pdf.cell(w_cat, 7, _pdf_text("Total (FY revenue, all categories)"), 1, 0, "L", True)
+        for fy in fy_compare:
+            pdf.cell(w_rev_each, 7, format_currency_pdf(fy_totals[fy]), 1, 0, "R", True)
+        pdf.cell(
+            w_yoy,
+            7,
+            _pdf_text(_rev_yoy_pct(fy_totals[f_prev], fy_totals[f_last])),
+            1,
+            1,
+            "R",
+            True,
+        )
+        pdf.set_font("Arial", "", 7)
+        pdf.ln(1)
+        pdf.set_font("Arial", "I", 6)
+        pdf.set_text_color(80, 80, 80)
+        cap_parts = []
+        for fy in fy_compare:
+            den = fy_totals.get(fy, 0)
+            pct = (sub_by_fy[fy] / den * 100.0) if den > 0 else 0.0
+            cap_parts.append(f"{fy}: subtotal = {pct:.1f}% of FY total")
+        pdf.multi_cell(0, 3.5, _pdf_text(" | ".join(cap_parts)), 0, 1)
+        pdf.set_text_color(0, 0, 0)
     else:
         pdf.set_font("Arial", "", 9)
         pdf.set_fill_color(255, 255, 255)

@@ -173,7 +173,7 @@ export default function ReportsPage() {
         loadDocs();
     }, [activeTab, baseReportParams]);
 
-    // Fetch dynamic options based on selected report type
+    // Fetch dynamic options based on selected report type (uses global filters via baseReportParams)
     useEffect(() => {
         if (activeTab !== 'export') return;
 
@@ -195,14 +195,17 @@ export default function ReportsPage() {
                         setEntityOptions(data.map((c: any) => c.CUSTOMER_NAME).filter(Boolean).sort());
                     }
                 } else if (selectedReport === "State Wise") {
-                    if (stateOptions.length > 0) {
-                        setEntityOptions(stateOptions);
-                    } else {
-                        const data = await fetchStateData({ tenant });
-                        setEntityOptions(data.map((s: any) => s.STATE).filter(Boolean).sort());
-                    }
+                    const data = await fetchStateData(baseReportParams);
+                    const names = [...new Set(data.map((s: any) => s.STATE).filter(Boolean))].sort((a, b) =>
+                        String(a).localeCompare(String(b))
+                    ) as string[];
+                    setEntityOptions(names);
                 } else if (selectedReport === "Material Group Wise") {
-                    setEntityOptions(["AIR FILTER", "SELF LOCKING PA 66 CABLE TIE", "JUNCTION BOXES", "POLYMIDE FLEXIBLE CONDUIT & SLITTED", "POLYAMIDE CONDUIT GLAND"]);
+                    const data = await fetchMaterialPerformance(baseReportParams);
+                    const names = [...new Set(
+                        data.map((r: any) => r.ITEM_NAME_GROUP ?? r.MATERIALGROUP ?? r.name).filter(Boolean)
+                    )].sort((a, b) => String(a).localeCompare(String(b))) as string[];
+                    setEntityOptions(names);
                 }
             } catch (e) {
                 console.error("Failed to fetch entity options", e);
@@ -213,7 +216,7 @@ export default function ReportsPage() {
         };
 
         loadOptions();
-    }, [activeTab, selectedReport, customerOptions, stateOptions, tenant]);
+    }, [activeTab, selectedReport, customerOptions, tenant, baseReportParams]);
 
     // Load Advanced Options once
     useEffect(() => {

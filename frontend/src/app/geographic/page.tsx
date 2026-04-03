@@ -132,7 +132,10 @@ export default function GeographicPage() {
                     </div>
 
                     {(() => {
-                        const stateInfo = validStates.find((s: any) => s.STATE === drilldownState);
+                        const stateInfo = validStates.find(
+                            (s: any) =>
+                                String(s?.STATE ?? "").toLowerCase() === String(drilldownState ?? "").toLowerCase()
+                        );
                         if (!stateInfo) return <div className="text-gray-500">No data for this state</div>;
                         return (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

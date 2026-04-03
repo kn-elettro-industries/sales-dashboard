@@ -1575,19 +1575,27 @@ def _generate_pdf_report_inner(
         elif report_type == "City Wise":
             col = "CITY" if "CITY" in df.columns else "STATE"
             if col in df.columns:
-                df = df[df[col] == specific_entity]
+                se = str(specific_entity).strip()
+                nm = df[col].astype(str).str.strip().str.upper()
+                df = df[nm == se.upper()]
         elif report_type == "Material Wise":
             col = "ITEMNAME" if "ITEMNAME" in df.columns else "MATERIALGROUP"
             if col in df.columns:
-                df = df[df[col] == specific_entity]
+                se = str(specific_entity).strip()
+                nm = df[col].astype(str).str.strip().str.upper()
+                df = df[nm == se.upper()]
         elif report_type == "Material Group Wise":
             col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
             if col in df.columns:
-                df = df[df[col] == specific_entity]
+                se = str(specific_entity).strip()
+                nm = df[col].astype(str).str.strip().str.upper()
+                df = df[nm == se.upper()]
         elif report_type == "Month Wise" and "MONTH" in df.columns:
             df = df[df["MONTH"] == specific_entity]
         elif report_type == "State Wise" and "STATE" in df.columns:
-            df = df[df["STATE"] == specific_entity]
+            se = str(specific_entity).strip()
+            nm = df["STATE"].astype(str).str.strip().str.upper()
+            df = df[nm == se.upper()]
 
     print("PDF_GEN - Filters applied. Creating PDF object...", flush=True); sys.stdout.flush()
     # Use the df provided. Don't filter since FastAPI applies frontend filters before passing this DF.

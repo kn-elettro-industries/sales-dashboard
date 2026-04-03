@@ -53,10 +53,11 @@ export default function MaterialsPage() {
 
     const tablePareto = React.useMemo(() => {
         return validPareto.map((p: any) => {
-            const nameKey = Object.keys(p).find(k => !['AMOUNT', 'Percentage', 'Cumulative', 'Class'].includes(k)) || 'MaterialGroup';
+            const nameKey =
+                Object.keys(p).find(k => !['AMOUNT', 'Percentage', 'Cumulative', 'Class'].includes(k)) || 'ITEM_NAME_GROUP';
             return {
                 ...p,
-                MaterialGroup: p[nameKey] || 'Unknown'
+                MaterialGroup: p.ITEM_NAME_GROUP ?? p[nameKey] ?? 'Unknown',
             };
         });
     }, [validPareto]);

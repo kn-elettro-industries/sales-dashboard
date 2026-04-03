@@ -1439,11 +1439,18 @@ def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str]
     df = df[~df["STATE"].astype(str).str.upper().str.contains("NOT FOUND", na=False)]
     if df.empty:
         return []
-    state = df.groupby("STATE").agg(
+    # Single row per state: merge MAHARASHTRA / Maharashtra / maharashtra (map + filters)
+    df = df.copy()
+    df["STATE"] = df["STATE"].astype(str).str.strip()
+    df = df[df["STATE"].str.len() > 0]
+    df["_STATE_KEY"] = df["STATE"].str.upper()
+    state = df.groupby("_STATE_KEY", as_index=False).agg(
         Revenue=("AMOUNT", "sum"),
         Orders=("INVOICE_NO", "nunique"),
-        Customers=("CUSTOMER_NAME", "nunique")
-    ).sort_values("Revenue", ascending=False).reset_index()
+        Customers=("CUSTOMER_NAME", "nunique"),
+    ).sort_values("Revenue", ascending=False)
+    state["STATE"] = state["_STATE_KEY"].map(lambda x: str(x).title() if pd.notna(x) else "")
+    state = state.drop(columns=["_STATE_KEY"])
     
     # Add market share
     total_rev = state["Revenue"].sum()
@@ -1455,8 +1462,8 @@ def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str]
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
     try:
         from shared.geo_data import STATE_COORDS
-        state["lat"] = state["STATE"].map(lambda x: STATE_COORDS.get(x.title(), [20.5937, 78.9629])[0])
-        state["lon"] = state["STATE"].map(lambda x: STATE_COORDS.get(x.title(), [20.5937, 78.9629])[1])
+        state["lat"] = state["STATE"].map(lambda x: STATE_COORDS.get(str(x).strip(), [20.5937, 78.9629])[0])
+        state["lon"] = state["STATE"].map(lambda x: STATE_COORDS.get(str(x).strip(), [20.5937, 78.9629])[1])
     except:
         state["lat"] = 20.5937
         state["lon"] = 78.9629
@@ -1470,10 +1477,17 @@ def get_city_data(tenant_id: str = "default_elettro", limit: int = 20, start_dat
     col = "CITY" if "CITY" in df.columns else "STATE"
     if df.empty or col not in df.columns:
         return []
-    city = df.groupby(col).agg(
+    df = df.copy()
+    df[col] = df[col].astype(str).str.strip()
+    df = df[df[col].str.len() > 0]
+    key_col = "_GEO_KEY"
+    df[key_col] = df[col].str.upper()
+    city = df.groupby(key_col).agg(
         Revenue=("AMOUNT", "sum"),
-        Customers=("CUSTOMER_NAME", "nunique")
+        Customers=("CUSTOMER_NAME", "nunique"),
     ).sort_values("Revenue", ascending=False).head(limit).reset_index()
+    city[col] = city[key_col].map(lambda x: str(x).title() if pd.notna(x) else "")
+    city = city.drop(columns=[key_col])
     return serialize_df(city)
 
 # ─── MATERIAL PERFORMANCE ───
@@ -1503,10 +1517,12 @@ def get_material_performance(tenant_id: str = "default_elettro", start_date: Opt
 def get_pareto_data(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
-    grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
-    if df.empty or grp_col not in df.columns:
+    grp_col = _material_group_column(df)
+    if df.empty or grp_col is None:
         return []
     pareto = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).reset_index()
+    if grp_col != "ITEM_NAME_GROUP":
+        pareto = pareto.rename(columns={grp_col: "ITEM_NAME_GROUP"})
     total = pareto["AMOUNT"].sum()
     pareto["Percentage"] = (pareto["AMOUNT"] / total * 100).round(1)
     pareto["Cumulative"] = pareto["Percentage"].cumsum().round(1)

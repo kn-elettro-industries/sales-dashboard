@@ -10,8 +10,9 @@ CUSTOMER_NAME_CANONICAL: dict[str, str] = {
 }
 
 # Normalized customer key (strip + lower) -> (CITY, STATE) as stored in analytics
+# STATE must match existing rows (e.g. MAHARASHTRA) — same casing as COMPANY_STATE / tax logic in routes.py
 CUSTOMER_GEO_OVERRIDES: dict[str, tuple[str, str]] = {
-    "bharat trading corporation": ("Pune", "Maharashtra"),
+    "bharat trading corporation": ("Pune", "MAHARASHTRA"),
     # Add more rows here when audits find bad CITY/STATE in source or master data.
 }
 

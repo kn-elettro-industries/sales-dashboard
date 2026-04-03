@@ -121,6 +121,28 @@ def _rev_yoy_pct(prev_rev: float, curr_rev: float) -> str:
     return "—"
 
 
+def _pdf_remaining_mm(pdf: FPDF) -> float:
+    """Vertical space left above the bottom margin (mm)."""
+    return float(pdf.h - pdf.b_margin - pdf.get_y())
+
+
+def _pdf_need_space(pdf: FPDF, min_height_mm: float) -> None:
+    """Start a new page if less than ``min_height_mm`` remains (avoids images/tables overlapping the footer)."""
+    if min_height_mm <= 0:
+        return
+    if pdf.get_y() + min_height_mm > pdf.h - pdf.b_margin:
+        pdf.add_page()
+
+
+def _pdf_section_rule(pdf: FPDF) -> None:
+    """Light separator between major sections."""
+    pdf.ln(3)
+    pdf.set_draw_color(210, 210, 210)
+    y = pdf.get_y()
+    pdf.line(10, y, 200, y)
+    pdf.ln(5)
+
+
 def _pdf_draw_aggregate_material_mix_table(
     pdf: FPDF,
     df: pd.DataFrame,
@@ -187,41 +209,51 @@ def _pdf_draw_fy_material_group_table(
 
     df_mix = df_work.copy()
     df_mix["_FY"] = df_mix["FINANCIAL_YEAR"].astype(str).str.strip()
-    fill = False
 
     if len(fy_compare) == 2:
         fy0, fy1 = fy_compare[0], fy_compare[1]
         fy_totals = {fy: float(df_mix.loc[df_mix["_FY"] == fy, "AMOUNT"].sum()) for fy in (fy0, fy1)}
         mix = df_mix.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(max_categories)
         w_num, w_cat, w_r1, w_s1, w_r2, w_s2, w_y = 7, 60, 27, 15, 27, 15, 20
-        pdf.set_font("Arial", "B", 7)
-        pdf.set_fill_color(218, 165, 32)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(w_num, 9, "#", 1, 0, "C", True)
-        pdf.cell(w_cat, 9, "Product Category", 1, 0, "L", True)
-        pdf.cell(w_r1, 9, _pdf_text(f"{fy0} Rev")[:24], 1, 0, "R", True)
-        pdf.cell(w_s1, 9, _pdf_text(f"{fy0} %")[:12], 1, 0, "R", True)
-        pdf.cell(w_r2, 9, _pdf_text(f"{fy1} Rev")[:24], 1, 0, "R", True)
-        pdf.cell(w_s2, 9, _pdf_text(f"{fy1} %")[:12], 1, 0, "R", True)
-        pdf.cell(w_y, 9, "YoY Rev %", 1, 1, "R", True)
-        pdf.set_font("Arial", "", 8)
-        pdf.set_text_color(0, 0, 0)
+        row_h = 7
+        hdr_h = 9
+        footer_block_h = 21.0  # subtotal + total rows (3 x 7mm)
+
+        def fy2_header() -> None:
+            pdf.set_font("Arial", "B", 7)
+            pdf.set_fill_color(218, 165, 32)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(w_num, hdr_h, "#", 1, 0, "C", True)
+            pdf.cell(w_cat, hdr_h, "Product Category", 1, 0, "L", True)
+            pdf.cell(w_r1, hdr_h, _pdf_text(f"{fy0} Rev")[:24], 1, 0, "R", True)
+            pdf.cell(w_s1, hdr_h, _pdf_text(f"{fy0} %")[:12], 1, 0, "R", True)
+            pdf.cell(w_r2, hdr_h, _pdf_text(f"{fy1} Rev")[:24], 1, 0, "R", True)
+            pdf.cell(w_s2, hdr_h, _pdf_text(f"{fy1} %")[:12], 1, 0, "R", True)
+            pdf.cell(w_y, hdr_h, "YoY Rev %", 1, 1, "R", True)
+            pdf.set_font("Arial", "", 8)
+            pdf.set_text_color(0, 0, 0)
+
         if not mix.empty and sum(fy_totals.values()) > 0:
+            fy2_header()
             for i, cat in enumerate(mix.index, 1):
+                if pdf.get_y() + row_h > pdf.h - pdf.b_margin - footer_block_h:
+                    pdf.add_page()
+                    fy2_header()
                 r0 = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == fy0), "AMOUNT"].sum())
                 r1 = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == fy1), "AMOUNT"].sum())
                 s0 = (r0 / fy_totals[fy0] * 100.0) if fy_totals.get(fy0, 0) > 0 else 0.0
                 s1 = (r1 / fy_totals[fy1] * 100.0) if fy_totals.get(fy1, 0) > 0 else 0.0
                 yoy = _rev_yoy_pct(r0, r1)
-                pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-                pdf.cell(w_num, 7, str(i), 1, 0, "C", fill)
-                pdf.cell(w_cat, 7, _pdf_text(str(cat))[:48], 1, 0, "L", fill)
-                pdf.cell(w_r1, 7, format_currency_pdf(r0), 1, 0, "R", fill)
-                pdf.cell(w_s1, 7, f"{s0:.1f}%", 1, 0, "R", fill)
-                pdf.cell(w_r2, 7, format_currency_pdf(r1), 1, 0, "R", fill)
-                pdf.cell(w_s2, 7, f"{s1:.1f}%", 1, 0, "R", fill)
-                pdf.cell(w_y, 7, _pdf_text(yoy), 1, 1, "R", fill)
-                fill = not fill
+                row_fill = i % 2 == 0
+                pdf.set_fill_color(248, 249, 250) if row_fill else pdf.set_fill_color(255, 255, 255)
+                pdf.cell(w_num, row_h, str(i), 1, 0, "C", row_fill)
+                pdf.cell(w_cat, row_h, _pdf_text(str(cat))[:48], 1, 0, "L", row_fill)
+                pdf.cell(w_r1, row_h, format_currency_pdf(r0), 1, 0, "R", row_fill)
+                pdf.cell(w_s1, row_h, f"{s0:.1f}%", 1, 0, "R", row_fill)
+                pdf.cell(w_r2, row_h, format_currency_pdf(r1), 1, 0, "R", row_fill)
+                pdf.cell(w_s2, row_h, f"{s1:.1f}%", 1, 0, "R", row_fill)
+                pdf.cell(w_y, row_h, _pdf_text(yoy), 1, 1, "R", row_fill)
+            _pdf_need_space(pdf, footer_block_h)
             # Subtotal = sum of rows shown; aggregate % = share of each FY total captured by those rows
             cats = list(mix.index)
             sub0 = float(
@@ -266,30 +298,41 @@ def _pdf_draw_fy_material_group_table(
     w_cat = 38
     rem = 187 - w_num - w_cat - w_yoy
     w_rev_each = max(18, rem / max(nfy, 1))
-    pdf.set_font("Arial", "B", 6)
-    pdf.set_fill_color(218, 165, 32)
-    pdf.set_text_color(255, 255, 255)
-    pdf.cell(w_num, 9, "#", 1, 0, "C", True)
-    pdf.cell(w_cat, 9, "Product Category", 1, 0, "L", True)
-    for fy in fy_compare:
-        pdf.cell(w_rev_each, 9, _pdf_text(f"{fy} Rev")[:18], 1, 0, "R", True)
-    pdf.cell(w_yoy, 9, "YoY (last vs prev)", 1, 1, "R", True)
-    pdf.set_font("Arial", "", 7)
-    pdf.set_text_color(0, 0, 0)
+    row_h = 7
+    hdr_h = 9
+    footer_block_h = 21.0
     f_prev, f_last = fy_compare[-2], fy_compare[-1]
+
+    def fyn_header() -> None:
+        pdf.set_font("Arial", "B", 6)
+        pdf.set_fill_color(218, 165, 32)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(w_num, hdr_h, "#", 1, 0, "C", True)
+        pdf.cell(w_cat, hdr_h, "Product Category", 1, 0, "L", True)
+        for fy in fy_compare:
+            pdf.cell(w_rev_each, hdr_h, _pdf_text(f"{fy} Rev")[:18], 1, 0, "R", True)
+        pdf.cell(w_yoy, hdr_h, "YoY (last vs prev)", 1, 1, "R", True)
+        pdf.set_font("Arial", "", 7)
+        pdf.set_text_color(0, 0, 0)
+
     if not mix.empty and sum(fy_totals.values()) > 0:
+        fyn_header()
         for i, cat in enumerate(mix.index, 1):
-            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-            pdf.cell(w_num, 7, str(i), 1, 0, "C", fill)
-            pdf.cell(w_cat, 7, _pdf_text(str(cat))[:36], 1, 0, "L", fill)
+            if pdf.get_y() + row_h > pdf.h - pdf.b_margin - footer_block_h:
+                pdf.add_page()
+                fyn_header()
+            row_fill = i % 2 == 0
+            pdf.set_fill_color(248, 249, 250) if row_fill else pdf.set_fill_color(255, 255, 255)
+            pdf.cell(w_num, row_h, str(i), 1, 0, "C", row_fill)
+            pdf.cell(w_cat, row_h, _pdf_text(str(cat))[:36], 1, 0, "L", row_fill)
             rv_prev = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == f_prev), "AMOUNT"].sum())
             rv_last = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == f_last), "AMOUNT"].sum())
             for fy in fy_compare:
                 r = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == fy), "AMOUNT"].sum())
-                pdf.cell(w_rev_each, 7, format_currency_pdf(r), 1, 0, "R", fill)
+                pdf.cell(w_rev_each, row_h, format_currency_pdf(r), 1, 0, "R", row_fill)
             yoy = _rev_yoy_pct(rv_prev, rv_last)
-            pdf.cell(w_yoy, 7, _pdf_text(yoy), 1, 1, "R", fill)
-            fill = not fill
+            pdf.cell(w_yoy, row_h, _pdf_text(yoy), 1, 1, "R", row_fill)
+        _pdf_need_space(pdf, footer_block_h + 14.0)
         cats = list(mix.index)
         pdf.set_font("Arial", "B", 7)
         pdf.set_fill_color(255, 248, 220)
@@ -761,7 +804,7 @@ def _generate_dynamic_pdf_report_inner(
     )
 
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_auto_page_break(auto=True, margin=22)
 
     if df.empty:
         pdf.set_font("Arial", "B", 14)
@@ -814,11 +857,15 @@ def _generate_dynamic_pdf_report_inner(
     primary_col = _dim_to_col(df, primary_dimension)
     secondary_col = _dim_to_col(df, secondary_dimension) if secondary_dimension else None
 
+    trend_drawn = False
+    share_drawn = False
+
     # Trend (monthly)
     if include_trend and "DATE" in df.columns and "AMOUNT" in df.columns:
         pdf.set_font("Arial", "B", 12)
         pdf.set_text_color(0, 0, 0)
         pdf.cell(0, 8, "2. Monthly Trend", 0, 1)
+        _pdf_need_space(pdf, 98.0)
         trend = df.groupby(pd.Grouper(key="DATE", freq="ME"))["AMOUNT"].sum().reset_index()
         trend["DATE"] = pd.to_datetime(trend["DATE"], errors="coerce")
         trend = trend.sort_values("DATE").tail(24)
@@ -836,9 +883,13 @@ def _generate_dynamic_pdf_report_inner(
         pdf.image(img, x=10, w=185)
         os.remove(img)
         pdf.ln(3)
+        trend_drawn = True
 
     # Share chart
     if include_share and primary_col:
+        if trend_drawn:
+            _pdf_section_rule(pdf)
+            pdf.add_page()
         pdf.set_font("Arial", "B", 12)
         pdf.cell(0, 8, _pdf_text(f"3. Revenue Share by {primary_col}"), 0, 1)
         s = _safe_top_series(df, primary_col, "AMOUNT", top_n=max(3, int(top_n)))
@@ -863,12 +914,17 @@ def _generate_dynamic_pdf_report_inner(
             ax.legend(wedges, [str(x)[:22] for x in s.index], loc="center left", bbox_to_anchor=(1, 0, 0.5, 1), fontsize=8)
             ax.set_title(f"Revenue share by {primary_col}", fontsize=12, fontweight="bold", pad=12)
             img = create_chart(fig)
+            _pdf_need_space(pdf, 102.0)
             pdf.image(img, x=10, w=175)
             os.remove(img)
             pdf.ln(3)
+            share_drawn = True
 
     # Top table
     if include_top_table and primary_col:
+        if share_drawn or trend_drawn:
+            _pdf_section_rule(pdf)
+            pdf.add_page()
         pdf.set_font("Arial", "B", 12)
         pdf.cell(0, 8, _pdf_text(f"4. Top {max(3, int(top_n))} by Revenue ({primary_col})"), 0, 1)
         grp = df.groupby(primary_col).agg(
@@ -877,23 +933,30 @@ def _generate_dynamic_pdf_report_inner(
             Customers=("CUSTOMER_NAME", "nunique") if "CUSTOMER_NAME" in df.columns else ("AMOUNT", "size"),
         ).sort_values("Revenue", ascending=False).head(max(3, int(top_n))).reset_index()
 
-        pdf.set_font("Arial", "B", 9)
-        pdf.set_fill_color(33, 37, 41)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(85, 8, _pdf_text(primary_col.replace("_", " ").title()), 0, 0, "L", 1)
-        pdf.cell(40, 8, "Revenue", 0, 0, "R", 1)
-        pdf.cell(30, 8, "Orders", 0, 0, "R", 1)
-        pdf.cell(30, 8, "Customers", 0, 1, "R", 1)
-        pdf.set_font("Arial", "", 9)
-        pdf.set_text_color(0, 0, 0)
-        fill = False
+        def _dyn_top_header() -> None:
+            pdf.set_font("Arial", "B", 9)
+            pdf.set_fill_color(33, 37, 41)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(85, 8, _pdf_text(primary_col.replace("_", " ").title()), 0, 0, "L", 1)
+            pdf.cell(40, 8, "Revenue", 0, 0, "R", 1)
+            pdf.cell(30, 8, "Orders", 0, 0, "R", 1)
+            pdf.cell(30, 8, "Customers", 0, 1, "R", 1)
+            pdf.set_font("Arial", "", 9)
+            pdf.set_text_color(0, 0, 0)
+
+        _dyn_top_header()
+        tr_i = 0
         for _, row in grp.iterrows():
+            if pdf.get_y() + 9 > pdf.h - pdf.b_margin:
+                pdf.add_page()
+                _dyn_top_header()
+            tr_i += 1
+            fill = tr_i % 2 == 0
             pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(85, 7, _pdf_text(row[primary_col])[:45], 0, 0, "L", fill)
             pdf.cell(40, 7, format_currency_pdf(float(row["Revenue"])), 0, 0, "R", fill)
             pdf.cell(30, 7, str(int(row["Orders"])), 0, 0, "R", fill)
             pdf.cell(30, 7, str(int(row["Customers"])), 0, 1, "R", fill)
-            fill = not fill
         pdf.ln(2)
 
     # Material groups by FY when multiple fiscal years are selected (dynamic report)
@@ -906,6 +969,8 @@ def _generate_dynamic_pdf_report_inner(
     )
     if len(fy_dyn) >= 2 and grp_m and grp_m in df_dyn_fy.columns and "AMOUNT" in df_dyn_fy.columns:
         pdf.ln(3)
+        _pdf_section_rule(pdf)
+        pdf.add_page()
         pdf.set_font("Arial", "B", 12)
         pdf.cell(0, 8, "Material groups by financial year (comparison)", 0, 1)
         pdf.set_font("Arial", "", 8)
@@ -1375,7 +1440,7 @@ def _generate_distributor_strategy_pdf_inner(
     product_categories = int(df[grp_col].nunique()) if grp_col in df.columns else 0
 
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_auto_page_break(auto=True, margin=22)
 
     # Performance summary header bar
     pdf.set_fill_color(33, 37, 41)
@@ -1417,6 +1482,7 @@ def _generate_distributor_strategy_pdf_inner(
         and grp_col in df_work.columns
         and "AMOUNT" in df_work.columns
     )
+    _pdf_need_space(pdf, 100.0 if use_fy_breakdown else 72.0)
 
     # Product mix analysis
     pdf.set_font("Arial", "B", 12)
@@ -1432,6 +1498,8 @@ def _generate_distributor_strategy_pdf_inner(
         _pdf_draw_aggregate_material_mix_table(pdf, df, grp_col, total_rev, max_rows=9)
 
     pdf.ln(6)
+    _pdf_section_rule(pdf)
+    pdf.add_page()
 
     # Strategic recommendations
     pdf.set_font("Arial", "B", 12)
@@ -1631,7 +1699,7 @@ def _generate_pdf_report_inner(
     print("PDF_GEN - Cover page done. Adding main page...", flush=True); sys.stdout.flush()
     
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_auto_page_break(auto=True, margin=22)
     
     title_text = f"Report: {report_type}"
     sub_title = "Performance Overview" if report_type == "Executive Summary" else "Fiscal Year Overview"
@@ -1735,6 +1803,7 @@ def _generate_pdf_report_inner(
         img_path = create_chart(fig)
         print("PDF_GEN - Trend chart saved.", flush=True); sys.stdout.flush()
         
+        _pdf_need_space(pdf, 118.0)
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 10, "2. Revenue Trend", 0, 1)
         pdf.image(img_path, x=10, w=185)
@@ -1742,10 +1811,11 @@ def _generate_pdf_report_inner(
         pdf.ln(5)
 
     print("PDF_GEN - Starting Page 2: Distribution...", flush=True); sys.stdout.flush()
-    # --- Page 2: Distribution ---
+    # --- Page 2+: Distribution (category pie optional) ---
     pdf.add_page()
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
     item_col = "ITEMNAME" if "ITEMNAME" in df.columns else "MATERIALGROUP"
+    pie_drawn = False
     
     if grp_col in df.columns:
         pdf.set_font("Arial", 'B', 12)
@@ -1776,12 +1846,19 @@ def _generate_pdf_report_inner(
         
         img_path = create_chart(fig)
         
+        _pdf_need_space(pdf, 125.0)
         pdf.image(img_path, x=10, w=180)
         os.remove(img_path)
         pdf.ln(5)
+        _pdf_section_rule(pdf)
+        pie_drawn = True
 
     print("PDF_GEN - Starting Horizontal Bar chart...", flush=True); sys.stdout.flush()
-    # Top items Horizontal Bar
+    # Top 10 bar: new page only after a pie chart (otherwise use the same page)
+    if pie_drawn:
+        pdf.add_page()
+    else:
+        _pdf_need_space(pdf, 115.0)
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 10, f"4. Top 10 High Volume Items", 0, 1)
     top_items = df.groupby(item_col)["AMOUNT"].sum().sort_values(ascending=False).head(10)
@@ -1808,40 +1885,45 @@ def _generate_pdf_report_inner(
     fig.tight_layout()
     img_path = create_chart(fig)
     
+    _pdf_need_space(pdf, 108.0)
     pdf.image(img_path, x=10, w=185)
     os.remove(img_path)
     pdf.ln(10)
+    _pdf_section_rule(pdf)
 
-    # 6. Detailed Breakdown Table
+    # Detailed Breakdown Table (dedicated page; long tables use header repeat on overflow)
+    pdf.add_page()
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "5. Detailed Breakdown", 0, 1)
     
-    # Table Header (Dark Theme)
-    pdf.set_font("Arial", 'B', 9)
-    pdf.set_fill_color(33, 37, 41)
-    pdf.set_text_color(255, 255, 255)
-    pdf.cell(95, 10, "Item Description", 0, 0, 'L', 1)
-    pdf.cell(45, 10, "Category", 0, 0, 'L', 1)
-    pdf.cell(45, 10, "Revenue", 0, 1, 'R', 1)
-    
-    pdf.set_font("Arial", '', 9)
-    pdf.set_text_color(0, 0, 0)
-    
-    # Top 25 items for table
+    # Top 25 items for table (header repeated after each automatic page break)
     detailed_data = df.groupby([item_col, grp_col])["AMOUNT"].sum().reset_index().sort_values(by="AMOUNT", ascending=False).head(25)
-    
-    fill = False
+
+    def _detailed_table_header() -> None:
+        pdf.set_font("Arial", 'B', 9)
+        pdf.set_fill_color(33, 37, 41)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(95, 10, "Item Description", 0, 0, 'L', 1)
+        pdf.cell(45, 10, "Category", 0, 0, 'L', 1)
+        pdf.cell(45, 10, "Revenue", 0, 1, 'R', 1)
+        pdf.set_font("Arial", '', 9)
+        pdf.set_text_color(0, 0, 0)
+
+    _detailed_table_header()
+    row_i = 0
     for idx, row in detailed_data.iterrows():
-        pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-        
+        if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+            pdf.add_page()
+            _detailed_table_header()
+        row_i += 1
+        fill = row_i % 2 == 0
         name = str(row[item_col])[:55]
         grp = str(row[grp_col])[:20]
         amt = format_currency_pdf(row["AMOUNT"])
-        
+        pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
         pdf.cell(95, 8, name, 0, 0, 'L', fill)
         pdf.cell(45, 8, grp, 0, 0, 'L', fill)
         pdf.cell(45, 8, amt, 0, 1, 'R', fill)
-        fill = not fill
         
     pdf.ln(5)
     pdf.set_draw_color(200, 200, 200)
@@ -1852,35 +1934,40 @@ def _generate_pdf_report_inner(
     if "FINANCIAL_YEAR" in df.columns:
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "5. Fiscal Year (FY) Analysis", 0, 1)
+        pdf.cell(0, 10, "6. Fiscal Year (FY) Analysis", 0, 1)
         pdf.ln(2)
 
         fy_stats = df.groupby("FINANCIAL_YEAR").agg(Revenue=("AMOUNT", "sum"), Orders=("INVOICE_NO", "nunique")).sort_index()
 
-        pdf.set_font("Arial", 'B', 10)
-        pdf.set_fill_color(33, 37, 41)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(40, 10, "Fiscal Year", 0, 0, 'C', 1)
-        pdf.cell(50, 10, "Total Revenue", 0, 0, 'C', 1)
-        pdf.cell(40, 10, "Total Orders", 0, 0, 'C', 1)
-        pdf.cell(50, 10, "YoY Growth", 0, 1, 'C', 1)
+        def _fy_stats_header() -> None:
+            pdf.set_font("Arial", 'B', 10)
+            pdf.set_fill_color(33, 37, 41)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(40, 10, "Fiscal Year", 0, 0, 'C', 1)
+            pdf.cell(50, 10, "Total Revenue", 0, 0, 'C', 1)
+            pdf.cell(40, 10, "Total Orders", 0, 0, 'C', 1)
+            pdf.cell(50, 10, "YoY Growth", 0, 1, 'C', 1)
+            pdf.set_font("Arial", '', 10)
+            pdf.set_text_color(0, 0, 0)
 
-        pdf.set_font("Arial", '', 10)
-        pdf.set_text_color(0, 0, 0)
-
+        _fy_stats_header()
         prev_rev = 0
-        fill = False
+        fy_i = 0
         for fy, row in fy_stats.iterrows():
-            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+            if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                pdf.add_page()
+                _fy_stats_header()
+            fy_i += 1
+            fill = fy_i % 2 == 0
             growth = ((row["Revenue"] - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
             growth_str = f"{growth:+.1f}%" if prev_rev > 0 else "-"
 
+            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(40, 8, fy, 0, 0, "C", fill)
             pdf.cell(50, 8, format_currency_pdf(row["Revenue"]), 0, 0, "R", fill)
             pdf.cell(40, 8, str(row["Orders"]), 0, 0, "C", fill)
             pdf.cell(50, 8, growth_str, 0, 1, "C", fill)
             prev_rev = row["Revenue"]
-            fill = not fill
         pdf.ln(5)
 
         # FY Comparison Chart (Multi-line Year-over-Year)
@@ -1911,6 +1998,7 @@ def _generate_pdf_report_inner(
 
                 img_path = create_chart(fig)
 
+                _pdf_need_space(pdf, 108.0)
                 pdf.image(img_path, x=10, w=185)
                 os.remove(img_path)
                 pdf.ln(5)
@@ -1925,7 +2013,7 @@ def _generate_pdf_report_inner(
     ):
         pdf.add_page()
         pdf.set_font("Arial", "B", 14)
-        pdf.cell(0, 10, "Material groups by financial year (comparison)", 0, 1)
+        pdf.cell(0, 10, "7. Material groups by financial year (comparison)", 0, 1)
         pdf.set_font("Arial", "", 9)
         pdf.set_text_color(100, 100, 100)
         pdf.cell(
@@ -1940,9 +2028,10 @@ def _generate_pdf_report_inner(
         _pdf_draw_fy_material_group_table(pdf, _df_fy, grp_col, _fy_filter_list, max_categories=9)
         pdf.ln(5)
 
-    # 8. Material Group Deep Dive
+    # Material Group Deep Dive (always start on a new page so it never runs under the FY tables/charts)
+    pdf.add_page()
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "6. Material Group Deep Dive", 0, 1)
+    pdf.cell(0, 10, "8. Material Group Deep Dive", 0, 1)
     pdf.ln(5)
 
     if grp_col in df.columns:
@@ -1975,7 +2064,7 @@ def _generate_pdf_report_inner(
     if report_type == "Customer Wise":
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "7. Material Group Preference", 0, 1)
+        pdf.cell(0, 10, "9. Material Group Preference", 0, 1)
         pdf.ln(5)
 
         if len(_fy_filter_list) >= 2 and grp_col in _df_fy.columns:
@@ -2008,7 +2097,7 @@ def _generate_pdf_report_inner(
     if report_type == "Material Group Wise":
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "7. Top 10 Customers", 0, 1)
+        pdf.cell(0, 10, "9. Top 10 Customers", 0, 1)
         pdf.ln(5)
         
         if "CUSTOMER_NAME" in df.columns:

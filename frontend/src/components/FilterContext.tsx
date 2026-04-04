@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, type Dispatch, type SetStateAction } from "react";
 
 const FILTER_STORAGE_KEY = "elettro_filter_view";
 
@@ -27,7 +27,7 @@ interface FilterContextType {
     selectedMonths: string[];
     setSelectedMonths: (v: string[]) => void;
     selectedItems: string[];
-    setSelectedItems: (v: string[]) => void;
+    setSelectedItems: Dispatch<SetStateAction<string[]>>;
     saveCurrentView: (name: string) => void;
     loadView: (name: string) => void;
     savedViewNames: string[];

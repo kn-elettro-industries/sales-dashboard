@@ -45,7 +45,8 @@ node_modules/
 # Generated test PDFs (anywhere in repo)
 backend/*.pdf
 *.pdf
-reports/
+# Generated report output at repo root only (do not use plain "reports/" — it ignores Next.js app route frontend/src/app/reports/)
+/reports/
 
 # Scratch / debug scripts
 backend/check_app.py

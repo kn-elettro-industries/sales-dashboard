@@ -1623,6 +1623,16 @@ def _generate_pdf_report_inner(
 ) -> bytes:
     import sys
     print("PDF_GEN - ENTERED generate_pdf_report", flush=True); sys.stdout.flush()
+
+    # UI / API may send alternate labels; normalize so filters match and layout is consistent
+    _rt_raw = (report_type or "").strip()
+    _report_aliases = {
+        "Region Wise": "State Wise",
+        "Regional": "State Wise",
+        "State / Region Wise": "State Wise",
+        "State/Region Wise": "State Wise",
+    }
+    report_type = _report_aliases.get(_rt_raw, _rt_raw)
     
     # 1. Apply Secondary Filters (Advanced Context)
     if filter_customer and filter_customer != "All" and "CUSTOMER_NAME" in df.columns:
@@ -2042,6 +2052,7 @@ def _generate_pdf_report_inner(
         ).sort_values(by="Total_Revenue", ascending=False).head(8) 
         
         for group_name, row in group_summary.iterrows():
+            _pdf_need_space(pdf, 24.0)
             pdf.set_font("Arial", 'B', 11)
             pdf.set_fill_color(33, 37, 41)
             pdf.set_text_color(255, 255, 255)
@@ -2077,21 +2088,26 @@ def _generate_pdf_report_inner(
         else:
             mat_grp_data = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(15)
 
-            pdf.set_font("Arial", 'B', 10)
-            pdf.set_fill_color(33, 37, 41)
-            pdf.set_text_color(255, 255, 255)
-            pdf.cell(120, 10, "Material Group", 0, 0, 'L', 1)
-            pdf.cell(50, 10, "Revenue", 0, 1, 'R', 1)
+            def _cust_pref_mg_header() -> None:
+                pdf.set_font("Arial", 'B', 10)
+                pdf.set_fill_color(33, 37, 41)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(120, 10, "Material Group", 0, 0, 'L', 1)
+                pdf.cell(50, 10, "Revenue", 0, 1, 'R', 1)
+                pdf.set_font("Arial", '', 10)
+                pdf.set_text_color(0, 0, 0)
 
-            pdf.set_font("Arial", '', 10)
-            pdf.set_text_color(0, 0, 0)
-
-            fill = False
+            _cust_pref_mg_header()
+            mg_i = 0
             for grp, amt in mat_grp_data.items():
+                if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                    pdf.add_page()
+                    _cust_pref_mg_header()
+                mg_i += 1
+                fill = mg_i % 2 == 0
                 pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
                 pdf.cell(120, 8, str(grp)[:60], 0, 0, 'L', fill)
                 pdf.cell(50, 8, format_currency_pdf(amt), 0, 1, 'R', fill)
-                fill = not fill
 
     # 10. Material Group Specific Enhancement: Top Customers
     if report_type == "Material Group Wise":
@@ -2103,21 +2119,26 @@ def _generate_pdf_report_inner(
         if "CUSTOMER_NAME" in df.columns:
             cust_data = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(15)
             
-            pdf.set_font("Arial", 'B', 10)
-            pdf.set_fill_color(33, 37, 41)
-            pdf.set_text_color(255, 255, 255)
-            pdf.cell(120, 10, "Customer Name", 0, 0, 'L', 1)
-            pdf.cell(50, 10, "Revenue", 0, 1, 'R', 1)
-            
-            pdf.set_font("Arial", '', 10)
-            pdf.set_text_color(0, 0, 0)
-            
-            fill = False
+            def _mg_top_cust_header() -> None:
+                pdf.set_font("Arial", 'B', 10)
+                pdf.set_fill_color(33, 37, 41)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(120, 10, "Customer Name", 0, 0, 'L', 1)
+                pdf.cell(50, 10, "Revenue", 0, 1, 'R', 1)
+                pdf.set_font("Arial", '', 10)
+                pdf.set_text_color(0, 0, 0)
+
+            _mg_top_cust_header()
+            cu_i = 0
             for cust, amt in cust_data.items():
+                if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                    pdf.add_page()
+                    _mg_top_cust_header()
+                cu_i += 1
+                fill = cu_i % 2 == 0
                 pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
                 pdf.cell(120, 8, str(cust)[:60], 0, 0, 'L', fill)
                 pdf.cell(50, 8, format_currency_pdf(amt), 0, 1, 'R', fill)
-                fill = not fill
 
     # --- Final Page: Insights ---
     # ── SUMMARY ANALYSIS PAGE (All Report Types) ──
@@ -2163,28 +2184,35 @@ def _generate_pdf_report_inner(
     
     # Top 5 Customers
     if "CUSTOMER_NAME" in df.columns:
-        pdf.set_font("Arial", 'B', 12)
-        pdf.set_fill_color(33, 37, 41)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 8, "  TOP 5 CUSTOMERS", 0, 1, 'L', 1)
-        pdf.set_text_color(0, 0, 0)
-        pdf.set_font("Arial", '', 10)
-        pdf.ln(2)
-        
+        def _mgmt_top5_cust_header() -> None:
+            pdf.set_font("Arial", 'B', 12)
+            pdf.set_fill_color(33, 37, 41)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(0, 8, "  TOP 5 CUSTOMERS", 0, 1, 'L', 1)
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_font("Arial", '', 10)
+            pdf.ln(2)
+
+        _mgmt_top5_cust_header()
         top5_cust = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(5)
-        fill = False
+        tc_i = 0
         for i, (cust, amt) in enumerate(top5_cust.items(), 1):
+            if pdf.get_y() + 9 > pdf.h - pdf.b_margin:
+                pdf.add_page()
+                _mgmt_top5_cust_header()
+            tc_i += 1
+            fill = tc_i % 2 == 0
             share = (amt / total_rev * 100) if total_rev > 0 else 0
             pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(10, 7, f"{i}.", 0, 0, 'C', fill)
             pdf.cell(100, 7, str(cust)[:50], 0, 0, 'L', fill)
             pdf.cell(40, 7, format_currency_pdf(amt), 0, 0, 'R', fill)
             pdf.cell(30, 7, f"{share:.1f}%", 0, 1, 'R', fill)
-            fill = not fill
         pdf.ln(5)
     
     # Top 5 Material Groups (or FY comparison when multiple FYs selected)
     if grp_col in df.columns:
+        _pdf_need_space(pdf, 55.0)
         pdf.set_font("Arial", 'B', 12)
         pdf.set_fill_color(33, 37, 41)
         pdf.set_text_color(255, 255, 255)
@@ -2198,18 +2226,29 @@ def _generate_pdf_report_inner(
             _pdf_draw_fy_material_group_table(pdf, _df_fy, grp_col, _fy_filter_list, max_categories=5)
         else:
             top5_grp = df.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(5)
-            fill = False
+            tg_i = 0
             for i, (grp, amt) in enumerate(top5_grp.items(), 1):
+                if pdf.get_y() + 9 > pdf.h - pdf.b_margin:
+                    pdf.add_page()
+                    pdf.set_font("Arial", 'B', 12)
+                    pdf.set_fill_color(33, 37, 41)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(0, 8, "  TOP 5 MATERIAL GROUPS (continued)", 0, 1, 'L', 1)
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.set_font("Arial", '', 10)
+                    pdf.ln(2)
+                tg_i += 1
+                fill = tg_i % 2 == 0
                 share = (amt / total_rev * 100) if total_rev > 0 else 0
                 pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
                 pdf.cell(10, 7, f"{i}.", 0, 0, 'C', fill)
                 pdf.cell(100, 7, str(grp)[:50], 0, 0, 'L', fill)
                 pdf.cell(40, 7, format_currency_pdf(amt), 0, 0, 'R', fill)
                 pdf.cell(30, 7, f"{share:.1f}%", 0, 1, 'R', fill)
-                fill = not fill
         pdf.ln(5)
     
     # Auto-Generated Insights
+    _pdf_need_space(pdf, 28.0)
     pdf.set_font("Arial", 'B', 12)
     pdf.set_fill_color(33, 37, 41)
     pdf.set_text_color(255, 255, 255)
@@ -2247,13 +2286,15 @@ def _generate_pdf_report_inner(
         insights.append(f"GEOGRAPHY: Active across {num_states} states. Top state: {top_state}.")
 
     for insight in insights:
-        pdf.set_font("Arial", 'B', 9)
-        pdf.cell(5, 7, "", 0, 0)
+        _pdf_need_space(pdf, 14.0)
+        pdf.set_x(10)
         if ":" in insight:
-            pdf.cell(0, 7, insight, 0, 1, 'L')
+            pdf.set_font("Arial", 'B', 9)
+            pdf.multi_cell(0, 5, _pdf_text(insight), 0, 'L')
         else:
             pdf.set_font("Arial", '', 9)
-            pdf.cell(0, 7, insight, 0, 1, 'L')
+            pdf.multi_cell(0, 5, _pdf_text(insight), 0, 'L')
+        pdf.ln(1)
 
     return _pdf_to_bytes(pdf)
 

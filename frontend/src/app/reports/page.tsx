@@ -9,11 +9,12 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatAmount, formatCr } from "@/lib/format";
 
+/** Second column on Export tab: Executive Summary shows an info panel; other PDFs use global filters only (no single-entity picker). */
 const REPORT_TYPES = [
-    { id: "Executive Summary", label: "Executive Summary (All Data)", icon: FileText, needsEntity: false },
-    { id: "Distributor Strategy Report", label: "Distributor Strategy Report", icon: FileText, needsEntity: true },
-    { id: "State Wise", label: "State/Region Deep Dive", icon: FileText, needsEntity: true },
-    { id: "Material Group Wise", label: "Material Category Deep Dive", icon: FileText, needsEntity: true },
+    { id: "Executive Summary", label: "Executive Summary (All Data)", icon: FileText, showTargetEntitySection: true },
+    { id: "Distributor Strategy Report", label: "Distributor Strategy Report", icon: FileText, showTargetEntitySection: false },
+    { id: "State Wise", label: "State/Region Deep Dive", icon: FileText, showTargetEntitySection: false },
+    { id: "Material Group Wise", label: "Material Category Deep Dive", icon: FileText, showTargetEntitySection: false },
 ];
 
 const DYNAMIC_DIMENSIONS = [
@@ -42,14 +43,11 @@ export default function ReportsPage() {
     // Export State
     const [downloading, setDownloading] = useState(false);
     const [selectedReport, setSelectedReport] = useState("Executive Summary");
-    const [selectedEntity, setSelectedEntity] = useState("All");
     const [filterCustomer, setFilterCustomer] = useState("All");
     const [filterState, setFilterState] = useState("All");
     const [filterMaterial, setFilterMaterial] = useState("All");
-    const [entityOptions, setEntityOptions] = useState<string[]>([]);
     const [customerOptions, setCustomerOptions] = useState<string[]>([]);
     const [stateOptions, setStateOptions] = useState<string[]>([]);
-    const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
     // Dynamic (Streamlit-like) builder state
     const [dynPrimary, setDynPrimary] = useState("customer");
@@ -173,51 +171,6 @@ export default function ReportsPage() {
         loadDocs();
     }, [activeTab, baseReportParams]);
 
-    // Fetch dynamic options based on selected report type (uses global filters via baseReportParams)
-    useEffect(() => {
-        if (activeTab !== 'export') return;
-
-        const loadOptions = async () => {
-            const report = REPORT_TYPES.find(r => r.id === selectedReport);
-            if (!report?.needsEntity) {
-                setEntityOptions([]);
-                setSelectedEntity("All");
-                return;
-            }
-
-            setIsLoadingOptions(true);
-            try {
-                if (selectedReport === "Distributor Strategy Report") {
-                    if (customerOptions.length > 0) {
-                        setEntityOptions(customerOptions);
-                    } else {
-                        const data = await fetchAllCustomers({ tenant });
-                        setEntityOptions(data.map((c: any) => c.CUSTOMER_NAME).filter(Boolean).sort());
-                    }
-                } else if (selectedReport === "State Wise") {
-                    const data = await fetchStateData(baseReportParams);
-                    const names = [...new Set(data.map((s: any) => s.STATE).filter(Boolean))].sort((a, b) =>
-                        String(a).localeCompare(String(b))
-                    ) as string[];
-                    setEntityOptions(names);
-                } else if (selectedReport === "Material Group Wise") {
-                    const data = await fetchMaterialPerformance(baseReportParams);
-                    const names = [...new Set(
-                        data.map((r: any) => r.ITEM_NAME_GROUP ?? r.MATERIALGROUP ?? r.name).filter(Boolean)
-                    )].sort((a, b) => String(a).localeCompare(String(b))) as string[];
-                    setEntityOptions(names);
-                }
-            } catch (e) {
-                console.error("Failed to fetch entity options", e);
-            } finally {
-                setIsLoadingOptions(false);
-                setSelectedEntity("All");
-            }
-        };
-
-        loadOptions();
-    }, [activeTab, selectedReport, customerOptions, tenant, baseReportParams]);
-
     // Load Advanced Options once
     useEffect(() => {
         const loadAdvanced = async () => {
@@ -235,44 +188,24 @@ export default function ReportsPage() {
         loadAdvanced();
     }, [tenant]);
 
-    // Keep report-level filters in sync with global filters so user doesn't have to re-select
+    // Keep report-level filter dropdowns in sync with global filters (not used for single-entity PDF scope anymore)
     useEffect(() => {
-        // If exactly one customer selected globally, default isolate + entity to that
-        if (selectedCustomers.length === 1) {
-            if (filterCustomer === "All") {
-                setFilterCustomer(selectedCustomers[0]);
-            }
-            if (selectedReport === "Distributor Strategy Report" && selectedEntity === "All") {
-                setSelectedEntity(selectedCustomers[0]);
-            }
+        if (selectedCustomers.length === 1 && filterCustomer === "All") {
+            setFilterCustomer(selectedCustomers[0]);
         }
-        // If exactly one state selected globally
-        if (selectedStates.length === 1) {
-            if (filterState === "All") {
-                setFilterState(selectedStates[0]);
-            }
-            if (selectedReport === "State Wise" && selectedEntity === "All") {
-                setSelectedEntity(selectedStates[0]);
-            }
+        if (selectedStates.length === 1 && filterState === "All") {
+            setFilterState(selectedStates[0]);
         }
-        // If exactly one material group selected globally
-        if (selectedMaterialGroups.length === 1) {
-            if (filterMaterial === "All") {
-                setFilterMaterial(selectedMaterialGroups[0]);
-            }
-            if (selectedReport === "Material Group Wise" && selectedEntity === "All") {
-                setSelectedEntity(selectedMaterialGroups[0]);
-            }
+        if (selectedMaterialGroups.length === 1 && filterMaterial === "All") {
+            setFilterMaterial(selectedMaterialGroups[0]);
         }
     }, [
         selectedCustomers,
         selectedStates,
         selectedMaterialGroups,
-        selectedReport,
         filterCustomer,
         filterState,
         filterMaterial,
-        selectedEntity,
     ]);
 
     const handleDownload = async () => {
@@ -283,9 +216,6 @@ export default function ReportsPage() {
                 report_type: selectedReport,
             });
 
-            if (selectedEntity && selectedEntity !== "All") {
-                queryParams.append("specific_entity", selectedEntity);
-            }
             if (filterCustomer !== "All") queryParams.append("filter_customer", filterCustomer);
             if (filterState !== "All") queryParams.append("filter_state", filterState);
             if (filterMaterial !== "All") queryParams.append("filter_material", filterMaterial);
@@ -388,6 +318,40 @@ export default function ReportsPage() {
     // Formatting (platform units: Cr / L / K)
     const fmtCr = formatCr;
     const fmt = formatAmount;
+
+    const showTargetEntityColumn = REPORT_TYPES.find((r) => r.id === selectedReport)?.showTargetEntitySection ?? false;
+
+    const exportDownloadSection = (
+        <div className="border-t border-[#30363d] pt-6 space-y-3">
+            <p className="text-xs text-gray-500">
+                Respects <b className="text-gray-400">global filters</b> (date range, state, customer, material, etc.).
+            </p>
+            <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
+                className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg
+                    ${downloading
+                        ? "bg-[#30363d] text-gray-400 cursor-not-allowed shadow-none"
+                        : "bg-gradient-to-r from-[#b8860b] to-[#daa520] text-[#0d1117] hover:scale-[1.01] hover:shadow-[#daa520]/20"
+                    }
+                `}
+            >
+                {downloading ? (
+                    <>
+                        <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                        Generating Dynamic PDF...
+                    </>
+                ) : (
+                    <>
+                        <Download className="w-5 h-5 shrink-0" />
+                        Download Industrial Report
+                    </>
+                )}
+            </button>
+            <p className="text-xs text-gray-500 text-center">Large reports may take 15–30 seconds.</p>
+        </div>
+    );
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
@@ -597,14 +561,20 @@ export default function ReportsPage() {
             {activeTab === 'export' && (
                 <div className="animate-in fade-in duration-300">
                     <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 md:p-8">
-                        {/* Top row: step titles align on one baseline (desktop) */}
-                        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8 lg:mb-3">
+                        {/* Top row: step titles — second column only for Executive Summary (scope note + download there) */}
+                        <div
+                            className={`hidden lg:grid lg:gap-8 lg:mb-3 ${showTargetEntityColumn ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}
+                        >
                             <span className="text-sm font-medium text-gray-300 leading-5">1. Select Report Type</span>
-                            <span className="text-sm font-medium text-gray-300 leading-5">2. Select Target Entity</span>
+                            {showTargetEntityColumn && (
+                                <span className="text-sm font-medium text-gray-300 leading-5">2. Report scope</span>
+                            )}
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-8 items-start">
-                            {/* Column 1 — report types */}
+                        <div
+                            className={`grid grid-cols-1 gap-8 items-start ${showTargetEntityColumn ? "lg:grid-cols-2 lg:gap-8" : ""}`}
+                        >
+                            {/* Column 1 — report types (+ main download when no scope column) */}
                             <div className="flex flex-col gap-3 min-w-0">
                                 <label className="lg:hidden text-sm font-medium text-gray-300 leading-5">1. Select Report Type</label>
                                 <div className="grid gap-3">
@@ -731,78 +701,25 @@ export default function ReportsPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                {!showTargetEntityColumn && exportDownloadSection}
                             </div>
 
-                            {/* Column 2 — entity + main download */}
-                            <div className="flex flex-col gap-6 min-w-0">
-                                <div>
-                                    <label className="lg:hidden text-sm font-medium text-gray-300 leading-5 mb-2 block">2. Select Target Entity</label>
-
-                                    {REPORT_TYPES.find(r => r.id === selectedReport)?.needsEntity ? (
-                                        <div className="flex flex-col gap-3">
-                                            <select
-                                                value={selectedEntity}
-                                                onChange={(e) => setSelectedEntity(e.target.value)}
-                                                disabled={isLoadingOptions || entityOptions.length === 0}
-                                                className="w-full bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-3 outline-none focus:border-[#daa520] disabled:opacity-50 min-h-[3rem]"
-                                            >
-                                                <option value="All">Summary (All {selectedReport.split(' ')[0]}s)</option>
-                                                {entityOptions.map(opt => (
-                                                    <option key={opt} value={opt}>{opt}</option>
-                                                ))}
-                                            </select>
-
-                                            {isLoadingOptions && (
-                                                <p className="text-sm text-[#daa520] flex items-center gap-2">
-                                                    <Loader2 size={14} className="animate-spin shrink-0" />
-                                                    Loading options...
-                                                </p>
-                                            )}
-                                            {selectedEntity !== "All" && (
-                                                <div className="bg-[#2a2414] border border-[#daa520]/20 text-[#daa520] p-3 rounded-lg text-sm flex items-start gap-2 w-full">
-                                                    <Filter size={16} className="mt-0.5 shrink-0" />
-                                                    <p>This report will be <b>exclusively filtered</b> for {selectedEntity}, rendering a 4-page deep dive.</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
+                            {/* Column 2 — Executive Summary scope note + download (other PDFs use global filters only; no entity picker) */}
+                            {showTargetEntityColumn && (
+                                <div className="flex flex-col gap-6 min-w-0">
+                                    <div>
+                                        <label className="lg:hidden text-sm font-medium text-gray-300 leading-5 mb-2 block">
+                                            2. Report scope
+                                        </label>
                                         <div className="bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-6 text-center text-gray-500 text-sm leading-relaxed">
                                             <p>The Executive Summary includes all data by default.</p>
                                             <p className="mt-1">No specific entity required.</p>
                                         </div>
-                                    )}
+                                    </div>
+                                    {exportDownloadSection}
                                 </div>
-
-                                <div className="border-t border-[#30363d] pt-6 space-y-3">
-                                    <p className="text-xs text-gray-500">
-                                        Respects <b className="text-gray-400">global filters</b> (date range, state, customer, material, etc.).
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={handleDownload}
-                                        disabled={downloading}
-                                        className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg
-                                            ${downloading
-                                                ? 'bg-[#30363d] text-gray-400 cursor-not-allowed shadow-none'
-                                                : 'bg-gradient-to-r from-[#b8860b] to-[#daa520] text-[#0d1117] hover:scale-[1.01] hover:shadow-[#daa520]/20'
-                                            }
-                                        `}
-                                    >
-                                        {downloading ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin shrink-0" />
-                                                Generating Dynamic PDF...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Download className="w-5 h-5 shrink-0" />
-                                                Download Industrial Report
-                                            </>
-                                        )}
-                                    </button>
-                                    <p className="text-xs text-gray-500 text-center">Large reports may take 15–30 seconds.</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 

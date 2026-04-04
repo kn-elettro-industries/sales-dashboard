@@ -191,10 +191,51 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                     <YAxis type="number" dataKey={yKey} name="Frequency" stroke="#8b949e" tick={{ fill: "#8b949e" }} />
                     <ZAxis type="number" dataKey={zKey} range={[50, 800]} name="Monetary" />
                     <Tooltip
-                        {...CHART_TOOLTIP_BASE}
                         cursor={{ strokeDasharray: "3 3" }}
-                        contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
-                        formatter={(value: any, name?: string) => (name === "Monetary" ? formatAmt(value) : value)}
+                        wrapperStyle={CHART_TOOLTIP_BASE.wrapperStyle}
+                        content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const raw = payload[0] as { payload?: Record<string, unknown> } & Record<string, unknown>;
+                            const row = (raw?.payload ?? raw) as Record<string, unknown> | undefined;
+                            if (!row || typeof row !== "object") return null;
+                            const customer = String(row[nameKey] ?? "").trim() || "—";
+                            const rec = row[xKey];
+                            const freq = row[yKey];
+                            const mon = row[zKey];
+                            const rowStyle = { color: "#e6edf3" as const, fontSize: 12, margin: "2px 0 0 0" };
+                            const labelStyle = { color: "#8b949e" as const, fontSize: 11, margin: "6px 0 0 0" };
+                            return (
+                                <div
+                                    className="recharts-default-tooltip"
+                                    style={{
+                                        ...CHART_TOOLTIP_BASE.contentStyle,
+                                        padding: "10px 12px",
+                                        fontSize: 13,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            color: "#daa520",
+                                            fontWeight: 700,
+                                            fontSize: 13,
+                                            marginBottom: 8,
+                                            lineHeight: 1.3,
+                                            wordBreak: "break-word",
+                                        }}
+                                    >
+                                        {customer}
+                                    </div>
+                                    <div style={labelStyle}>Recency (days)</div>
+                                    <div style={rowStyle}>{rec != null ? Number(rec).toLocaleString("en-IN") : "—"}</div>
+                                    <div style={labelStyle}>Frequency</div>
+                                    <div style={rowStyle}>{freq != null ? Number(freq).toLocaleString("en-IN") : "—"}</div>
+                                    <div style={labelStyle}>Monetary (revenue)</div>
+                                    <div style={{ ...rowStyle, color: "#daa520", fontWeight: 600 }}>
+                                        {mon != null ? formatAmt(Number(mon)) : "—"}
+                                    </div>
+                                </div>
+                            );
+                        }}
                     />
                     <Scatter name="Customers" data={data} fill="#daa520" fillOpacity={0.6}>
                         {data.map((entry, index) => (

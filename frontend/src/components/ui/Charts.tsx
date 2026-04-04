@@ -29,6 +29,24 @@ const SEGMENT_COLORS = [
 // Legacy alias for other charts
 const COLORS = SEGMENT_COLORS;
 
+/** Recharts defaults tooltip *values* to black; itemStyle/labelStyle + globals.css fix contrast on dark UI */
+const CHART_TOOLTIP_BASE = {
+    contentStyle: {
+        backgroundColor: "#161b22",
+        border: "1px solid #30363d",
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
+    },
+    labelStyle: {
+        color: "#daa520",
+        fontWeight: 600 as const,
+    },
+    itemStyle: {
+        color: "#e6edf3",
+    },
+    wrapperStyle: { outline: "none" as const, zIndex: 50 },
+};
+
 // Wrapper so Recharts never gets width/height -1 (fixes console warning)
 function ChartWrapper({ children, className = "min-h-[320px] w-full mt-4" }: { children: React.ReactNode; className?: string }) {
     return (
@@ -72,8 +90,8 @@ export function GradientAreaChart({ data, xKey, yKey, formatCurrency = true }: {
                         tickFormatter={(val) => formatCurrency ? formatAxisTick(val) : String(val)}
                     />
                     <Tooltip
-                        contentStyle={{ backgroundColor: "#161b22", border: "1px solid #30363d", color: "#fff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}
-                        labelStyle={{ color: "#daa520" }}
+                        {...CHART_TOOLTIP_BASE}
+                        contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                         formatter={(value: any) => [formatCurrency ? `₹ ${Number(value || 0).toLocaleString("en-IN")}` : value, "Revenue"]}
                     />
                     <Area type="monotone" dataKey={yKey} stroke="#daa520" strokeWidth={2.5} fillOpacity={1} fill="url(#colorYKey)" dot={false} activeDot={{ r: 5, fill: "#daa520", stroke: "#161b22", strokeWidth: 2 }} />
@@ -125,7 +143,8 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                                 ))}
                             </Pie>
                             <Tooltip
-                                contentStyle={{ backgroundColor: "#161b22", border: "1px solid #30363d", color: "#fff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.4)", fontSize: 13 }}
+                                {...CHART_TOOLTIP_BASE}
+                                contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                                 formatter={(value: any, name: string | undefined) => [`${formatTooltipAmount(Number(value || 0))} · ${((Number(value || 0) / total) * 100).toFixed(1)}%`, name ?? ""]}
                             />
                         </RechartsPieChart>
@@ -172,9 +191,10 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                     <YAxis type="number" dataKey={yKey} name="Frequency" stroke="#8b949e" tick={{ fill: "#8b949e" }} />
                     <ZAxis type="number" dataKey={zKey} range={[50, 800]} name="Monetary" />
                     <Tooltip
-                        cursor={{ strokeDasharray: '3 3' }}
-                        contentStyle={{ backgroundColor: '#161b22', borderColor: '#30363d', color: '#fff', borderRadius: '8px' }}
-                        formatter={(value: any, name?: string) => name === 'Monetary' ? formatAmt(value) : value}
+                        {...CHART_TOOLTIP_BASE}
+                        cursor={{ strokeDasharray: "3 3" }}
+                        contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
+                        formatter={(value: any, name?: string) => (name === "Monetary" ? formatAmt(value) : value)}
                     />
                     <Scatter name="Customers" data={data} fill="#daa520" fillOpacity={0.6}>
                         {data.map((entry, index) => (
@@ -251,7 +271,8 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                             content={<CustomizedContent />}
                         >
                             <Tooltip
-                                contentStyle={{ backgroundColor: "#161b22", border: "1px solid #30363d", color: "#fff", borderRadius: "8px", fontSize: 13 }}
+                                {...CHART_TOOLTIP_BASE}
+                                contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                                 formatter={(value: any, name: string | undefined) => {
                                     const pct = total > 0 ? ((Number(value || 0) / total) * 100).toFixed(1) : "0";
                                     return [`${formatTooltipAmount(Number(value || 0))} · ${pct}%`, name ?? ""];
@@ -355,8 +376,9 @@ export function BarChart({ data, xKey, yKey }: { data: any[]; xKey: string; yKey
                         tickFormatter={(val) => formatAxisTick(val)}
                     />
                     <Tooltip
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                        contentStyle={{ backgroundColor: '#161b22', borderColor: '#30363d', color: '#fff' }}
+                        {...CHART_TOOLTIP_BASE}
+                        cursor={{ fill: "rgba(255,255,255,0.06)" }}
+                        contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                         formatter={(value: any) => formatTooltipAmount(Number(value || 0))}
                     />
                     <Bar dataKey={yKey} fill="#daa520" radius={[4, 4, 0, 0]} barSize={40} />

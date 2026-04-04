@@ -9,12 +9,11 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatAmount, formatCr } from "@/lib/format";
 
-/** Second column on Export tab: Executive Summary shows an info panel; other PDFs use global filters only (no single-entity picker). */
 const REPORT_TYPES = [
-    { id: "Executive Summary", label: "Executive Summary (All Data)", icon: FileText, showTargetEntitySection: true },
-    { id: "Distributor Strategy Report", label: "Distributor Strategy Report", icon: FileText, showTargetEntitySection: false },
-    { id: "State Wise", label: "State/Region Deep Dive", icon: FileText, showTargetEntitySection: false },
-    { id: "Material Group Wise", label: "Material Category Deep Dive", icon: FileText, showTargetEntitySection: false },
+    { id: "Executive Summary", label: "Executive Summary (All Data)", icon: FileText },
+    { id: "Distributor Strategy Report", label: "Distributor Strategy Report", icon: FileText },
+    { id: "State Wise", label: "State/Region Deep Dive", icon: FileText },
+    { id: "Material Group Wise", label: "Material Category Deep Dive", icon: FileText },
 ];
 
 const DYNAMIC_DIMENSIONS = [
@@ -319,8 +318,6 @@ export default function ReportsPage() {
     const fmtCr = formatCr;
     const fmt = formatAmount;
 
-    const showTargetEntityColumn = REPORT_TYPES.find((r) => r.id === selectedReport)?.showTargetEntitySection ?? false;
-
     const exportDownloadSection = (
         <div className="border-t border-[#30363d] pt-6 space-y-3">
             <p className="text-xs text-gray-500">
@@ -561,22 +558,13 @@ export default function ReportsPage() {
             {activeTab === 'export' && (
                 <div className="animate-in fade-in duration-300">
                     <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 md:p-8">
-                        {/* Top row: step titles — second column only for Executive Summary (scope note + download there) */}
-                        <div
-                            className={`hidden lg:grid lg:gap-8 lg:mb-3 ${showTargetEntityColumn ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}
-                        >
-                            <span className="text-sm font-medium text-gray-300 leading-5">1. Select Report Type</span>
-                            {showTargetEntityColumn && (
-                                <span className="text-sm font-medium text-gray-300 leading-5">2. Report scope</span>
-                            )}
+                        <div className="hidden lg:block mb-3">
+                            <span className="text-sm font-medium text-gray-300 leading-5">Select Report Type</span>
                         </div>
 
-                        <div
-                            className={`grid grid-cols-1 gap-8 items-start ${showTargetEntityColumn ? "lg:grid-cols-2 lg:gap-8" : ""}`}
-                        >
-                            {/* Column 1 — report types (+ main download when no scope column) */}
+                        <div className="grid grid-cols-1 gap-8 items-start">
                             <div className="flex flex-col gap-3 min-w-0">
-                                <label className="lg:hidden text-sm font-medium text-gray-300 leading-5">1. Select Report Type</label>
+                                <label className="lg:hidden text-sm font-medium text-gray-300 leading-5">Select Report Type</label>
                                 <div className="grid gap-3">
                                     {REPORT_TYPES.map((report) => (
                                         <button
@@ -702,24 +690,8 @@ export default function ReportsPage() {
                                     )}
                                 </div>
 
-                                {!showTargetEntityColumn && exportDownloadSection}
+                                {exportDownloadSection}
                             </div>
-
-                            {/* Column 2 — Executive Summary scope note + download (other PDFs use global filters only; no entity picker) */}
-                            {showTargetEntityColumn && (
-                                <div className="flex flex-col gap-6 min-w-0">
-                                    <div>
-                                        <label className="lg:hidden text-sm font-medium text-gray-300 leading-5 mb-2 block">
-                                            2. Report scope
-                                        </label>
-                                        <div className="bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-6 text-center text-gray-500 text-sm leading-relaxed">
-                                            <p>The Executive Summary includes all data by default.</p>
-                                            <p className="mt-1">No specific entity required.</p>
-                                        </div>
-                                    </div>
-                                    {exportDownloadSection}
-                                </div>
-                            )}
                         </div>
                     </div>
 

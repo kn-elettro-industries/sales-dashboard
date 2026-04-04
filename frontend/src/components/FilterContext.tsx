@@ -91,7 +91,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
             dateTo: dateRange?.to?.toISOString?.()?.slice(0, 10),
         };
         localStorage.setItem(FILTER_STORAGE_KEY + "_current", JSON.stringify(payload));
-    }, [hasHydrated, tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths]);
+    }, [hasHydrated, tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const saveCurrentView = useCallback((name: string) => {
         if (typeof window === "undefined" || !name.trim()) return;

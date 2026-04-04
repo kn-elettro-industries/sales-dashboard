@@ -159,16 +159,22 @@ export default function GlobalFilterBar() {
     });
     const [exporting, setExporting] = useState(false);
 
-    // Load filter options from backend; on 502/error keep empty arrays so UI does not crash
+    // Load filter options from backend; items are restricted to selected material groups when any are chosen
     useEffect(() => {
-        fetch(`${API_BASE}/filters/options?tenant_id=${tenant}`)
-            .then(r => {
+        const params = new URLSearchParams();
+        params.set("tenant_id", tenant);
+        if (selectedMaterialGroups.length > 0) {
+            params.set("material_groups", selectedMaterialGroups.join(","));
+        }
+        fetch(`${API_BASE}/filters/options?${params.toString()}`)
+            .then((r) => {
                 if (!r.ok) return null;
                 return r.json();
             })
             .then((data: FilterOptions | null) => {
                 if (data && typeof data === "object" && !("error" in data)) {
                     const cbs = data.cities_by_state;
+                    const nextItems = Array.isArray(data.items) ? data.items : [];
                     setOptions({
                         states: Array.isArray(data.states) ? data.states : [],
                         cities: Array.isArray(data.cities) ? data.cities : [],
@@ -177,12 +183,17 @@ export default function GlobalFilterBar() {
                         material_groups: Array.isArray(data.material_groups) ? data.material_groups : [],
                         fiscal_years: Array.isArray(data.fiscal_years) ? data.fiscal_years : [],
                         months: Array.isArray(data.months) ? data.months : [],
-                        items: Array.isArray(data.items) ? data.items : [],
+                        items: nextItems,
+                    });
+                    setSelectedItems((prev) => {
+                        const allowed = new Set(nextItems);
+                        const pruned = prev.filter((x) => allowed.has(x));
+                        return pruned.length === prev.length ? prev : pruned;
                     });
                 }
             })
-            .catch(() => { });
-    }, [tenant]);
+            .catch(() => {});
+    }, [tenant, selectedMaterialGroups, setSelectedItems]);
 
     const cityOptionsForFilter = useMemo(() => {
         const all = options.cities;
@@ -401,7 +412,12 @@ export default function GlobalFilterBar() {
                         </div>
                     </div>
                     <div className="mt-3 min-w-0">
-                        <label className="text-xs text-gray-500 mb-1 block">Item (SKU)</label>
+                        <label className="text-xs text-gray-500 mb-1 block">
+                            Item (SKU)
+                            {selectedMaterialGroups.length > 0 ? (
+                                <span className="text-[#daa520]"> — only items in selected material group(s)</span>
+                            ) : null}
+                        </label>
                         <MultiSelect
                             longLabels
                             label="Items"

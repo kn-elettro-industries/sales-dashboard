@@ -824,11 +824,23 @@ def handle_chat_query(req: ChatRequest):
 # ─── FILTER OPTIONS ───
 
 @router.get("/filters/options")
-def get_filter_options(tenant_id: str = "default_elettro"):
-    """Returns all unique filter values for the sidebar multi-selects."""
+def get_filter_options(
+    tenant_id: str = "default_elettro",
+    material_groups: Optional[str] = None,
+):
+    """Returns all unique filter values for the sidebar multi-selects.
+
+    When ``material_groups`` is a comma-separated list, the ``items`` list is restricted to
+    ITEMNAME values that appear in those material groups (so the Items picklist stays linked).
+    Other option lists (states, material_groups catalog, etc.) always come from the full dataset.
+    """
     df = get_tenant_data(tenant_id)
     if df.empty:
         return {"states": [], "cities": [], "cities_by_state": {}, "customers": [], "material_groups": [], "fiscal_years": [], "months": [], "items": []}
+
+    df_for_items = df
+    if material_groups and str(material_groups).strip():
+        df_for_items = apply_filters(df, None, None, None, material_groups, None, None, None)
 
     # Exclude "State Not Found" / "STATE NOT FOUND ⚠️" from filter options so only real states appear (no duplicate region placeholders)
     raw_states = df["STATE"].dropna().unique().tolist() if "STATE" in df.columns else []
@@ -852,8 +864,8 @@ def get_filter_options(tenant_id: str = "default_elettro"):
 
     _ITEM_CAP = 4000
     item_names: list = []
-    if "ITEMNAME" in df.columns:
-        raw_items = df["ITEMNAME"].dropna().astype(str).str.strip()
+    if "ITEMNAME" in df_for_items.columns:
+        raw_items = df_for_items["ITEMNAME"].dropna().astype(str).str.strip()
         raw_items = raw_items[raw_items != ""]
         item_names = sorted(raw_items.unique().tolist())[:_ITEM_CAP]
 

@@ -163,8 +163,9 @@ export default function GlobalFilterBar() {
     useEffect(() => {
         const params = new URLSearchParams();
         params.set("tenant_id", tenant);
+        // Single JSON param so selections survive proxies / URL parsing (repeated keys often break)
         if (selectedMaterialGroups.length > 0) {
-            params.set("material_groups", selectedMaterialGroups.join(","));
+            params.set("material_groups_json", JSON.stringify(selectedMaterialGroups));
         }
         fetch(`${API_BASE}/filters/options?${params.toString()}`)
             .then((r) => {

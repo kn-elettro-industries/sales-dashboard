@@ -194,6 +194,11 @@ def _material_group_column(df: pd.DataFrame):
     for col in candidates:
         if col in df.columns:
             return col
+    # After standardize(), columns are UPPER; tolerate uncommon DB names
+    for c in df.columns:
+        cu = str(c).upper()
+        if "GROUP" in cu and ("MATERIAL" in cu or "ITEM_NAME" in cu or "PRODUCT" in cu):
+            return c
     return None
 
 def _apply_material_mappings(df: pd.DataFrame) -> pd.DataFrame:
@@ -250,11 +255,18 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
         cust_list = [c.strip() for c in customers.split(",") if c.strip()]
         if "CUSTOMER_NAME" in df.columns and cust_list:
             df = df[df["CUSTOMER_NAME"].isin(cust_list)]
-    if material_groups and str(material_groups).strip():
-        mg_list = [m.strip() for m in material_groups.split(",") if m.strip()]
+    mg_list: List[str] = []
+    if material_groups is not None:
+        if isinstance(material_groups, (list, tuple)):
+            mg_list = [str(m).strip() for m in material_groups if str(m).strip()]
+        elif str(material_groups).strip():
+            mg_list = [m.strip() for m in str(material_groups).split(",") if m.strip()]
+    if mg_list:
         grp_col = _material_group_column(df)
-        if grp_col and mg_list:
-            df = df[df[grp_col].isin(mg_list)]
+        if grp_col:
+            gser = df[grp_col].astype(str).str.strip()
+            mg_lower = {m.lower() for m in mg_list}
+            df = df[gser.str.lower().isin(mg_lower)]
     if fiscal_years and str(fiscal_years).strip():
         fy_list = [f.strip() for f in fiscal_years.split(",") if f.strip()]
         if "FINANCIAL_YEAR" in df.columns and fy_list:
@@ -823,23 +835,47 @@ def handle_chat_query(req: ChatRequest):
 
 # ─── FILTER OPTIONS ───
 
+def _item_name_column(df: pd.DataFrame) -> Optional[str]:
+    """Column holding SKU / item description for filter picklists."""
+    for c in ("ITEMNAME", "ITEM_NAME", "PRODUCT_NAME", "MATERIAL_NAME", "ITEM_DESC"):
+        if c in df.columns:
+            return c
+    return None
+
+
 @router.get("/filters/options")
 def get_filter_options(
+    request: Request,
     tenant_id: str = "default_elettro",
-    material_groups: Optional[str] = None,
+    material_groups_json: Optional[str] = Query(None),
 ):
     """Returns all unique filter values for the sidebar multi-selects.
 
-    When ``material_groups`` is a comma-separated list, the ``items`` list is restricted to
-    ITEMNAME values that appear in those material groups (so the Items picklist stays linked).
-    Other option lists (states, material_groups catalog, etc.) always come from the full dataset.
+    Pass selected groups as ``material_groups_json`` (URL-encoded JSON array), e.g. ``["Air filter","X"]``.
+    Single query param survives proxies reliably; ``items`` is then restricted to SKUs in those groups.
+    Fallback: repeated ``material_groups`` query keys (Starlette getlist).
     """
+    material_groups: List[str] = []
+    if material_groups_json and str(material_groups_json).strip():
+        try:
+            parsed = json.loads(material_groups_json)
+            if isinstance(parsed, list):
+                material_groups = [str(x).strip() for x in parsed if str(x).strip()]
+        except (json.JSONDecodeError, TypeError, ValueError):
+            material_groups = []
+    if not material_groups:
+        material_groups = [m.strip() for m in request.query_params.getlist("material_groups") if m.strip()]
+
     df = get_tenant_data(tenant_id)
     if df.empty:
         return {"states": [], "cities": [], "cities_by_state": {}, "customers": [], "material_groups": [], "fiscal_years": [], "months": [], "items": []}
 
+    # Align column names with the rest of the API (ITEMNAME, ITEM_NAME_GROUP, …) so filters match apply_filters
+    df = standardize(df.copy())
+    df = _coalesce_state_region(df)
+
     df_for_items = df
-    if material_groups and str(material_groups).strip():
+    if material_groups:
         df_for_items = apply_filters(df, None, None, None, material_groups, None, None, None)
 
     # Exclude "State Not Found" / "STATE NOT FOUND ⚠️" from filter options so only real states appear (no duplicate region placeholders)
@@ -849,7 +885,7 @@ def get_filter_options(
     customers = sorted(df["CUSTOMER_NAME"].dropna().unique().tolist()) if "CUSTOMER_NAME" in df.columns else []
     
     grp_col = _material_group_column(df)
-    material_groups = sorted(df[grp_col].dropna().unique().tolist()) if grp_col else []
+    material_group_choices = sorted(df[grp_col].dropna().unique().tolist()) if grp_col else []
     
     fiscal_years = sorted(df["FINANCIAL_YEAR"].dropna().unique().tolist()) if "FINANCIAL_YEAR" in df.columns else []
     months = []
@@ -864,8 +900,9 @@ def get_filter_options(
 
     _ITEM_CAP = 4000
     item_names: list = []
-    if "ITEMNAME" in df_for_items.columns:
-        raw_items = df_for_items["ITEMNAME"].dropna().astype(str).str.strip()
+    item_col = _item_name_column(df_for_items)
+    if item_col:
+        raw_items = df_for_items[item_col].dropna().astype(str).str.strip()
         raw_items = raw_items[raw_items != ""]
         item_names = sorted(raw_items.unique().tolist())[:_ITEM_CAP]
 
@@ -888,7 +925,7 @@ def get_filter_options(
         "cities": cities,
         "cities_by_state": cities_by_state,
         "customers": customers,
-        "material_groups": material_groups,
+        "material_groups": material_group_choices,
         "fiscal_years": fiscal_years,
         "months": months,
         "items": item_names,

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response, Request
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Dict, List, Optional
 import logging
 import pandas as pd
 import json
@@ -185,6 +185,23 @@ def _date_amount_columns(df: pd.DataFrame):
     amount_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
     return date_col, amount_col
 
+
+def _unique_labels_ci(series: pd.Series, *, exclude_substr: tuple = ("NOT FOUND", "UNKNOWN")) -> List[str]:
+    """Strip values; drop junk rows; collapse case-insensitive duplicates (first spelling wins). Sorted for stable UI."""
+    if series is None or getattr(series, "empty", True):
+        return []
+    s = series.dropna().astype(str).str.strip()
+    s = s[s != ""]
+    canon: Dict[str, str] = {}
+    for val in s:
+        up = val.upper()
+        if any(x in up for x in exclude_substr):
+            continue
+        k = val.lower()
+        if k not in canon:
+            canon[k] = val
+    return sorted(canon.values(), key=lambda x: x.lower())
+
 def _material_group_column(df: pd.DataFrame):
     """Return the material group column name if present (any common casing)."""
     candidates = [
@@ -250,7 +267,9 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
     if cities and str(cities).strip():
         city_list = [c.strip() for c in cities.split(",") if c.strip()]
         if "CITY" in df.columns and city_list:
-            df = df[df["CITY"].isin(city_list)]
+            gser = df["CITY"].astype(str).str.strip()
+            want = {c.lower() for c in city_list}
+            df = df[gser.str.lower().isin(want)]
     if customers and str(customers).strip():
         cust_list = [c.strip() for c in customers.split(",") if c.strip()]
         if "CUSTOMER_NAME" in df.columns and cust_list:
@@ -878,10 +897,9 @@ def get_filter_options(
     if material_groups:
         df_for_items = apply_filters(df, None, None, None, material_groups, None, None, None)
 
-    # Exclude "State Not Found" / "STATE NOT FOUND ⚠️" from filter options so only real states appear (no duplicate region placeholders)
-    raw_states = df["STATE"].dropna().unique().tolist() if "STATE" in df.columns else []
-    states = sorted([s for s in raw_states if str(s).strip() and "NOT FOUND" not in str(s).upper()])
-    cities = sorted([c for c in df["CITY"].dropna().unique().tolist() if "NOT FOUND" not in str(c).upper() and "UNKNOWN" not in str(c).upper()]) if "CITY" in df.columns else []
+    # Exclude placeholders; collapse "Pune" / "PUNE" / spacing variants so picklists do not show duplicates
+    states = _unique_labels_ci(df["STATE"], exclude_substr=("NOT FOUND",)) if "STATE" in df.columns else []
+    cities = _unique_labels_ci(df["CITY"], exclude_substr=("NOT FOUND", "UNKNOWN")) if "CITY" in df.columns else []
     customers = sorted(df["CUSTOMER_NAME"].dropna().unique().tolist()) if "CUSTOMER_NAME" in df.columns else []
     
     grp_col = _material_group_column(df)
@@ -912,11 +930,8 @@ def get_filter_options(
             st_s = str(st).strip()
             if not st_s or "NOT FOUND" in st_s.upper():
                 continue
-            sub = df[df["STATE"].astype(str).str.strip() == st_s]["CITY"].dropna().astype(str).str.strip()
-            sub = sub[sub != ""]
-            clist = sorted(
-                {c for c in sub.unique() if "NOT FOUND" not in c.upper() and "UNKNOWN" not in c.upper()}
-            )
+            sub = df[df["STATE"].astype(str).str.strip() == st_s]["CITY"]
+            clist = _unique_labels_ci(sub, exclude_substr=("NOT FOUND", "UNKNOWN"))
             if clist:
                 cities_by_state[st_s] = clist
 
@@ -1742,6 +1757,78 @@ def export_filtered_data(
         content=csv_bytes,
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
+@router.get("/export/customers-below-revenue")
+def export_customers_below_revenue(
+    tenant_id: str = Query("default_elettro"),
+    max_revenue_inr: float = Query(
+        550_000.0,
+        ge=0,
+        description="Customers with total Revenue (sum of AMOUNT in the filtered period) strictly below this INR value. Default 550000 = ₹5.5 L.",
+    ),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    customers: Optional[str] = None,
+    material_groups: Optional[str] = None,
+    fiscal_years: Optional[str] = None,
+    months: Optional[str] = None,
+    items: Optional[str] = None,
+):
+    """
+    CSV of one row per customer: Revenue, Orders, AvgOrder, LastOrder — only customers whose
+    total sales in the selected filters are **below** ``max_revenue_inr`` (default ₹5.5 L).
+    """
+    df = get_tenant_data(tenant_id, start_date, end_date)
+    df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
+    if df.empty or "CUSTOMER_NAME" not in df.columns or "AMOUNT" not in df.columns:
+        csv_bytes = "CUSTOMER_NAME,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n".encode("utf-8-sig")
+    else:
+        inv_col = "INVOICE_NO" if "INVOICE_NO" in df.columns else None
+        has_date = "DATE" in df.columns
+        if inv_col and has_date:
+            cust = df.groupby("CUSTOMER_NAME").agg(
+                Revenue=("AMOUNT", "sum"),
+                Orders=(inv_col, "nunique"),
+                AvgOrder=("AMOUNT", "mean"),
+                LastOrder=("DATE", "max"),
+            ).reset_index()
+        elif inv_col:
+            cust = df.groupby("CUSTOMER_NAME").agg(
+                Revenue=("AMOUNT", "sum"),
+                Orders=(inv_col, "nunique"),
+                AvgOrder=("AMOUNT", "mean"),
+            ).reset_index()
+            cust["LastOrder"] = pd.NaT
+        elif has_date:
+            cust = df.groupby("CUSTOMER_NAME").agg(
+                Revenue=("AMOUNT", "sum"),
+                Orders=("AMOUNT", "count"),
+                AvgOrder=("AMOUNT", "mean"),
+                LastOrder=("DATE", "max"),
+            ).reset_index()
+        else:
+            cust = df.groupby("CUSTOMER_NAME").agg(
+                Revenue=("AMOUNT", "sum"),
+                Orders=("AMOUNT", "count"),
+                AvgOrder=("AMOUNT", "mean"),
+            ).reset_index()
+            cust["LastOrder"] = pd.NaT
+        _lo = pd.to_datetime(cust["LastOrder"], errors="coerce")
+        cust["LastOrder"] = _lo.dt.strftime("%Y-%m-%d").where(_lo.notna(), "")
+        cust = cust[cust["Revenue"] < float(max_revenue_inr)].sort_values("Revenue", ascending=True)
+        cust["MaxRevenueThreshold_INR"] = float(max_revenue_inr)
+        csv_bytes = cust.to_csv(index=False).encode("utf-8-sig")
+
+    safe_max = int(max_revenue_inr) if float(max_revenue_inr) == int(float(max_revenue_inr)) else round(float(max_revenue_inr), 2)
+    filename = f"{REPORT_FILE_PREFIX}_Customers_Under_{safe_max}INR_{tenant_id}.csv"
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

@@ -161,6 +161,23 @@ export const fetchGrowthMetrics = (p?: FilterParams) => apiFetch("/sales/growth"
 export const fetchAllCustomers = (p?: FilterParams) => apiFetch("/customers/all", p).then(d => d || []).catch(() => []);
 export const fetchRfmSegments = (p?: FilterParams) => apiFetch("/customers/rfm", p).then(d => d || []).catch(() => []);
 
+/** CSV download URL: customers with total revenue in the period **below** ``maxRevenueInr`` INR (default ₹5.5 L = 550_000). Respects the same filters as the dashboard. */
+export function getExportCustomersBelowRevenueUrl(p: FilterParams, maxRevenueInr: number): string {
+    const query = new URLSearchParams();
+    if (p.tenant) query.append("tenant_id", p.tenant);
+    if (p.startDate) query.append("start_date", p.startDate);
+    if (p.endDate) query.append("end_date", p.endDate);
+    if (p.states) query.append("states", p.states);
+    if (p.cities) query.append("cities", p.cities);
+    if (p.customers) query.append("customers", p.customers);
+    if (p.materialGroups) query.append("material_groups", p.materialGroups);
+    if (p.fiscalYears) query.append("fiscal_years", p.fiscalYears);
+    if (p.months) query.append("months", p.months);
+    if (p.items) query.append("items", p.items);
+    query.append("max_revenue_inr", String(maxRevenueInr));
+    return `${API_BASE_URL}/export/customers-below-revenue?${query.toString()}`;
+}
+
 // Geographic
 export const fetchStateData = (p?: FilterParams) => apiFetch("/geographic/states", p).then(d => d || []).catch(() => []);
 export const fetchCityData = (p?: FilterParams) => apiFetch("/geographic/cities", p).then(d => d || []).catch(() => []);

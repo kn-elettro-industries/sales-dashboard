@@ -287,7 +287,7 @@ export default function CustomersPage() {
                     data={displayCustomers}
                     searchable={true}
                     searchPlaceholder="Search customers..."
-                    searchKeys={['CUSTOMER_NAME']}
+                    searchKeys={['CUSTOMER_NAME', 'CITY', 'STATE']}
                     pageSizeOptions={[10, 25, 50]}
                     defaultPageSize={10}
                     columns={[
@@ -298,6 +298,8 @@ export default function CustomersPage() {
                             cell: (_, index) => <span className="text-gray-500">{index! + 1}</span> // Fixed index rendering
                         },
                         { header: 'Customer', accessorKey: 'CUSTOMER_NAME', sortable: true },
+                        { header: 'City', accessorKey: 'CITY', sortable: true },
+                        { header: 'State', accessorKey: 'STATE', sortable: true },
                         {
                             header: 'Revenue',
                             accessorKey: 'Revenue',

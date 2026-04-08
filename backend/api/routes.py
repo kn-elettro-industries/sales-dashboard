@@ -223,8 +223,9 @@ def _most_frequent_customer_label(series: pd.Series) -> str:
 def _customer_summary_df(df: pd.DataFrame) -> pd.DataFrame:
     """
     One row per logical customer: group by case-insensitive trimmed name; Revenue from _revenue_amount_series.
+    Includes STATE and CITY when present (most common value per customer when invoices differ).
     """
-    empty_cols = ["CUSTOMER_NAME", "Revenue", "Orders", "AvgOrder", "LastOrder"]
+    empty_cols = ["CUSTOMER_NAME", "STATE", "CITY", "Revenue", "Orders", "AvgOrder", "LastOrder"]
     if df is None or df.empty or "CUSTOMER_NAME" not in df.columns:
         return pd.DataFrame(columns=empty_cols)
     if "AMOUNT" not in df.columns:
@@ -242,6 +243,10 @@ def _customer_summary_df(df: pd.DataFrame) -> pd.DataFrame:
         "Revenue": ("_rev", "sum"),
         "AvgOrder": ("_rev", "mean"),
     }
+    if "STATE" in d.columns:
+        parts["STATE"] = ("STATE", _most_frequent_customer_label)
+    if "CITY" in d.columns:
+        parts["CITY"] = ("CITY", _most_frequent_customer_label)
     if inv_col:
         parts["Orders"] = (inv_col, "nunique")
     else:
@@ -251,11 +256,18 @@ def _customer_summary_df(df: pd.DataFrame) -> pd.DataFrame:
     out = d.groupby("_ck", as_index=False).agg(**parts)
     if "_ck" in out.columns:
         out = out.drop(columns=["_ck"])
+    if "STATE" not in out.columns:
+        out["STATE"] = ""
+    if "CITY" not in out.columns:
+        out["CITY"] = ""
     if has_date:
         _lo = pd.to_datetime(out["LastOrder"], errors="coerce")
         out["LastOrder"] = _lo.dt.strftime("%Y-%m-%d").where(_lo.notna(), "")
     else:
         out["LastOrder"] = ""
+    # Stable column order for CSV/API
+    col_order = ["CUSTOMER_NAME", "CITY", "STATE", "Revenue", "Orders", "AvgOrder", "LastOrder"]
+    out = out[[c for c in col_order if c in out.columns]]
     return out
 
 
@@ -1851,17 +1863,18 @@ def export_customers_below_revenue(
     items: Optional[str] = None,
 ):
     """
-    CSV of one row per customer: Revenue, Orders, AvgOrder, LastOrder — customers whose
+    CSV of one row per customer: CITY, STATE, Revenue, Orders, AvgOrder, LastOrder — customers whose
     total sales (same basis as /customers/all) are **at or below** ``max_revenue_inr`` (default ₹5.5 L).
     """
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
+    _hdr = "CUSTOMER_NAME,CITY,STATE,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n"
     if df.empty or "CUSTOMER_NAME" not in df.columns or "AMOUNT" not in df.columns:
-        csv_bytes = "CUSTOMER_NAME,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n".encode("utf-8-sig")
+        csv_bytes = _hdr.encode("utf-8-sig")
     else:
         cust = _customer_summary_df(df)
         if cust.empty:
-            csv_bytes = "CUSTOMER_NAME,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n".encode("utf-8-sig")
+            csv_bytes = _hdr.encode("utf-8-sig")
         else:
             cust = cust[cust["Revenue"] <= float(max_revenue_inr)].sort_values("Revenue", ascending=True)
             cust["MaxRevenueThreshold_INR"] = float(max_revenue_inr)

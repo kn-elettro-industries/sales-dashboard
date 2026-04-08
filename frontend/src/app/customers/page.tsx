@@ -194,9 +194,8 @@ export default function CustomersPage() {
                         />
                     </div>
                     <p id="export-below-help" className="text-xs text-gray-500 max-w-md flex-1 min-w-[12rem]">
-                        Same date range and global filters as the rest of the app. CSV: one row per customer (revenue, orders, last order)
-                        with total sales in the period{" "}
-                        <strong className="text-gray-400">strictly below</strong> ₹
+                        Same date range and global filters as the rest of the app. Revenue is the sum of <strong className="text-gray-400">AMOUNT</strong> only (excludes tax). CSV lists customers with total in the period{" "}
+                        <strong className="text-gray-400">at or below</strong> ₹
                         {(Number.isFinite(parseFloat(maxRevenueLakh.replace(",", ".")))
                             ? parseFloat(maxRevenueLakh.replace(",", ".")) * 100000
                             : 550000

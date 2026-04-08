@@ -161,7 +161,7 @@ export const fetchGrowthMetrics = (p?: FilterParams) => apiFetch("/sales/growth"
 export const fetchAllCustomers = (p?: FilterParams) => apiFetch("/customers/all", p).then(d => d || []).catch(() => []);
 export const fetchRfmSegments = (p?: FilterParams) => apiFetch("/customers/rfm", p).then(d => d || []).catch(() => []);
 
-/** CSV download URL: customers with total revenue in the period **below** ``maxRevenueInr`` INR (default ₹5.5 L = 550_000). Respects the same filters as the dashboard. */
+/** CSV download URL: customers with total revenue **at or below** ``maxRevenueInr`` INR (default ₹5.5 L). Same as Customer Intelligence: **AMOUNT** sums only. */
 export function getExportCustomersBelowRevenueUrl(p: FilterParams, maxRevenueInr: number): string {
     const query = new URLSearchParams();
     if (p.tenant) query.append("tenant_id", p.tenant);

@@ -196,6 +196,9 @@ def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
             amt_col = next((c for c in df.columns if str(c).upper() == "AMOUNT"), None)
             if amt_col is not None:
                 df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
+            tot_col = next((c for c in df.columns if str(c).upper() == "TOTALAMOUNT"), None)
+            if tot_col is not None:
+                df[tot_col] = pd.to_numeric(df[tot_col], errors="coerce")
             date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
             if date_col is not None:
                 df[date_col] = pd.to_datetime(df[date_col], errors="coerce")

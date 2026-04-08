@@ -202,6 +202,63 @@ def _unique_labels_ci(series: pd.Series, *, exclude_substr: tuple = ("NOT FOUND"
             canon[k] = val
     return sorted(canon.values(), key=lambda x: x.lower())
 
+
+def _revenue_amount_series(df: pd.DataFrame) -> pd.Series:
+    """Per-row value for customer revenue rollups: **AMOUNT only** (excludes tax / TOTALAMOUNT by design)."""
+    idx = df.index
+    if "AMOUNT" in df.columns:
+        return pd.to_numeric(df["AMOUNT"], errors="coerce").fillna(0)
+    return pd.Series(0.0, index=idx)
+
+
+def _most_frequent_customer_label(series: pd.Series) -> str:
+    """Canonical display name when the same account appears under different spellings / casing."""
+    s = series.dropna().astype(str).str.strip()
+    s = s[s != ""]
+    if s.empty:
+        return ""
+    return str(s.value_counts().index[0])
+
+
+def _customer_summary_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    One row per logical customer: group by case-insensitive trimmed name; Revenue from _revenue_amount_series.
+    """
+    empty_cols = ["CUSTOMER_NAME", "Revenue", "Orders", "AvgOrder", "LastOrder"]
+    if df is None or df.empty or "CUSTOMER_NAME" not in df.columns:
+        return pd.DataFrame(columns=empty_cols)
+    if "AMOUNT" not in df.columns:
+        return pd.DataFrame(columns=empty_cols)
+    d = df.copy()
+    d["_rev"] = _revenue_amount_series(d)
+    d["_ck"] = d["CUSTOMER_NAME"].astype(str).str.strip().str.lower()
+    d = d[d["_ck"] != ""]
+    if d.empty:
+        return pd.DataFrame(columns=empty_cols)
+    inv_col = "INVOICE_NO" if "INVOICE_NO" in d.columns else None
+    has_date = "DATE" in d.columns
+    parts = {
+        "CUSTOMER_NAME": ("CUSTOMER_NAME", _most_frequent_customer_label),
+        "Revenue": ("_rev", "sum"),
+        "AvgOrder": ("_rev", "mean"),
+    }
+    if inv_col:
+        parts["Orders"] = (inv_col, "nunique")
+    else:
+        parts["Orders"] = ("_rev", "count")
+    if has_date:
+        parts["LastOrder"] = ("DATE", "max")
+    out = d.groupby("_ck", as_index=False).agg(**parts)
+    if "_ck" in out.columns:
+        out = out.drop(columns=["_ck"])
+    if has_date:
+        _lo = pd.to_datetime(out["LastOrder"], errors="coerce")
+        out["LastOrder"] = _lo.dt.strftime("%Y-%m-%d").where(_lo.notna(), "")
+    else:
+        out["LastOrder"] = ""
+    return out
+
+
 def _material_group_column(df: pd.DataFrame):
     """Return the material group column name if present (any common casing)."""
     candidates = [
@@ -1455,15 +1512,10 @@ def get_growth_metrics(tenant_id: str = "default_elettro", start_date: Optional[
 def get_all_customers(tenant_id: str = "default_elettro", start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
-    if df.empty or "CUSTOMER_NAME" not in df.columns:
+    cust = _customer_summary_df(df)
+    if cust.empty:
         return []
-    cust = df.groupby("CUSTOMER_NAME").agg(
-        Revenue=("AMOUNT", "sum"),
-        Orders=("INVOICE_NO", "nunique"),
-        AvgOrder=("AMOUNT", "mean"),
-        LastOrder=("DATE", "max")
-    ).sort_values("Revenue", ascending=False).reset_index()
-    cust["LastOrder"] = cust["LastOrder"].dt.strftime("%Y-%m-%d")
+    cust = cust.sort_values("Revenue", ascending=False).reset_index(drop=True)
     return serialize_df(cust)
 
 @router.get("/customers/rfm")
@@ -1472,12 +1524,32 @@ def get_rfm_segments(tenant_id: str = "default_elettro", start_date: Optional[st
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "CUSTOMER_NAME" not in df.columns or "DATE" not in df.columns:
         return []
+    if "AMOUNT" not in df.columns:
+        return []
+    df = df.copy()
+    df["_rev"] = _revenue_amount_series(df)
+    df["_ck"] = df["CUSTOMER_NAME"].astype(str).str.strip().str.lower()
+    df = df[df["_ck"] != ""]
+    if df.empty:
+        return []
     max_date = df["DATE"].max()
-    rfm = df.groupby("CUSTOMER_NAME").agg(
-        Recency=("DATE", lambda x: (max_date - x.max()).days),
-        Frequency=("INVOICE_NO", "nunique"),
-        Monetary=("AMOUNT", "sum")
-    ).reset_index()
+    inv_col = "INVOICE_NO" if "INVOICE_NO" in df.columns else None
+    if inv_col:
+        rfm = df.groupby("_ck").agg(
+            CUSTOMER_NAME=("CUSTOMER_NAME", _most_frequent_customer_label),
+            Recency=("DATE", lambda x: (max_date - x.max()).days),
+            Frequency=(inv_col, "nunique"),
+            Monetary=("_rev", "sum"),
+        ).reset_index()
+    else:
+        rfm = df.groupby("_ck").agg(
+            CUSTOMER_NAME=("CUSTOMER_NAME", _most_frequent_customer_label),
+            Recency=("DATE", lambda x: (max_date - x.max()).days),
+            Frequency=("DATE", "count"),
+            Monetary=("_rev", "sum"),
+        ).reset_index()
+    if "_ck" in rfm.columns:
+        rfm = rfm.drop(columns=["_ck"])
     # Simple scoring
     for col in ["Recency", "Frequency", "Monetary"]:
         rfm[f"{col}_Score"] = pd.qcut(rfm[col], q=4, labels=[4,3,2,1] if col == "Recency" else [1,2,3,4], duplicates="drop").astype(int)
@@ -1766,7 +1838,7 @@ def export_customers_below_revenue(
     max_revenue_inr: float = Query(
         550_000.0,
         ge=0,
-        description="Customers with total Revenue (sum of AMOUNT in the filtered period) strictly below this INR value. Default 550000 = ₹5.5 L.",
+        description="Include customers with total revenue at or below this INR (sum of AMOUNT only). Default 550000 = ₹5.5 L.",
     ),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
@@ -1779,49 +1851,21 @@ def export_customers_below_revenue(
     items: Optional[str] = None,
 ):
     """
-    CSV of one row per customer: Revenue, Orders, AvgOrder, LastOrder — only customers whose
-    total sales in the selected filters are **below** ``max_revenue_inr`` (default ₹5.5 L).
+    CSV of one row per customer: Revenue, Orders, AvgOrder, LastOrder — customers whose
+    total sales (same basis as /customers/all) are **at or below** ``max_revenue_inr`` (default ₹5.5 L).
     """
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     if df.empty or "CUSTOMER_NAME" not in df.columns or "AMOUNT" not in df.columns:
         csv_bytes = "CUSTOMER_NAME,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n".encode("utf-8-sig")
     else:
-        inv_col = "INVOICE_NO" if "INVOICE_NO" in df.columns else None
-        has_date = "DATE" in df.columns
-        if inv_col and has_date:
-            cust = df.groupby("CUSTOMER_NAME").agg(
-                Revenue=("AMOUNT", "sum"),
-                Orders=(inv_col, "nunique"),
-                AvgOrder=("AMOUNT", "mean"),
-                LastOrder=("DATE", "max"),
-            ).reset_index()
-        elif inv_col:
-            cust = df.groupby("CUSTOMER_NAME").agg(
-                Revenue=("AMOUNT", "sum"),
-                Orders=(inv_col, "nunique"),
-                AvgOrder=("AMOUNT", "mean"),
-            ).reset_index()
-            cust["LastOrder"] = pd.NaT
-        elif has_date:
-            cust = df.groupby("CUSTOMER_NAME").agg(
-                Revenue=("AMOUNT", "sum"),
-                Orders=("AMOUNT", "count"),
-                AvgOrder=("AMOUNT", "mean"),
-                LastOrder=("DATE", "max"),
-            ).reset_index()
+        cust = _customer_summary_df(df)
+        if cust.empty:
+            csv_bytes = "CUSTOMER_NAME,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n".encode("utf-8-sig")
         else:
-            cust = df.groupby("CUSTOMER_NAME").agg(
-                Revenue=("AMOUNT", "sum"),
-                Orders=("AMOUNT", "count"),
-                AvgOrder=("AMOUNT", "mean"),
-            ).reset_index()
-            cust["LastOrder"] = pd.NaT
-        _lo = pd.to_datetime(cust["LastOrder"], errors="coerce")
-        cust["LastOrder"] = _lo.dt.strftime("%Y-%m-%d").where(_lo.notna(), "")
-        cust = cust[cust["Revenue"] < float(max_revenue_inr)].sort_values("Revenue", ascending=True)
-        cust["MaxRevenueThreshold_INR"] = float(max_revenue_inr)
-        csv_bytes = cust.to_csv(index=False).encode("utf-8-sig")
+            cust = cust[cust["Revenue"] <= float(max_revenue_inr)].sort_values("Revenue", ascending=True)
+            cust["MaxRevenueThreshold_INR"] = float(max_revenue_inr)
+            csv_bytes = cust.to_csv(index=False).encode("utf-8-sig")
 
     safe_max = int(max_revenue_inr) if float(max_revenue_inr) == int(float(max_revenue_inr)) else round(float(max_revenue_inr), 2)
     filename = f"{REPORT_FILE_PREFIX}_Customers_Under_{safe_max}INR_{tenant_id}.csv"

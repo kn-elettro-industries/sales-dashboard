@@ -42,6 +42,8 @@ export default function ReportsPage() {
     // Export State
     const [downloading, setDownloading] = useState(false);
     const [selectedReport, setSelectedReport] = useState("Executive Summary");
+    /** Distributor Strategy PDF: include branded cover (default on). */
+    const [distributorIncludeCover, setDistributorIncludeCover] = useState(true);
     const [filterCustomer, setFilterCustomer] = useState("All");
     const [filterState, setFilterState] = useState("All");
     const [filterMaterial, setFilterMaterial] = useState("All");
@@ -229,6 +231,10 @@ export default function ReportsPage() {
 
             if (dateRange?.from) queryParams.append("start_date", format(dateRange.from, "yyyy-MM-dd"));
             if (dateRange?.to) queryParams.append("end_date", format(dateRange.to, "yyyy-MM-dd"));
+
+            if (selectedReport === "Distributor Strategy Report") {
+                queryParams.append("include_cover", distributorIncludeCover ? "true" : "false");
+            }
 
             const url = `${API_BASE_URL}/reports/download?${queryParams.toString()}`;
 
@@ -581,6 +587,23 @@ export default function ReportsPage() {
                                         </button>
                                     ))}
                                 </div>
+
+                                {selectedReport === "Distributor Strategy Report" && (
+                                    <label className="flex items-start gap-3 rounded-lg border border-[#30363d] bg-[#0d1117]/60 px-4 py-3 text-sm text-gray-300 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={distributorIncludeCover}
+                                            onChange={(e) => setDistributorIncludeCover(e.target.checked)}
+                                            className="accent-[#daa520] mt-0.5 shrink-0"
+                                        />
+                                        <span>
+                                            <span className="font-medium text-gray-200">Include cover page</span>
+                                            <span className="block text-xs text-gray-500 mt-1">
+                                                Uncheck to start the PDF directly on the performance summary (no branded title page).
+                                            </span>
+                                        </span>
+                                    </label>
+                                )}
 
                                 <div className="mt-4 rounded-lg border border-[#30363d]/90 bg-[#0d1117]/40 overflow-hidden">
                                     <button

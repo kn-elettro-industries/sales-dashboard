@@ -725,6 +725,7 @@ def download_pdf_report(
     fiscal_years: Optional[str] = None,
     months: Optional[str] = None,
     items: Optional[str] = None,
+    include_cover: bool = Query(True, description="Distributor Strategy Report: include branded cover page"),
 ):
     try:
         from .pdf_generator import generate_pdf_report, generate_dynamic_pdf_report, generate_distributor_strategy_pdf
@@ -793,7 +794,11 @@ def download_pdf_report(
                     suffix = f"Months: {shown}{'...' if len(month_parts) > 6 else ''}"
                 analysis_period = f"{analysis_period} | {suffix}" if analysis_period else suffix
             pdf_bytes = generate_distributor_strategy_pdf(
-                df, customer_name, analysis_period, selected_fiscal_years=fy_parts
+                df,
+                customer_name,
+                analysis_period,
+                selected_fiscal_years=fy_parts,
+                include_cover=include_cover,
             )
             entity_name = str(customer_name).replace(" ", "_")
         else:

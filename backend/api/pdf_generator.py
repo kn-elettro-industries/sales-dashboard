@@ -1391,16 +1391,25 @@ def generate_distributor_strategy_pdf(
     customer_name: str,
     analysis_period: str = "YTD",
     selected_fiscal_years: Optional[List[str]] = None,
+    *,
+    include_cover: bool = True,
 ) -> bytes:
     """
-    Generates the usual Distributor Strategy Report: cover (DISTRIBUTOR STRATEGY REPORT + customer + FY),
-    Efficiency & Consolidation (scatter + zone + Top 10 table), Executive Summary (KPIs, Top Material Groups, Insights).
+    Generates the usual Distributor Strategy Report: optional cover (DISTRIBUTOR STRATEGY REPORT + customer + period),
+    then performance summary (KPIs, product mix, recommendations).
     When ``selected_fiscal_years`` has 2+ entries, product mix is split by FY (revenue + share per FY + YoY).
     matplotlib is lazy-loaded and freed after generation to save RAM."""
     _, Figure, FigureCanvas, cm = _get_matplotlib()
     try:
         return _generate_distributor_strategy_pdf_inner(
-            df, customer_name, analysis_period, Figure, FigureCanvas, cm, selected_fiscal_years
+            df,
+            customer_name,
+            analysis_period,
+            Figure,
+            FigureCanvas,
+            cm,
+            selected_fiscal_years,
+            include_cover=include_cover,
         )
     finally:
         gc.collect()
@@ -1412,15 +1421,20 @@ def _generate_distributor_strategy_pdf_inner(
     analysis_period: str,
     Figure, FigureCanvas, cm,
     selected_fiscal_years: Optional[List[str]] = None,
+    *,
+    include_cover: bool = True,
 ) -> bytes:
     """Inner implementation — matplotlib symbols passed in as arguments.
     """
-    # Distributor Strategy Report: cover + performance summary (no consolidation page).
+    # Distributor Strategy Report: optional cover, then performance summary.
     if df.empty:
         pdf = PDF()
         pdf.alias_nb_pages()
         pdf.report_label = "Distributor Strategy Report"
-        pdf.create_distributor_cover_page(_pdf_text(customer_name), _pdf_text(analysis_period))
+        if include_cover:
+            pdf.create_distributor_cover_page(_pdf_text(customer_name), _pdf_text(analysis_period))
+        else:
+            pdf.add_page()
         pdf.set_text_color(200, 200, 200)
         pdf.set_font("Arial", "", 11)
         pdf.set_xy(0, 185)
@@ -1431,15 +1445,16 @@ def _generate_distributor_strategy_pdf_inner(
     pdf = PDF()
     pdf.alias_nb_pages()
     pdf.report_label = "Distributor Strategy Report"
-    pdf.create_distributor_cover_page(_pdf_text(customer_name), _pdf_text(analysis_period))
+    if include_cover:
+        pdf.create_distributor_cover_page(_pdf_text(customer_name), _pdf_text(analysis_period))
+    pdf.add_page()
 
-    # Page 2: Performance summary (Product mix + recommendations)
+    # Performance summary (Product mix + recommendations); page 1 if no cover, else page 2
     total_rev = float(df["AMOUNT"].sum()) if "AMOUNT" in df.columns else 0.0
     total_orders = int(df["INVOICE_NO"].nunique()) if "INVOICE_NO" in df.columns else 0
     avg_order = total_rev / max(total_orders, 1)
     product_categories = int(df[grp_col].nunique()) if grp_col in df.columns else 0
 
-    pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=22)
 
     # Performance summary header bar

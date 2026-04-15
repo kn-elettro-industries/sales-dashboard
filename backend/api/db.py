@@ -7,6 +7,8 @@ from cachetools import TTLCache, cached
 
 from dotenv import load_dotenv
 
+from .sales_dates import parse_invoice_dates, fiscal_year_india
+
 load_dotenv()
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
@@ -153,20 +155,6 @@ def verify_user(username: str, password: str):
         return None
 
 
-def _fy_from_date(date):
-    """Same as routes.calculate_fy: April = start of FY. Used for read-time enrichment."""
-    if pd.isna(date):
-        return "UNKNOWN"
-    try:
-        d = pd.to_datetime(date)
-        if hasattr(d, "month"):
-            y = d.year % 100
-            return f"FY{y}-{(d.year + 1) % 100}" if d.month >= 4 else f"FY{y - 1}-{y}"
-    except Exception:
-        pass
-    return "UNKNOWN"
-
-
 def _tenant_query_date_filter() -> str:
     """Limit rows fetched from DB to reduce RAM. Set EGRESS_MAX_YEARS=3 in env to enable. Default=0 (load all)."""
     try:
@@ -181,7 +169,10 @@ def _tenant_query_date_filter() -> str:
 
 @cached(cache=tenant_cache)
 def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
-    """Internal cached helper to fetch full tenant dataset from DB. Enriches FINANCIAL_YEAR and MONTH from DATE when missing."""
+    """Internal cached helper to fetch full tenant dataset from DB.
+    Coerces DATE, normalizes column name to ``DATE``, and always derives FINANCIAL_YEAR + MONTH from DATE
+    so labels match invoice dates (fixes stale MONTH/FY from older uploads).
+    """
     eng = get_engine()
     if eng is None:
         return pd.DataFrame()
@@ -201,13 +192,13 @@ def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
                 df[tot_col] = pd.to_numeric(df[tot_col], errors="coerce")
             date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
             if date_col is not None:
-                df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-                if hasattr(df[date_col].dtype, "tz") and df[date_col].dtype.tz is not None:
-                    df[date_col] = df[date_col].dt.tz_localize(None)
-                if "FINANCIAL_YEAR" not in df.columns:
-                    df["FINANCIAL_YEAR"] = df[date_col].apply(_fy_from_date)
-                if "MONTH" not in df.columns:
-                    df["MONTH"] = df[date_col].dt.strftime("%b-%y").str.upper()
+                if date_col != "DATE":
+                    df = df.rename(columns={date_col: "DATE"})
+                df["DATE"] = parse_invoice_dates(df["DATE"])
+                valid = df["DATE"].notna()
+                if valid.any():
+                    df.loc[valid, "FINANCIAL_YEAR"] = df.loc[valid, "DATE"].apply(fiscal_year_india)
+                    df.loc[valid, "MONTH"] = df.loc[valid, "DATE"].dt.strftime("%b-%y").str.upper()
         except Exception as e:
             logging.warning("get_cached_tenant_df: enrich/coerce failed, returning raw df: %s", e)
         return df

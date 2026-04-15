@@ -21,6 +21,10 @@ from .db import (
     upsert_distributor_target,
 )
 from .customer_geo_overrides import apply_customer_geo_overrides, apply_customer_name_canonical
+from .sales_dates import parse_invoice_dates, fiscal_year_india
+
+# Single FY helper for reports/PDF imports (`from .routes import calculate_fy`).
+calculate_fy = fiscal_year_india
 
 router = APIRouter()
 
@@ -389,6 +393,26 @@ def standardize(df):
     df.columns = df.columns.str.strip().str.upper()
     df.columns = df.columns.str.replace(".", "", regex=False).str.replace(" ", "_")
 
+    # Invoice / voucher date synonyms → DATE (must exist for FY, MONTH, trend, filters)
+    if "DATE" not in df.columns:
+        for syn in (
+            "INVOICE_DATE", "BILL_DATE", "VOUCHER_DATE", "DOC_DATE", "DOCUMENT_DATE",
+            "TRANSACTION_DATE", "SALES_DATE", "POSTING_DATE", "VOUCHER_DT", "INVOICE_DT",
+        ):
+            if syn in df.columns:
+                df.rename(columns={syn: "DATE"}, inplace=True)
+                break
+
+    # Revenue line amount (before tax) — common ERP export names
+    if "AMOUNT" not in df.columns:
+        for syn in (
+            "NET_AMOUNT", "INVOICE_AMOUNT", "BILL_AMOUNT", "LINE_AMOUNT",
+            "TAXABLE_AMOUNT", "BASIC_AMOUNT", "VALUE", "NET_VALUE", "AMT",
+        ):
+            if syn in df.columns:
+                df.rename(columns={syn: "AMOUNT"}, inplace=True)
+                break
+
     for col in list(df.columns):
         cu = col.upper()
 
@@ -440,13 +464,6 @@ def _coalesce_state_region(df: pd.DataFrame) -> pd.DataFrame:
     df["STATE"] = df["STATE"].fillna("").astype(str).str.strip()
     df.loc[df["STATE"] == "", "STATE"] = STATE_PLACEHOLDER
     return df
-
-def calculate_fy(date):
-    """Indian FY label: April -> March (e.g. Apr 2025-Mar 2026 is FY25-26)."""
-    if pd.isna(date): return "UNKNOWN"
-    if date.month >= 4: return f"FY{date.year % 100}-{(date.year + 1) % 100}"
-    else: return f"FY{(date.year - 1) % 100}-{date.year % 100}"
-
 
 COMPANY_STATE = "MAHARASHTRA"
 TAX_RATE = 0.18
@@ -540,6 +557,47 @@ async def upload_customer_master(file: UploadFile = File(...), tenant_id: str = 
         raise HTTPException(status_code=500, detail=f"Failed to process customer master: {str(e)}")
 
 
+def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[pd.DataFrame, int]:
+    """
+    After ``standardize()`` column names: region coalesce, customer master, geo fixes,
+    then strict DATE/AMOUNT validation and FY/MONTH derivation.
+
+    Invalid date cells are **dropped** (count returned). Missing DATE/AMOUNT columns raise 400.
+    """
+    df = _coalesce_state_region(df)
+    df = _merge_customer_master(df, tenant_id)
+    df = apply_customer_name_canonical(df)
+    df = apply_customer_geo_overrides(df)
+    if "DATE" not in df.columns:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing invoice date column. Use DATE, INVOICE_DATE, BILL_DATE, or another supported name.",
+        )
+    if "AMOUNT" not in df.columns:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing amount column. Use AMOUNT, NET_AMOUNT, INVOICE_AMOUNT, BILL_AMOUNT, LINE_AMOUNT, or VALUE.",
+        )
+    df["DATE"] = parse_invoice_dates(df["DATE"])
+    _bad_dt = df["DATE"].isna()
+    rows_dropped_invalid_date = int(_bad_dt.sum())
+    if _bad_dt.any():
+        df = df.loc[~_bad_dt].copy()
+    if df.empty:
+        raise HTTPException(
+            status_code=400,
+            detail="No rows with a valid invoice date. Prefer YYYY-MM-DD; DD/MM/YYYY is supported for ambiguous numerics.",
+        )
+    df["AMOUNT"] = pd.to_numeric(df["AMOUNT"], errors="coerce").fillna(0.0)
+    df["FINANCIAL_YEAR"] = df["DATE"].apply(fiscal_year_india)
+    df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
+    if "CITY" not in df.columns:
+        df["CITY"] = "City Not Found"
+    if "STATE" not in df.columns:
+        df["STATE"] = STATE_PLACEHOLDER
+    return df, rows_dropped_invalid_date
+
+
 @router.post("/upload")
 async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form("default_elettro")):
     try:
@@ -552,37 +610,25 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
         if df.empty:
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-        # 1. Clean & Standardize
         df = standardize(df)
-        df = _coalesce_state_region(df)
+        df, rows_dropped_invalid_date = _ingest_sales_after_standardize(df, tenant_id)
 
-        # 2. Enrich from customer master (STATE/CITY)
-        df = _merge_customer_master(df, tenant_id)
-        df = apply_customer_name_canonical(df)
-        df = apply_customer_geo_overrides(df)
-
-        # 3. Enrich Dates
-        if "DATE" in df.columns:
-            df["DATE"] = pd.to_datetime(df["DATE"], errors='coerce')
-            df["FINANCIAL_YEAR"] = df["DATE"].apply(calculate_fy)
-            df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
-
-        if "CITY" not in df.columns: df["CITY"] = "City Not Found"
-        if "STATE" not in df.columns: df["STATE"] = STATE_PLACEHOLDER
-
-        # 4. Standardize material group names, then exclude non-sales rows (ETL rule)
         df = _apply_material_mappings(df)
         df = _exclude_material_groups(df)
-
-        # 5. Calculate taxes (IGST/CGST/SGST based on state)
         df = calculate_taxes(df)
 
-        # 6. Insert into database
         from .db import update_database
         rows_inserted = update_database(df, tenant_id)
 
-        return {"filename": file.filename, "rows_inserted": rows_inserted, "tenant": tenant_id}
+        return {
+            "filename": file.filename,
+            "rows_inserted": rows_inserted,
+            "rows_dropped_invalid_date": rows_dropped_invalid_date,
+            "tenant": tenant_id,
+        }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
@@ -612,21 +658,20 @@ async def v1_upload_batch(files: List[UploadFile] = File(...), tenant_id: str = 
             if df.empty:
                 continue
             df = standardize(df)
-            df = _coalesce_state_region(df)
-            if "DATE" in df.columns:
-                df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
-                df["FINANCIAL_YEAR"] = df["DATE"].apply(calculate_fy)
-                df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
-            if "CITY" not in df.columns:
-                df["CITY"] = "City Not Found"
-            if "STATE" not in df.columns:
-                df["STATE"] = STATE_PLACEHOLDER
+            df, rows_dropped_invalid_date = _ingest_sales_after_standardize(df, tenant_id)
             df = _apply_material_mappings(df)
             df = _exclude_material_groups(df)
             df = calculate_taxes(df)
             from .db import update_database
             rows = update_database(df, tenant_id)
-            last_result = {"filename": file.filename, "rows_inserted": rows, "tenant": tenant_id}
+            last_result = {
+                "filename": file.filename,
+                "rows_inserted": rows,
+                "rows_dropped_invalid_date": rows_dropped_invalid_date,
+                "tenant": tenant_id,
+            }
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed on {file.filename}: {str(e)}")
     return last_result or {"filename": None, "rows_inserted": 0, "tenant": tenant_id}
@@ -1281,9 +1326,7 @@ def get_dashboard_summary(
             df[amt_col] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0)
         date_col_raw = next((c for c in df.columns if str(c).upper() == "DATE"), None)
         if date_col_raw is not None:
-            df[date_col_raw] = pd.to_datetime(df[date_col_raw], errors="coerce")
-            if hasattr(df[date_col_raw].dtype, "tz") and df[date_col_raw].dtype.tz is not None:
-                df[date_col_raw] = df[date_col_raw].dt.tz_localize(None)
+            df[date_col_raw] = parse_invoice_dates(df[date_col_raw])
         revenue = float(df[amt_col].sum()) if amt_col is not None else 0.0
         orders = int(df["INVOICE_NO"].nunique()) if "INVOICE_NO" in df.columns else 0
         cust_count = int(df["CUSTOMER_NAME"].nunique()) if "CUSTOMER_NAME" in df.columns else 0
@@ -1347,7 +1390,7 @@ def get_dashboard_summary(
         date_col, amount_col = _date_amount_columns(df)
         if date_col and amount_col:
             df_t = df.copy()
-            df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
+            df_t[date_col] = parse_invoice_dates(df_t[date_col])
             df_t = df_t.dropna(subset=[date_col])
             if not df_t.empty:
                 t = df_t.groupby(pd.Grouper(key=date_col, freq="ME"))[amount_col].sum().reset_index()
@@ -1438,7 +1481,7 @@ def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str
     out = []
     if date_col:
         df_t = df.copy()
-        df_t[date_col] = pd.to_datetime(df_t[date_col], errors="coerce")
+        df_t[date_col] = parse_invoice_dates(df_t[date_col])
         df_t = df_t.dropna(subset=[date_col])
         if not df_t.empty:
             trend = df_t.groupby(pd.Grouper(key=date_col, freq="ME"))[amount_col].sum().reset_index()
@@ -1771,7 +1814,7 @@ def get_fy_comparison(
         date_col = next((c for c in df.columns if str(c).upper() == "DATE"), None)
         if date_col is not None:
             df = df.copy()
-            dt = pd.to_datetime(df[date_col], errors="coerce")
+            dt = parse_invoice_dates(df[date_col])
             df["FINANCIAL_YEAR"] = dt.apply(lambda x: calculate_fy(x) if pd.notna(x) else None)
         else:
             return {"rows": [], "message": "FINANCIAL_YEAR not available for this dataset."}

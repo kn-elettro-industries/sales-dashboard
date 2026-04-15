@@ -52,6 +52,7 @@ export default function DataUploadPage() {
         setStatus("uploading");
         setProgress({ current: 0, total: files.length });
         let totalRows = 0;
+        let totalDroppedDates = 0;
         let failedFiles: string[] = [];
 
         for (let i = 0; i < files.length; i++) {
@@ -68,6 +69,7 @@ export default function DataUploadPage() {
                 const result = await response.json();
                 if (response.ok) {
                     totalRows += result.rows_inserted || 0;
+                    totalDroppedDates += Number(result.rows_dropped_invalid_date) || 0;
                 } else {
                     failedFiles.push(`${files[i].name}: ${result.detail || "failed"}`);
                 }
@@ -78,11 +80,23 @@ export default function DataUploadPage() {
 
         if (failedFiles.length === 0) {
             setStatus("success");
-            setMessage(`Successfully processed ${files.length} file${files.length > 1 ? "s" : ""} — ${totalRows.toLocaleString()} rows inserted.`);
+            const dropNote =
+                totalDroppedDates > 0
+                    ? ` ${totalDroppedDates.toLocaleString()} row(s) skipped (invalid/unparseable dates). Use YYYY-MM-DD in source files when possible.`
+                    : "";
+            setMessage(
+                `Successfully processed ${files.length} file${files.length > 1 ? "s" : ""} — ${totalRows.toLocaleString()} rows inserted.${dropNote}`
+            );
             setFiles([]);
         } else if (failedFiles.length < files.length) {
             setStatus("success");
-            setMessage(`Processed ${files.length - failedFiles.length} of ${files.length} files (${totalRows.toLocaleString()} rows). Failed: ${failedFiles.join("; ")}`);
+            const dropNote =
+                totalDroppedDates > 0
+                    ? ` ${totalDroppedDates.toLocaleString()} row(s) skipped (invalid dates).`
+                    : "";
+            setMessage(
+                `Processed ${files.length - failedFiles.length} of ${files.length} files (${totalRows.toLocaleString()} rows).${dropNote} Failed: ${failedFiles.join("; ")}`
+            );
             setFiles([]);
         } else {
             setStatus("error");

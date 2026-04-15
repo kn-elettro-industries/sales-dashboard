@@ -1,5 +1,5 @@
 """
-Indian financial year: April -> March (same convention as `routes.calculate_fy` and `db._fy_from_date`).
+Indian financial year: April -> March (same convention as ``sales_dates.fiscal_year_india`` / ``routes.calculate_fy``).
 """
 
 from __future__ import annotations

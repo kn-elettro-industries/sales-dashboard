@@ -228,8 +228,8 @@ export default function GlobalFilterBar() {
             setExporting(true);
             const params = new URLSearchParams();
             params.append("tenant_id", tenant);
-            if (dateRange?.from) params.append("start_date", dateRange.from.toISOString());
-            if (dateRange?.to) params.append("end_date", dateRange.to.toISOString());
+            if (dateRange?.from) params.append("start_date", format(dateRange.from, "yyyy-MM-dd"));
+            if (dateRange?.to) params.append("end_date", format(dateRange.to, "yyyy-MM-dd"));
             if (selectedStates.length > 0) params.append("states", selectedStates.join(","));
             if (selectedCities.length > 0) params.append("cities", selectedCities.join(","));
             if (selectedCustomers.length > 0) params.append("customers", selectedCustomers.join(","));

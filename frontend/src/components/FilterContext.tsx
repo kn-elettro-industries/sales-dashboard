@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, type Dispatch, type SetStateAction } from "react";
+import { format } from "date-fns";
 
 const FILTER_STORAGE_KEY = "elettro_filter_view";
 
@@ -87,15 +88,15 @@ export function FilterProvider({ children }: { children: ReactNode }) {
             fiscalYears: selectedFiscalYears,
             months: selectedMonths,
             items: selectedItems,
-            dateFrom: dateRange?.from?.toISOString?.()?.slice(0, 10),
-            dateTo: dateRange?.to?.toISOString?.()?.slice(0, 10),
+            dateFrom: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+            dateTo: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
         };
         localStorage.setItem(FILTER_STORAGE_KEY + "_current", JSON.stringify(payload));
     }, [hasHydrated, tenant, dateRange, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const saveCurrentView = useCallback((name: string) => {
         if (typeof window === "undefined" || !name.trim()) return;
-        const payload = { name: name.trim(), tenant, states: selectedStates, cities: selectedCities, customers: selectedCustomers, materialGroups: selectedMaterialGroups, fiscalYears: selectedFiscalYears, months: selectedMonths, items: selectedItems, dateFrom: dateRange?.from?.toISOString?.()?.slice(0, 10), dateTo: dateRange?.to?.toISOString?.()?.slice(0, 10) };
+        const payload = { name: name.trim(), tenant, states: selectedStates, cities: selectedCities, customers: selectedCustomers, materialGroups: selectedMaterialGroups, fiscalYears: selectedFiscalYears, months: selectedMonths, items: selectedItems, dateFrom: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined, dateTo: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined };
         const key = FILTER_STORAGE_KEY + "_" + name.trim();
         localStorage.setItem(key, JSON.stringify(payload));
         setSavedViewNames((prev) => {

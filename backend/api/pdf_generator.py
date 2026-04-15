@@ -105,11 +105,11 @@ def _ensure_financial_year_column(df: pd.DataFrame) -> pd.DataFrame:
         return df
     if "DATE" not in df.columns:
         return df
-    from .routes import calculate_fy
+    from .sales_dates import parse_invoice_dates, fiscal_year_india
 
     out = df.copy()
-    dt = pd.to_datetime(out["DATE"], errors="coerce")
-    out["FINANCIAL_YEAR"] = dt.apply(lambda x: calculate_fy(x) if pd.notna(x) else None)
+    dt = parse_invoice_dates(out["DATE"])
+    out["FINANCIAL_YEAR"] = dt.apply(lambda x: fiscal_year_india(x) if pd.notna(x) else None)
     return out
 
 

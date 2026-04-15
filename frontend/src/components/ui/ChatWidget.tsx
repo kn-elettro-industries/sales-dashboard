@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { format } from "date-fns";
 import { MessageSquare, X, Send, Loader2 } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
 import { API_BASE_URL } from "@/lib/api";
@@ -33,8 +34,8 @@ export default function ChatWidget() {
                 body: JSON.stringify({
                     query: userMsg,
                     tenant: tenant,
-                    startDate: dateRange?.from?.toISOString(),
-                    endDate: dateRange?.to?.toISOString()
+                    startDate: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+                    endDate: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
                 })
             });
 

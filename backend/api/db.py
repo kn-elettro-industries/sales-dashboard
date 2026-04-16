@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import bindparam, create_engine, text
 import logging
 from typing import Optional
 from cachetools import TTLCache, cached
@@ -254,6 +254,21 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
     return df
 
 
+def _normalize_invoice_no_key(val) -> str:
+    """Stable string for matching DB INVOICE_NO (handles Excel 12345.0 vs 12345)."""
+    if val is None:
+        return ""
+    try:
+        if pd.isna(val):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    s = str(val).strip()
+    if len(s) > 2 and s.endswith(".0") and s[:-2].replace("-", "").isdigit():
+        s = s[:-2]
+    return s
+
+
 def clear_tenant_data(tenant_id: str = "default_elettro") -> int:
     """Delete all rows for a tenant so data can be re-uploaded with enrichment (e.g. after adding customer master)."""
     eng = get_engine()
@@ -298,26 +313,38 @@ def update_database(new_df: pd.DataFrame, tenant_id: str = "default_elettro") ->
                 new_records_count = len(new_df)
                 logging.info(f"Created new Postgres table with {new_records_count} records for tenant {tenant_id}.")
             else:
-                # Deduplication logic per tenant
-                existing_invoices = pd.read_sql(
-                    text("SELECT \"INVOICE_NO\" FROM sales_master WHERE tenant_id = :tid"), 
-                    conn, params={"tid": tenant_id}
-                )
-                existing_set = set(existing_invoices["INVOICE_NO"])
-                
-                if "INVOICE_NO" in new_df.columns:
-                    to_insert = new_df[~new_df["INVOICE_NO"].isin(existing_set)]
-                else:
-                    logging.warning("INVOICE_NO missing in new data. Appending all.")
+                # Replace rows for any INVOICE_NO present in this file so re-upload fixes bad DATE/MONTH
+                # (old behaviour skipped duplicates — same invoice never updated in Postgres).
+                if "INVOICE_NO" not in new_df.columns:
+                    logging.warning("INVOICE_NO missing in new data. Appending all rows (cannot replace by invoice).")
                     to_insert = new_df
-
-                new_records_count = len(to_insert)
-
-                if new_records_count > 0:
-                    to_insert.to_sql("sales_master", eng, if_exists="append", index=False)
-                    logging.info(f"Appended {new_records_count} new records to Postgres for tenant {tenant_id}.")
+                    new_records_count = len(to_insert)
+                    if new_records_count > 0:
+                        to_insert.to_sql("sales_master", eng, if_exists="append", index=False)
+                        logging.info(f"Appended {new_records_count} records for tenant {tenant_id}.")
                 else:
-                    logging.info("No new records to append to Postgres DB.")
+                    inv_keys = list(
+                        dict.fromkeys(
+                            _normalize_invoice_no_key(x)
+                            for x in new_df["INVOICE_NO"].dropna()
+                            if _normalize_invoice_no_key(x)
+                        )
+                    )
+                    with eng.begin() as cconn:
+                        if inv_keys:
+                            del_stmt = text(
+                                'DELETE FROM sales_master WHERE tenant_id = :tid '
+                                'AND cast("INVOICE_NO" as text) IN :inv_list'
+                            ).bindparams(bindparam("inv_list", expanding=True))
+                            cconn.execute(del_stmt, {"tid": tenant_id, "inv_list": inv_keys})
+                            logging.info(
+                                "Removed existing rows for %s invoice key(s) before re-insert (tenant=%s)",
+                                len(inv_keys),
+                                tenant_id,
+                            )
+                        new_df.to_sql("sales_master", cconn, if_exists="append", index=False)
+                        new_records_count = len(new_df)
+                    logging.info(f"Inserted {new_records_count} records for tenant {tenant_id}.")
 
             if new_records_count > 0:
                 invalidate_tenant_cache(tenant_id)

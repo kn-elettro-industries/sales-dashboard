@@ -1901,6 +1901,11 @@ def export_filtered_data(
 @router.get("/export/customers-below-revenue")
 def export_customers_below_revenue(
     tenant_id: str = Query("default_elettro"),
+    min_revenue_inr: float = Query(
+        0.0,
+        ge=0,
+        description="Include customers with total revenue at or above this INR (AMOUNT sum). Use with max_revenue_inr for a band.",
+    ),
     max_revenue_inr: float = Query(
         550_000.0,
         ge=0,
@@ -1917,12 +1922,17 @@ def export_customers_below_revenue(
     items: Optional[str] = None,
 ):
     """
-    CSV of one row per customer: CITY, STATE, Revenue, Orders, AvgOrder, LastOrder — customers whose
-    total sales (same basis as /customers/all) are **at or below** ``max_revenue_inr`` (default ₹5.5 L).
+    CSV of one row per customer — customers whose total sales (same basis as /customers/all) fall in
+    ``[min_revenue_inr, max_revenue_inr]`` inclusive (default 0 … ₹5.5 L). Revenue = sum of AMOUNT only.
     """
+    if float(min_revenue_inr) > float(max_revenue_inr):
+        raise HTTPException(
+            status_code=400,
+            detail="min_revenue_inr must be less than or equal to max_revenue_inr.",
+        )
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
-    _hdr = "CUSTOMER_NAME,CITY,STATE,Revenue,Orders,AvgOrder,LastOrder,MaxRevenueThreshold_INR\n"
+    _hdr = "CUSTOMER_NAME,CITY,STATE,Revenue,Orders,AvgOrder,LastOrder,MinRevenueThreshold_INR,MaxRevenueThreshold_INR\n"
     if df.empty or "CUSTOMER_NAME" not in df.columns or "AMOUNT" not in df.columns:
         csv_bytes = _hdr.encode("utf-8-sig")
     else:
@@ -1930,12 +1940,15 @@ def export_customers_below_revenue(
         if cust.empty:
             csv_bytes = _hdr.encode("utf-8-sig")
         else:
-            cust = cust[cust["Revenue"] <= float(max_revenue_inr)].sort_values("Revenue", ascending=True)
-            cust["MaxRevenueThreshold_INR"] = float(max_revenue_inr)
+            lo, hi = float(min_revenue_inr), float(max_revenue_inr)
+            cust = cust[(cust["Revenue"] >= lo) & (cust["Revenue"] <= hi)].sort_values("Revenue", ascending=True)
+            cust["MinRevenueThreshold_INR"] = lo
+            cust["MaxRevenueThreshold_INR"] = hi
             csv_bytes = cust.to_csv(index=False).encode("utf-8-sig")
 
+    safe_min = int(min_revenue_inr) if float(min_revenue_inr) == int(float(min_revenue_inr)) else round(float(min_revenue_inr), 2)
     safe_max = int(max_revenue_inr) if float(max_revenue_inr) == int(float(max_revenue_inr)) else round(float(max_revenue_inr), 2)
-    filename = f"{REPORT_FILE_PREFIX}_Customers_Under_{safe_max}INR_{tenant_id}.csv"
+    filename = f"{REPORT_FILE_PREFIX}_Customers_Revenue_{safe_min}_to_{safe_max}INR_{tenant_id}.csv"
     return Response(
         content=csv_bytes,
         media_type="text/csv; charset=utf-8",

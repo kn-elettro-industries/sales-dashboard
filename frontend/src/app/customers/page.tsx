@@ -27,7 +27,8 @@ export default function CustomersPage() {
     const [loading, setLoading] = useState(true);
     /** Focus tables and chart on lower-purchase customers (RFM Potential / At Risk / Lost) */
     const [buyerFocus, setBuyerFocus] = useState<"all" | "low">("all");
-    /** Total revenue threshold in ₹ lakh; export lists customers strictly below this (default 5.5 L = ₹5,50,000) */
+    /** Revenue band in ₹ lakh for CSV export (inclusive). Default 0 … 5.5 L. */
+    const [minRevenueLakh, setMinRevenueLakh] = useState("0");
     const [maxRevenueLakh, setMaxRevenueLakh] = useState("5.5");
     const [exportingBelow, setExportingBelow] = useState(false);
 
@@ -119,12 +120,21 @@ export default function CustomersPage() {
         ]
     );
 
+    const parseLakhToInr = (raw: string, fallback: number) => {
+        const v = parseFloat(raw.replace(",", "."));
+        return Number.isFinite(v) && v >= 0 ? v * 100_000 : fallback;
+    };
+
     const handleDownloadBelowThreshold = () => {
-        const lakh = parseFloat(maxRevenueLakh.replace(",", "."));
-        const maxInr = Number.isFinite(lakh) && lakh > 0 ? lakh * 100_000 : 550_000;
+        const minInr = parseLakhToInr(minRevenueLakh, 0);
+        const maxInr = parseLakhToInr(maxRevenueLakh, 550_000);
+        if (minInr > maxInr) {
+            alert("Minimum (₹ lakh) must be less than or equal to maximum (₹ lakh).");
+            return;
+        }
         try {
             setExportingBelow(true);
-            const url = getExportCustomersBelowRevenueUrl(filterParams, maxInr);
+            const url = getExportCustomersBelowRevenueUrl(filterParams, maxInr, minInr);
             const a = document.createElement("a");
             a.style.display = "none";
             a.href = url;
@@ -179,28 +189,41 @@ export default function CustomersPage() {
                     )}
                 </div>
                 <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-[#30363d] bg-[#0d1117]/50 px-4 py-3">
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="max-rev-lakh" className="text-xs text-gray-500">
-                            Export customers with sales below (₹ lakh, total in period)
-                        </label>
-                        <input
-                            id="max-rev-lakh"
-                            type="text"
-                            inputMode="decimal"
-                            value={maxRevenueLakh}
-                            onChange={(e) => setMaxRevenueLakh(e.target.value)}
-                            className="w-28 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-[#daa520]"
-                            aria-describedby="export-below-help"
-                        />
+                    <div className="flex flex-wrap items-end gap-2">
+                        <div className="flex flex-col gap-1">
+                            <label htmlFor="min-rev-lakh" className="text-xs text-gray-500">
+                                From (₹ lakh)
+                            </label>
+                            <input
+                                id="min-rev-lakh"
+                                type="text"
+                                inputMode="decimal"
+                                value={minRevenueLakh}
+                                onChange={(e) => setMinRevenueLakh(e.target.value)}
+                                className="w-24 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-[#daa520]"
+                                aria-describedby="export-below-help"
+                            />
+                        </div>
+                        <span className="text-gray-500 text-sm pb-2">–</span>
+                        <div className="flex flex-col gap-1">
+                            <label htmlFor="max-rev-lakh" className="text-xs text-gray-500">
+                                To (₹ lakh)
+                            </label>
+                            <input
+                                id="max-rev-lakh"
+                                type="text"
+                                inputMode="decimal"
+                                value={maxRevenueLakh}
+                                onChange={(e) => setMaxRevenueLakh(e.target.value)}
+                                className="w-24 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-[#daa520]"
+                                aria-describedby="export-below-help"
+                            />
+                        </div>
                     </div>
                     <p id="export-below-help" className="text-xs text-gray-500 max-w-md flex-1 min-w-[12rem]">
-                        Same date range and global filters as the rest of the app. Revenue is the sum of <strong className="text-gray-400">AMOUNT</strong> only (excludes tax). CSV lists customers with total in the period{" "}
-                        <strong className="text-gray-400">at or below</strong> ₹
-                        {(Number.isFinite(parseFloat(maxRevenueLakh.replace(",", ".")))
-                            ? parseFloat(maxRevenueLakh.replace(",", ".")) * 100000
-                            : 550000
-                        ).toLocaleString("en-IN")}
-                        .
+                        Export customers whose total revenue in the period falls between these bounds (inclusive). Same date range and global filters as the rest of the app. Revenue = sum of{" "}
+                        <strong className="text-gray-400">AMOUNT</strong> only (excludes tax). Example: 2–5 lakh lists customers with ₹2,00,000–₹5,00,000 in the period. Use{" "}
+                        <strong className="text-gray-400">0</strong> as the lower bound for “up to” the max only.
                     </p>
                     <button
                         type="button"

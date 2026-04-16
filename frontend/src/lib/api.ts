@@ -161,8 +161,12 @@ export const fetchGrowthMetrics = (p?: FilterParams) => apiFetch("/sales/growth"
 export const fetchAllCustomers = (p?: FilterParams) => apiFetch("/customers/all", p).then(d => d || []).catch(() => []);
 export const fetchRfmSegments = (p?: FilterParams) => apiFetch("/customers/rfm", p).then(d => d || []).catch(() => []);
 
-/** CSV download URL: customers with total revenue **at or below** ``maxRevenueInr`` INR (default ₹5.5 L). Same as Customer Intelligence: **AMOUNT** sums only. */
-export function getExportCustomersBelowRevenueUrl(p: FilterParams, maxRevenueInr: number): string {
+/** CSV download URL: customers with total revenue in ``[minRevenueInr, maxRevenueInr]`` (AMOUNT sums only). Default band 0 … ₹5.5 L. */
+export function getExportCustomersBelowRevenueUrl(
+    p: FilterParams,
+    maxRevenueInr: number,
+    minRevenueInr: number = 0
+): string {
     const query = new URLSearchParams();
     if (p.tenant) query.append("tenant_id", p.tenant);
     if (p.startDate) query.append("start_date", p.startDate);
@@ -174,6 +178,7 @@ export function getExportCustomersBelowRevenueUrl(p: FilterParams, maxRevenueInr
     if (p.fiscalYears) query.append("fiscal_years", p.fiscalYears);
     if (p.months) query.append("months", p.months);
     if (p.items) query.append("items", p.items);
+    query.append("min_revenue_inr", String(minRevenueInr));
     query.append("max_revenue_inr", String(maxRevenueInr));
     return `${API_BASE_URL}/export/customers-below-revenue?${query.toString()}`;
 }

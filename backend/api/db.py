@@ -7,7 +7,7 @@ from cachetools import TTLCache, cached
 
 from dotenv import load_dotenv
 
-from .sales_dates import parse_invoice_dates, fiscal_year_india
+from .sales_dates import parse_invoice_dates, fiscal_year_india, MONTH_BUCKET_STRFTIME
 
 load_dotenv()
 
@@ -198,7 +198,7 @@ def get_cached_tenant_df(tenant_id: str) -> pd.DataFrame:
                 valid = df["DATE"].notna()
                 if valid.any():
                     df.loc[valid, "FINANCIAL_YEAR"] = df.loc[valid, "DATE"].apply(fiscal_year_india)
-                    df.loc[valid, "MONTH"] = df.loc[valid, "DATE"].dt.strftime("%b-%y").str.upper()
+                    df.loc[valid, "MONTH"] = df.loc[valid, "DATE"].dt.strftime(MONTH_BUCKET_STRFTIME)
         except Exception as e:
             logging.warning("get_cached_tenant_df: enrich/coerce failed, returning raw df: %s", e)
         return df

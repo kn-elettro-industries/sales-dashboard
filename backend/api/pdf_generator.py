@@ -474,20 +474,16 @@ def _pdf_prepared_for_line(
 
 
 def _sort_month_labels_chronological(month_labels: list) -> list:
-    """Sort MON-YY style labels oldest-first for timeline captions."""
+    """Sort MONTH bucket labels (``YYYY-MM`` or legacy ``MON-YY``) oldest-first."""
+    from .sales_dates import parse_month_label_for_sort
+
     if not month_labels:
         return []
     keyed = []
     for raw in month_labels:
         m = str(raw).strip()
-        try:
-            norm = m.title() if len(m) > 2 else m
-            dt = pd.to_datetime(norm, format="%b-%y", errors="coerce")
-            if pd.isna(dt):
-                dt = pd.to_datetime(norm, errors="coerce")
-            keyed.append((dt if pd.notna(dt) else pd.Timestamp.min, m))
-        except Exception:
-            keyed.append((pd.Timestamp.min, m))
+        dt = parse_month_label_for_sort(m)
+        keyed.append((dt if pd.notna(dt) else pd.Timestamp.min, m))
     keyed.sort(key=lambda x: x[0])
     return [x[1] for x in keyed]
 
@@ -1798,7 +1794,9 @@ def _generate_pdf_report_inner(
     if "MONTH" in df.columns and "AMOUNT" in df.columns:
         trend = df.groupby("MONTH")["AMOUNT"].sum().reset_index()
         try:
-            trend["SortKey"] = pd.to_datetime(trend["MONTH"], format="%b-%y", errors='coerce')
+            from .sales_dates import parse_month_label_for_sort
+
+            trend["SortKey"] = trend["MONTH"].map(parse_month_label_for_sort)
             trend = trend.sort_values("SortKey").tail(24)
         except Exception:
             trend = trend.tail(24)

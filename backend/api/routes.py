@@ -21,7 +21,13 @@ from .db import (
     upsert_distributor_target,
 )
 from .customer_geo_overrides import apply_customer_geo_overrides, apply_customer_name_canonical
-from .sales_dates import parse_invoice_dates, fiscal_year_india
+from .sales_dates import (
+    parse_invoice_dates,
+    fiscal_year_india,
+    MONTH_BUCKET_STRFTIME,
+    parse_month_label_for_sort,
+    month_filter_match_keys,
+)
 
 # Single FY helper for reports/PDF imports (`from .routes import calculate_fy`).
 calculate_fy = fiscal_year_india
@@ -82,7 +88,7 @@ def _create_token(user: str, role: str, tenant: str) -> str:
         "tenant": tenant,
         "exp": datetime.now(timezone.utc) + timedelta(hours=24),
     }
-    return jwt.encode(payload, secret, algorithm="HS256")
+        return jwt.encode(payload, secret, algorithm="HS256")
 
 
 def _verify_token(token: str):
@@ -375,7 +381,11 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
     if months and str(months).strip():
         month_list = [m.strip() for m in months.split(",") if m.strip()]
         if "MONTH" in df.columns and month_list:
-            df = df[df["MONTH"].isin(month_list)]
+            allowed_months: set = set()
+            for m in month_list:
+                allowed_months |= month_filter_match_keys(m)
+            col = df["MONTH"].astype(str).str.strip()
+            df = df[col.isin(allowed_months)]
     if items and str(items).strip():
         item_list = [x.strip() for x in str(items).split(",") if x.strip()]
         if "ITEMNAME" in df.columns and item_list:
@@ -590,7 +600,7 @@ def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[p
         )
     df["AMOUNT"] = pd.to_numeric(df["AMOUNT"], errors="coerce").fillna(0.0)
     df["FINANCIAL_YEAR"] = df["DATE"].apply(fiscal_year_india)
-    df["MONTH"] = df["DATE"].dt.strftime("%b-%y").str.upper()
+    df["MONTH"] = df["DATE"].dt.strftime(MONTH_BUCKET_STRFTIME)
     if "CITY" not in df.columns:
         df["CITY"] = "City Not Found"
     if "STATE" not in df.columns:
@@ -1030,7 +1040,7 @@ def get_filter_options(
         try:
             unique_months = df["MONTH"].dropna().unique()
             month_df = pd.DataFrame({"MONTH": unique_months})
-            month_df["SortKey"] = pd.to_datetime(month_df["MONTH"], format="%b-%y", errors='coerce')
+            month_df["SortKey"] = month_df["MONTH"].map(parse_month_label_for_sort)
             months = month_df.sort_values("SortKey")["MONTH"].tolist()
         except:
             months = sorted(df["MONTH"].dropna().unique().tolist())
@@ -1403,9 +1413,7 @@ def get_dashboard_summary(
                 try:
                     by_month = df.groupby(month_col)[amount_col].sum().reset_index()
                     by_month = by_month.rename(columns={amount_col: "AMOUNT", month_col: "MONTH"})
-                    month_str = by_month["MONTH"].astype(str).str.strip()
-                    month_str = month_str.str[:3].str.title() + "-" + month_str.str[-2:]
-                    by_month["DATE"] = pd.to_datetime(month_str, format="%b-%y", errors="coerce")
+                    by_month["DATE"] = by_month["MONTH"].map(parse_month_label_for_sort)
                     by_month = by_month.dropna(subset=["DATE"]).sort_values("DATE")
                     by_month["DATE"] = by_month["DATE"].dt.strftime("%Y-%m")
                     trend = serialize_df(by_month[["DATE", "AMOUNT"]].tail(trend_limit))
@@ -1493,9 +1501,7 @@ def get_sales_trend(tenant_id: str = "default_elettro", start_date: Optional[str
         try:
             by_month = df.groupby(month_col)[amount_col].sum().reset_index()
             by_month = by_month.rename(columns={amount_col: "AMOUNT", month_col: "MONTH"})
-            month_str = by_month["MONTH"].astype(str).str.strip()
-            month_str = month_str.str[:3].str.title() + "-" + month_str.str[-2:]
-            by_month["DATE"] = pd.to_datetime(month_str, format="%b-%y", errors="coerce")
+            by_month["DATE"] = by_month["MONTH"].map(parse_month_label_for_sort)
             by_month = by_month.dropna(subset=["DATE"]).sort_values("DATE")
             by_month["DATE"] = by_month["DATE"].dt.strftime("%Y-%m")
             return serialize_df(by_month[["DATE", "AMOUNT"]])

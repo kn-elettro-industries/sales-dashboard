@@ -88,7 +88,7 @@ def _create_token(user: str, role: str, tenant: str) -> str:
         "tenant": tenant,
         "exp": datetime.now(timezone.utc) + timedelta(hours=24),
     }
-        return jwt.encode(payload, secret, algorithm="HS256")
+    return jwt.encode(payload, secret, algorithm="HS256")
 
 
 def _verify_token(token: str):

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import { ThemeCornerToggle } from "@/components/ThemeCornerToggle";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -37,9 +38,10 @@ export default function LoginPage() {
             <ThemeCornerToggle />
             <div className="w-full max-w-md">
                 <div className="text-center mb-8 animate-slide-down opacity-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.png" alt="ELETTRO" className="h-14 mx-auto object-contain" />
-                    <p className="text-app-gold text-sm font-semibold uppercase tracking-[0.25em] mt-4">Intelligence</p>
+                    <BrandLogo size="lg" className="mx-auto" />
+                    <p className="text-amber-950 dark:text-app-gold text-sm font-semibold uppercase tracking-[0.25em] mt-4">
+                        Intelligence
+                    </p>
                 </div>
 
                 <div className="bg-app-card border border-app-border rounded-xl p-8 shadow-xl animate-scale-in opacity-0 animation-delay-150">

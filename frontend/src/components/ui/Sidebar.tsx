@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 import { useTheme } from "@/components/ThemeContext";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const navItems = [
     {
@@ -47,10 +48,11 @@ export default function Sidebar() {
 
     return (
         <aside className="w-64 bg-app-card border-r border-app-border flex flex-col h-screen sticky top-0">
-            <div className="p-5 border-b border-app-border flex flex-col items-start">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="KN Elettro" className="h-10 object-contain" />
-                <span className="text-app-gold text-xs font-semibold uppercase tracking-[0.25em] mt-2">KN Elettro Intelligence</span>
+            <div className="p-5 border-b border-app-border flex flex-col items-start gap-2">
+                <BrandLogo size="md" />
+                <span className="text-amber-950 dark:text-app-gold text-xs font-semibold uppercase tracking-[0.25em]">
+                    KN Elettro Intelligence
+                </span>
             </div>
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

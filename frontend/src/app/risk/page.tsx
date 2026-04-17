@@ -61,8 +61,8 @@ export default function RiskPage() {
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div>
-                <h2 className="text-2xl font-bold text-white">Risk Management</h2>
-                <p className="text-gray-400 mt-1">Concentration risk, churn risk, and operational alerts.</p>
+                <h2 className="text-2xl font-bold text-app-fg">Risk Management</h2>
+                <p className="text-app-fg-muted mt-1">Concentration risk, churn risk, and operational alerts.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -73,7 +73,7 @@ export default function RiskPage() {
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Revenue Concentration Risk</h3>
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">Revenue Concentration Risk</h3>
                 <DataTable
                     data={validCustomers}
                     searchable={true}
@@ -87,7 +87,7 @@ export default function RiskPage() {
                             accessorKey: '_index',
                             sortable: false,
                             align: 'center',
-                            cell: (_, index) => <span className="text-gray-500">{index! + 1}</span>
+                            cell: (_, index) => <span className="text-app-fg-muted">{index! + 1}</span>
                         },
                         { header: 'Customer', accessorKey: 'CUSTOMER_NAME', sortable: true },
                         {
@@ -101,7 +101,7 @@ export default function RiskPage() {
                                         <div className="flex-1 bg-[#2d333b] rounded-full h-2.5 overflow-hidden">
                                             <div className="bg-app-gold h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
                                         </div>
-                                        <span className="text-gray-300 text-xs w-10 text-right">{pct.toFixed(1)}%</span>
+                                        <span className="text-app-fg text-xs w-10 text-right">{pct.toFixed(1)}%</span>
                                     </div>
                                 );
                             }
@@ -111,14 +111,14 @@ export default function RiskPage() {
                             accessorKey: 'Revenue',
                             sortable: true,
                             align: 'right',
-                            cell: (item: any) => <span className="text-white font-semibold">{fmt(item.Revenue)}</span>
+                            cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
                         }
                     ]}
                 />
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Inactive Customers (90+ Days)</h3>
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">Inactive Customers (90+ Days)</h3>
                 <DataTable
                     data={inactiveCustomers}
                     searchable={true}
@@ -133,7 +133,7 @@ export default function RiskPage() {
                             accessorKey: 'Revenue',
                             sortable: true,
                             align: 'right',
-                            cell: (item: any) => <span className="text-white font-semibold">{fmt(item.Revenue)}</span>
+                            cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
                         },
                         { header: 'Orders', accessorKey: 'Orders', sortable: true, align: 'right' },
                         {

@@ -58,7 +58,7 @@ function ChartWrapper({ children, className = "min-h-[320px] w-full mt-4" }: { c
 
 function ChartEmpty({ message = "No data to display" }: { message?: string }) {
     return (
-        <div className="flex flex-col items-center justify-center h-[320px] w-full text-gray-500">
+        <div className="flex flex-col items-center justify-center h-[320px] w-full text-app-fg-muted">
             <div className="text-sm">{message}</div>
         </div>
     );
@@ -150,7 +150,7 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                         </RechartsPieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Total</span>
+                        <span className="text-app-fg-muted text-xs font-medium uppercase tracking-wider">Total</span>
                         <span className="text-app-gold font-bold text-lg mt-0.5">{formatAmount(total)}</span>
                     </div>
                 </div>
@@ -164,7 +164,7 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                             onMouseLeave={() => setActiveIndex(null)}
                         >
                             <div className="w-4 h-4 rounded flex-shrink-0 border border-app-border" style={{ backgroundColor: entry.fill }} />
-                            <span className="text-gray-200 text-sm truncate flex-1 min-w-0" title={String(entry[nameKey])}>
+                            <span className="text-app-fg text-sm truncate flex-1 min-w-0" title={String(entry[nameKey])}>
                                 {String(entry[nameKey]).length > 32 ? `${String(entry[nameKey]).slice(0, 30)}…` : entry[nameKey]}
                             </span>
                             <span className="text-app-gold font-semibold text-sm flex-shrink-0">{entry._pct.toFixed(1)}%</span>
@@ -244,7 +244,7 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                     </Scatter>
                 </ScatterChart>
             </ResponsiveContainer>
-            <p className="text-center text-xs text-gray-500 mt-2">X: Recency (Days) | Y: Purchase Frequency | Bubble Size: Monetary Value</p>
+            <p className="text-center text-xs text-app-fg-muted mt-2">X: Recency (Days) | Y: Purchase Frequency | Bubble Size: Monetary Value</p>
         </ChartWrapper>
     );
 }
@@ -331,7 +331,7 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                         return (
                             <div key={index} className="flex items-center gap-3 py-1.5 rounded px-2 -mx-2 hover:bg-app-hover transition-colors">
                                 <div className="w-4 h-4 rounded flex-shrink-0 border border-app-border" style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }} />
-                                <span className="text-gray-200 text-sm flex-1 min-w-0 break-words" title={name}>
+                                <span className="text-app-fg text-sm flex-1 min-w-0 break-words" title={name}>
                                     {name}
                                 </span>
                                 <span className="text-app-gold font-semibold text-sm flex-shrink-0">{pct.toFixed(1)}%</span>
@@ -354,7 +354,7 @@ export function CategoryHorizontalBarChart({ data, nameKey, valueKey, title }: {
 
     return (
         <ChartWrapper className="min-h-[320px]">
-            {title && <p className="text-sm text-gray-400 mb-2">{title}</p>}
+            {title && <p className="text-sm text-app-fg-muted mb-2">{title}</p>}
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                 {data.map((entry, index) => {
                     const val = Number(entry[valueKey]) || 0;
@@ -363,7 +363,7 @@ export function CategoryHorizontalBarChart({ data, nameKey, valueKey, title }: {
                     const barW = maxVal > 0 ? (val / maxVal) * 100 : 0;
                     return (
                         <div key={index} className="flex items-center gap-3 group">
-                            <span className="text-gray-200 text-sm min-w-0 flex-[1_1_35%] max-w-[50%] break-words" title={name}>
+                            <span className="text-app-fg text-sm min-w-0 flex-[1_1_35%] max-w-[50%] break-words" title={name}>
                                 {name}
                             </span>
                             <div className="flex-1 min-w-0 h-7 bg-app-hover rounded overflow-hidden">
@@ -376,7 +376,7 @@ export function CategoryHorizontalBarChart({ data, nameKey, valueKey, title }: {
                                     }}
                                 >
                                     {barW > 15 && (
-                                        <span className="text-xs font-semibold text-white drop-shadow-sm">
+                                        <span className="text-xs font-semibold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.75)]">
                                             {formatAmount(val)}
                                         </span>
                                     )}

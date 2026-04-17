@@ -326,8 +326,8 @@ export default function ReportsPage() {
 
     const exportDownloadSection = (
         <div className="border-t border-app-border pt-6 space-y-3">
-            <p className="text-xs text-gray-500">
-                Respects <b className="text-gray-400">global filters</b> (date range, state, customer, material, etc.).
+            <p className="text-xs text-app-fg-muted">
+                Respects <b className="text-app-fg">global filters</b> (date range, state, customer, material, etc.).
             </p>
             <button
                 type="button"
@@ -335,7 +335,7 @@ export default function ReportsPage() {
                 disabled={downloading}
                 className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg
                     ${downloading
-                        ? "bg-app-border-strong text-gray-400 cursor-not-allowed shadow-none"
+                        ? "bg-app-border-strong text-app-fg-muted cursor-not-allowed shadow-none"
                         : "bg-gradient-to-r from-app-gold-hover to-app-gold text-app-on-gold hover:scale-[1.01] hover:shadow-lg hover:ring-1 hover:ring-app-gold/30"
                     }
                 `}
@@ -352,7 +352,7 @@ export default function ReportsPage() {
                     </>
                 )}
             </button>
-            <p className="text-xs text-gray-500 text-center">Large reports may take 15–30 seconds.</p>
+            <p className="text-xs text-app-fg-muted text-center">Large reports may take 15–30 seconds.</p>
         </div>
     );
 
@@ -360,8 +360,8 @@ export default function ReportsPage() {
         <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-end">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Executive Sales Reports</h2>
-                    <p className="text-gray-400 mt-1">
+                    <h2 className="text-2xl font-bold text-app-fg">Executive Sales Reports</h2>
+                    <p className="text-app-fg-muted mt-1">
                         Strategy-grade PDF packs and interactive views that always respect your global filters.
                     </p>
                 </div>
@@ -373,7 +373,7 @@ export default function ReportsPage() {
                     onClick={() => setActiveTab('interactive')}
                     className={`flex items-center px-4 py-2 rounded-md transition-all text-sm font-medium ${activeTab === 'interactive'
                         ? 'bg-app-gold text-app-on-gold shadow-sm'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-app-hover'
+                        : 'text-app-fg-muted hover:text-app-fg hover:bg-app-hover'
                         }`}
                 >
                     <LayoutDashboard size={16} className="mr-2" />
@@ -383,7 +383,7 @@ export default function ReportsPage() {
                     onClick={() => setActiveTab('export')}
                     className={`flex items-center px-4 py-2 rounded-md transition-all text-sm font-medium ${activeTab === 'export'
                         ? 'bg-app-gold text-app-on-gold shadow-sm'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-app-hover'
+                        : 'text-app-fg-muted hover:text-app-fg hover:bg-app-hover'
                         }`}
                 >
                     <FileBarChart size={16} className="mr-2" />
@@ -397,14 +397,14 @@ export default function ReportsPage() {
                     <GitCompare size={22} className="shrink-0" />
                     YoY &amp; period comparison
                 </h3>
-                <p className="text-xs text-gray-500 mb-4 max-w-4xl">
-                    <strong className="text-gray-400">Period</strong> compares your selected date range to the <strong className="text-gray-400">immediately preceding period</strong> of the same length (needs start + end dates).
-                    <strong className="text-gray-400"> Fiscal years</strong> below ignore the global FY filter so multiple FYs can appear; <strong className="text-gray-400">YoY revenue</strong> compares each FY to the prior FY in the table (needs two or more FY rows).
+                <p className="text-xs text-app-fg-muted mb-4 max-w-4xl">
+                    <strong className="text-app-fg">Period</strong> compares your selected date range to the <strong className="text-app-fg">immediately preceding period</strong> of the same length (needs start + end dates).
+                    <strong className="text-app-fg"> Fiscal years</strong> below ignore the global FY filter so multiple FYs can appear; <strong className="text-app-fg">YoY revenue</strong> compares each FY to the prior FY in the table (needs two or more FY rows).
                 </p>
 
                 {/* vs previous calendar period */}
                 <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-app-fg mb-2 flex items-center gap-2">
                         <ArrowLeftRight size={16} className="text-app-gold" />
                         Selected period vs previous period
                     </h4>
@@ -426,7 +426,7 @@ export default function ReportsPage() {
                                     key={label}
                                     className="rounded-lg border border-app-border bg-app-bg px-3 py-2 text-center"
                                 >
-                                    <div className="text-[10px] uppercase tracking-wide text-gray-500">{label}</div>
+                                    <div className="text-[10px] uppercase tracking-wide text-app-fg-muted">{label}</div>
                                     <div
                                         className={`text-lg font-semibold ${
                                             pct >= 0 ? "text-emerald-400" : "text-red-400"
@@ -439,13 +439,13 @@ export default function ReportsPage() {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-gray-500 rounded-lg border border-dashed border-app-border bg-app-bg/40 px-3 py-3">
-                            Set a <strong className="text-gray-400">start and end date</strong> in the global filter bar (top of the page) to see percentage change vs the previous period of equal length.
+                        <p className="text-sm text-app-fg-muted rounded-lg border border-dashed border-app-border bg-app-bg/40 px-3 py-3">
+                            Set a <strong className="text-app-fg">start and end date</strong> in the global filter bar (top of the page) to see percentage change vs the previous period of equal length.
                         </p>
                     )}
                 </div>
 
-                <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <h4 className="text-sm font-medium text-app-fg mb-2 flex items-center gap-2">
                     <TrendingUp size={16} className="text-app-gold" />
                     Fiscal year breakdown &amp; YoY
                 </h4>
@@ -454,10 +454,10 @@ export default function ReportsPage() {
                         <Loader2 className="w-8 h-8 animate-spin text-app-gold" />
                     </div>
                 ) : fyComparisonMessage && fyComparisonRows.length === 0 ? (
-                    <p className="text-sm text-gray-500">{fyComparisonMessage}</p>
+                    <p className="text-sm text-app-fg-muted">{fyComparisonMessage}</p>
                 ) : fyComparisonRows.length === 0 ? (
-                    <p className="text-sm text-gray-500">
-                        No fiscal-year rows for the current filters. Try <strong className="text-gray-400">All Time</strong> or a wider date range, or check that uploaded data includes dates.
+                    <p className="text-sm text-app-fg-muted">
+                        No fiscal-year rows for the current filters. Try <strong className="text-app-fg">All Time</strong> or a wider date range, or check that uploaded data includes dates.
                     </p>
                 ) : (
                     <DataTable<FyComparisonRow>
@@ -467,7 +467,7 @@ export default function ReportsPage() {
                                 header: "Revenue",
                                 accessorKey: "revenue",
                                 align: "right",
-                                cell: (item) => <span className="text-white font-medium">{fmtCr(item.revenue)}</span>,
+                                cell: (item) => <span className="text-app-fg font-medium">{fmtCr(item.revenue)}</span>,
                             },
                             { header: "Orders", accessorKey: "orders", align: "right" },
                             { header: "Customers", accessorKey: "customers", align: "right" },
@@ -483,7 +483,7 @@ export default function ReportsPage() {
                                 align: "right",
                                 cell: (item) =>
                                     item.revenue_yoy_pct == null ? (
-                                        <span className="text-gray-500">—</span>
+                                        <span className="text-app-fg-muted">—</span>
                                     ) : (
                                         <span
                                             className={
@@ -565,12 +565,12 @@ export default function ReportsPage() {
                 <div className="animate-in fade-in duration-300">
                     <div className="bg-app-card border border-app-border rounded-xl p-6 md:p-8">
                         <div className="hidden lg:block mb-3">
-                            <span className="text-sm font-medium text-gray-300 leading-5">Select Report Type</span>
+                            <span className="text-sm font-medium text-app-fg leading-5">Select Report Type</span>
                         </div>
 
                         <div className="grid grid-cols-1 gap-8 items-start">
                             <div className="flex flex-col gap-3 min-w-0">
-                                <label className="lg:hidden text-sm font-medium text-gray-300 leading-5">Select Report Type</label>
+                                <label className="lg:hidden text-sm font-medium text-app-fg leading-5">Select Report Type</label>
                                 <div className="grid gap-3">
                                     {REPORT_TYPES.map((report) => (
                                         <button
@@ -579,7 +579,7 @@ export default function ReportsPage() {
                                             onClick={() => setSelectedReport(report.id)}
                                             className={`flex items-center p-4 rounded-lg border transition-all text-left min-h-[3.25rem] ${selectedReport === report.id
                                                 ? 'bg-app-gold-muted border-app-gold text-app-gold'
-                                                : 'bg-app-bg border-app-border text-gray-400 hover:border-gray-500 hover:text-gray-200'
+                                                : 'bg-app-bg border-app-border text-app-fg-muted hover:border-app-border-strong hover:text-app-fg'
                                                 }`}
                                         >
                                             <report.icon size={20} className="mr-3 flex-shrink-0" />
@@ -589,7 +589,7 @@ export default function ReportsPage() {
                                 </div>
 
                                 {selectedReport === "Distributor Strategy Report" && (
-                                    <label className="flex items-start gap-3 rounded-lg border border-app-border bg-app-bg/60 px-4 py-3 text-sm text-gray-300 cursor-pointer select-none">
+                                    <label className="flex items-start gap-3 rounded-lg border border-app-border bg-app-bg/60 px-4 py-3 text-sm text-app-fg cursor-pointer select-none">
                                         <input
                                             type="checkbox"
                                             checked={distributorIncludeCover}
@@ -597,8 +597,8 @@ export default function ReportsPage() {
                                             className="accent-app-gold mt-0.5 shrink-0"
                                         />
                                         <span>
-                                            <span className="font-medium text-gray-200">Include cover page</span>
-                                            <span className="block text-xs text-gray-500 mt-1">
+                                            <span className="font-medium text-app-fg">Include cover page</span>
+                                            <span className="block text-xs text-app-fg-muted mt-1">
                                                 Uncheck to start the PDF directly on the performance summary (no branded title page).
                                             </span>
                                         </span>
@@ -609,27 +609,27 @@ export default function ReportsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setAdvancedExportOpen((o) => !o)}
-                                        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-gray-400 hover:text-gray-200 hover:bg-app-card/80 transition-colors"
+                                        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-app-fg-muted hover:text-app-fg hover:bg-app-card/80 transition-colors"
                                         aria-expanded={advancedExportOpen}
                                     >
                                         <span>
-                                            <span className="text-gray-500 block text-xs font-normal mb-0.5">Optional</span>
-                                            <span className="font-medium text-gray-300">Dynamic cross-filter PDF</span>
-                                            <span className="block text-xs text-gray-600 mt-1 font-normal">Breakdown + top-N — only if you need it.</span>
+                                            <span className="text-app-fg-muted block text-xs font-normal mb-0.5">Optional</span>
+                                            <span className="font-medium text-app-fg">Dynamic cross-filter PDF</span>
+                                            <span className="block text-xs text-app-fg-muted mt-1 font-normal">Breakdown + top-N — only if you need it.</span>
                                         </span>
                                         <ChevronDown
-                                            className={`w-5 h-5 text-gray-500 shrink-0 transition-transform ${advancedExportOpen ? "rotate-180" : ""}`}
+                                            className={`w-5 h-5 text-app-fg-muted shrink-0 transition-transform ${advancedExportOpen ? "rotate-180" : ""}`}
                                         />
                                     </button>
                                     {advancedExportOpen && (
                                         <div className="border-t border-app-border px-3 py-4 space-y-4 bg-app-bg">
-                                            <p className="text-xs text-gray-500 flex items-start gap-2">
+                                            <p className="text-xs text-app-fg-muted flex items-start gap-2">
                                                 <Filter size={14} className="mt-0.5 shrink-0 text-app-gold/80" />
                                                 Uses your current global filters. Choose primary/secondary dimensions and top-N.
                                             </p>
                                             <div className="grid grid-cols-1 gap-4">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-xs text-gray-500">Primary Breakdown</span>
+                                                    <span className="text-xs text-app-fg-muted">Primary Breakdown</span>
                                                     <select
                                                         value={dynPrimary}
                                                         onChange={(e) => {
@@ -637,7 +637,7 @@ export default function ReportsPage() {
                                                             setDynPrimary(next);
                                                             if (dynSecondary === next) setDynSecondary("");
                                                         }}
-                                                        className="w-full min-h-[2.75rem] bg-app-bg text-white border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
+                                                        className="w-full min-h-[2.75rem] bg-app-bg text-app-fg border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold placeholder:text-app-fg-muted"
                                                     >
                                                         {DYNAMIC_DIMENSIONS.map((d) => (
                                                             <option key={d.id} value={d.id}>
@@ -647,11 +647,11 @@ export default function ReportsPage() {
                                                     </select>
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-xs text-gray-500">Secondary Breakdown (optional)</span>
+                                                    <span className="text-xs text-app-fg-muted">Secondary Breakdown (optional)</span>
                                                     <select
                                                         value={dynSecondary}
                                                         onChange={(e) => setDynSecondary(e.target.value)}
-                                                        className="w-full min-h-[2.75rem] bg-app-bg text-white border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
+                                                        className="w-full min-h-[2.75rem] bg-app-bg text-app-fg border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold placeholder:text-app-fg-muted"
                                                     >
                                                         <option value="">None</option>
                                                         {DYNAMIC_DIMENSIONS.filter((d) => d.id !== dynPrimary).map((d) => (
@@ -663,17 +663,17 @@ export default function ReportsPage() {
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-xs text-gray-500">Top N (3–50)</span>
+                                                        <span className="text-xs text-app-fg-muted">Top N (3–50)</span>
                                                         <input
                                                             type="number"
                                                             min={3}
                                                             max={50}
                                                             value={dynTopN}
                                                             onChange={(e) => setDynTopN(Number(e.target.value))}
-                                                            className="w-full min-h-[2.75rem] bg-app-bg text-white border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
+                                                            className="w-full min-h-[2.75rem] bg-app-bg text-app-fg border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold placeholder:text-app-fg-muted"
                                                         />
                                                     </div>
-                                                    <label className="flex items-center gap-2 text-sm text-gray-300 select-none pb-1">
+                                                    <label className="flex items-center gap-2 text-sm text-app-fg select-none pb-1">
                                                         <input
                                                             type="checkbox"
                                                             checked={dynIncludePivot}
@@ -692,7 +692,7 @@ export default function ReportsPage() {
                                                 className={`w-full py-3 rounded-lg font-bold text-base flex items-center justify-center gap-3 transition-all border
                                                     ${
                                                         dynDownloading
-                                                            ? "bg-app-border-strong text-gray-400 cursor-not-allowed border-app-border"
+                                                            ? "bg-app-border-strong text-app-fg-muted cursor-not-allowed border-app-border"
                                                             : "bg-app-card text-app-gold border-app-gold/40 hover:border-app-gold hover:bg-app-gold-muted"
                                                     }
                                                 `}
@@ -720,11 +720,11 @@ export default function ReportsPage() {
 
                     <div className="mt-8 bg-app-bg border border-app-border rounded-xl p-6 flex items-start">
                         <div className="bg-app-card p-3 rounded-lg mr-4 border border-app-border">
-                            <FileText className="text-gray-400 w-6 h-6" />
+                            <FileText className="text-app-fg-muted w-6 h-6" />
                         </div>
                         <div>
-                            <h4 className="text-white font-medium mb-1">Looking for deeply customized reports?</h4>
-                            <p className="text-sm text-gray-400 leading-relaxed max-w-3xl">
+                            <h4 className="text-app-fg font-medium mb-1">Looking for deeply customized reports?</h4>
+                            <p className="text-sm text-app-fg-muted leading-relaxed max-w-3xl">
                                 The native Next.js reporting engine directly connects to FastAPI to render real-time insights based on your global filter context. Customizing the report logic requires modifying the backend generator.
                             </p>
                         </div>

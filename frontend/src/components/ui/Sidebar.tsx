@@ -56,7 +56,7 @@ export default function Sidebar() {
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {navItems.map((group) => (
                     <div key={group.section}>
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">{group.section}</div>
+                        <div className="text-xs font-semibold text-app-fg-muted uppercase tracking-wider mb-2 mt-4">{group.section}</div>
                         {group.items.map((item) => {
                             const isActive = pathname === item.href;
                             return (
@@ -65,7 +65,7 @@ export default function Sidebar() {
                                     href={item.href}
                                     className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 ${isActive
                                         ? "bg-app-gold text-app-on-gold font-medium"
-                                        : "text-gray-400 hover:bg-app-muted hover:text-app-fg"
+                                        : "text-app-fg-muted hover:bg-app-muted hover:text-app-fg"
                                         }`}
                                 >
                                     <item.icon className="h-5 w-5" />
@@ -77,12 +77,12 @@ export default function Sidebar() {
                 ))}
                 {(user?.role || "").toLowerCase() === "admin" && (
                     <div>
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Admin</div>
+                        <div className="text-xs font-semibold text-app-fg-muted uppercase tracking-wider mb-2 mt-4">Admin</div>
                         <Link
                             href="/admin"
                             className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 ${pathname === "/admin"
                                 ? "bg-app-gold text-app-on-gold font-medium"
-                                : "text-gray-400 hover:bg-app-muted hover:text-app-fg"
+                                : "text-app-fg-muted hover:bg-app-muted hover:text-app-fg"
                                 }`}
                         >
                             <UserPlus className="h-5 w-5" />
@@ -92,7 +92,7 @@ export default function Sidebar() {
                 )}
             </nav>
 
-            <div className="p-4 border-t border-app-border text-sm text-gray-500 space-y-2">
+            <div className="p-4 border-t border-app-border text-sm text-app-fg-muted space-y-2">
                 <button
                     type="button"
                     onClick={toggleTheme}
@@ -119,7 +119,7 @@ export default function Sidebar() {
                 </button>
                 {user ? (
                     <>
-                        <p className="text-gray-400 truncate" title={user.user}>{user.user} <span className="text-app-gold">({user.role})</span></p>
+                        <p className="text-app-fg-muted truncate" title={user.user}>{user.user} <span className="text-app-gold">({user.role})</span></p>
                         <button type="button" onClick={logout} className="flex items-center gap-2 text-red-400 hover:text-red-300">
                             <LogOut size={14} /> Log out
                         </button>
@@ -131,7 +131,7 @@ export default function Sidebar() {
                         {loginErr && <p className="text-red-400 text-xs">Login failed</p>}
                         <div className="flex gap-2">
                             <button type="button" onClick={handleLogin} className="flex-1 py-1 rounded bg-app-gold text-app-on-gold text-xs font-medium">Log in</button>
-                            <button type="button" onClick={() => { setShowLogin(false); setLoginErr(false); }} className="py-1 px-2 rounded border border-app-border text-gray-400 text-xs">Cancel</button>
+                            <button type="button" onClick={() => { setShowLogin(false); setLoginErr(false); }} className="py-1 px-2 rounded border border-app-border text-app-fg-muted text-xs">Cancel</button>
                         </div>
                     </div>
                 ) : (

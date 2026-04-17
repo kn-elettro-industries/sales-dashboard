@@ -227,17 +227,17 @@ export default function DashboardPage() {
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap p-4 bg-app-card border border-app-border rounded-xl">
                 <div>
-                    <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
-                    <p className="text-xs text-gray-500 mt-1 max-w-3xl">
-                        <strong className="text-gray-400">Month or year?</strong> The app does not label targets as monthly vs yearly — it stores one revenue and one orders figure per tenant. They are compared to{" "}
-                        <strong className="text-gray-400">actual sales for your current filters</strong> (date range, months, fiscal year, etc. in the bar above). Fiscal year runs <strong className="text-gray-400">April to March</strong>. Set filters to the period you care about, then enter targets that match <em>that</em> period.
+                    <h2 className="text-xl font-semibold text-app-fg">Executive Summary</h2>
+                    <p className="text-xs text-app-fg-muted mt-1 max-w-3xl">
+                        <strong className="text-app-fg">Month or year?</strong> The app does not label targets as monthly vs yearly — it stores one revenue and one orders figure per tenant. They are compared to{" "}
+                        <strong className="text-app-fg">actual sales for your current filters</strong> (date range, months, fiscal year, etc. in the bar above). Fiscal year runs <strong className="text-app-fg">April to March</strong>. Set filters to the period you care about, then enter targets that match <em>that</em> period.
                     </p>
-                    <p className="text-xs text-gray-500 mt-1.5 max-w-3xl">
-                        Tables below split the revenue target by <strong className="text-gray-400">each row’s % of filtered total</strong> (customers and material groups).
+                    <p className="text-xs text-app-fg-muted mt-1.5 max-w-3xl">
+                        Tables below split the revenue target by <strong className="text-app-fg">each row’s % of filtered total</strong> (customers and material groups).
                     </p>
                 </div>
                 <div className="flex flex-wrap items-end gap-3 w-full sm:w-auto">
-                    <label className="flex flex-col gap-1 text-xs text-gray-400 min-w-[140px]">
+                    <label className="flex flex-col gap-1 text-xs text-app-fg-muted min-w-[140px]">
                         Revenue target (₹)
                         <input
                             type="text"
@@ -245,10 +245,10 @@ export default function DashboardPage() {
                             value={draftRevenue}
                             onChange={(e) => setDraftRevenue(e.target.value)}
                             placeholder="e.g. 50000000"
-                            className="bg-app-bg border border-app-border rounded-lg px-3 py-2 text-sm text-white w-full sm:w-40"
+                            className="bg-app-bg border border-app-border rounded-lg px-3 py-2 text-sm text-app-fg w-full sm:w-40 placeholder:text-app-fg-muted"
                         />
                     </label>
-                    <label className="flex flex-col gap-1 text-xs text-gray-400 min-w-[120px]">
+                    <label className="flex flex-col gap-1 text-xs text-app-fg-muted min-w-[120px]">
                         Orders target
                         <input
                             type="text"
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                             value={draftOrders}
                             onChange={(e) => setDraftOrders(e.target.value)}
                             placeholder="e.g. 1200"
-                            className="bg-app-bg border border-app-border rounded-lg px-3 py-2 text-sm text-white w-full sm:w-32"
+                            className="bg-app-bg border border-app-border rounded-lg px-3 py-2 text-sm text-app-fg w-full sm:w-32 placeholder:text-app-fg-muted"
                         />
                     </label>
                     <button
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                     {data.message && (
                         <p className="text-sm text-amber-200/90 mb-3 font-medium">{data.message}</p>
                     )}
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside mb-3">
+                    <ul className="text-sm text-app-fg space-y-1 list-disc list-inside mb-3">
                         <li>If you applied filters (e.g. <strong>FY</strong>, State, Date range), try <strong>Clear all filters</strong> or <strong>All Time</strong>.</li>
                         <li>Ensure <code className="bg-app-bg px-1 rounded">NEXT_PUBLIC_API_URL</code> points to your Render backend in Vercel env vars, then <strong>redeploy</strong>.</li>
                         <li>Upload data via <strong><Link href="/data" className="text-app-gold hover:underline">Data / Cloud Data Uploader</Link></strong> (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT).</li>
@@ -298,14 +298,14 @@ export default function DashboardPage() {
                     <h3 className="text-sm font-semibold text-red-400 flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-4 w-4" /> Revenue drop vs previous period (&gt;20%)
                     </h3>
-                    <ul className="text-sm text-gray-300 space-y-1">
+                    <ul className="text-sm text-app-fg space-y-1">
                         {anomalies.slice(0, 5).map((a) => (
                             <li key={a.entity}>
-                                <span className="font-medium text-white">{a.entity}</span>
+                                <span className="font-medium text-app-fg">{a.entity}</span>
                                 <span className="text-red-400 ml-2">{a.change_pct}%</span>
                             </li>
                         ))}
-                        {anomalies.length > 5 && <li className="text-gray-500">+{anomalies.length - 5} more</li>}
+                        {anomalies.length > 5 && <li className="text-app-fg-muted">+{anomalies.length - 5} more</li>}
                     </ul>
                 </div>
             )}
@@ -351,12 +351,12 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-app-card border border-app-border rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-200">
                     <div className="border-l-4 border-app-gold pl-3 mb-4">
-                        <h3 className="text-lg font-semibold text-white">Monthly Sales Trend</h3>
-                        <p className="text-sm text-gray-400 mt-0.5">Revenue over the selected period</p>
+                        <h3 className="text-lg font-semibold text-app-fg">Monthly Sales Trend</h3>
+                        <p className="text-sm text-app-fg-muted mt-0.5">Revenue over the selected period</p>
                     </div>
                     {loading ? (
                         <div className="flex-1 min-h-[320px] rounded-lg bg-app-bg/50 animate-pulse flex items-center justify-center border border-app-border/50">
-                            <span className="text-gray-500 text-sm">Loading chart...</span>
+                            <span className="text-app-fg-muted text-sm">Loading chart...</span>
                         </div>
                     ) : (
                         <div className="flex-1 min-h-[320px]">
@@ -368,17 +368,17 @@ export default function DashboardPage() {
                 <div className="bg-app-card border border-app-border rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-300">
                     <div className="border-l-4 border-app-gold pl-3 mb-4 flex items-center justify-between flex-wrap gap-2">
                         <div>
-                            <h3 className="text-lg font-semibold text-white">Top Material Groups</h3>
-                            <p className="text-sm text-gray-400 mt-0.5">By revenue share</p>
+                            <h3 className="text-lg font-semibold text-app-fg">Top Material Groups</h3>
+                            <p className="text-sm text-app-fg-muted mt-0.5">By revenue share</p>
                         </div>
                         <div className="flex rounded-lg border border-app-border p-0.5 bg-app-bg">
-                            <button type="button" onClick={() => setMaterialChartView("donut")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "donut" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"}`}>Donut</button>
-                            <button type="button" onClick={() => setMaterialChartView("bar")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "bar" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"}`}>Bar</button>
+                            <button type="button" onClick={() => setMaterialChartView("donut")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "donut" ? "bg-app-gold text-app-on-gold font-medium" : "text-app-fg-muted hover:text-app-fg"}`}>Donut</button>
+                            <button type="button" onClick={() => setMaterialChartView("bar")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "bar" ? "bg-app-gold text-app-on-gold font-medium" : "text-app-fg-muted hover:text-app-fg"}`}>Bar</button>
                         </div>
                     </div>
                     {loading ? (
                         <div className="flex-1 min-h-[320px] rounded-lg bg-app-bg/50 animate-pulse flex items-center justify-center border border-app-border/50">
-                            <span className="text-gray-500 text-sm">Loading chart...</span>
+                            <span className="text-app-fg-muted text-sm">Loading chart...</span>
                         </div>
                     ) : (
                         <div className="flex-1 min-h-[320px]">
@@ -395,9 +395,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 {/* Top Customers Table */}
                 <div className="bg-app-card border border-app-border rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-400">
-                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-app-border pb-4">Top Customers</h3>
+                    <h3 className="text-lg font-semibold text-app-fg mb-1 border-b border-app-border pb-4">Top Customers</h3>
                     {hasRevenueTargetSplit && (
-                        <p className="text-xs text-gray-500 mb-3 -mt-2">Share % = row revenue ÷ total filtered revenue. Implied target = your saved revenue goal × same share.</p>
+                        <p className="text-xs text-app-fg-muted mb-3 -mt-2">Share % = row revenue ÷ total filtered revenue. Implied target = your saved revenue goal × same share.</p>
                     )}
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
@@ -414,7 +414,7 @@ export default function DashboardPage() {
                                     accessorKey: 'AMOUNT',
                                     sortable: true,
                                     align: 'right',
-                                    cell: (item: any) => <span className="text-white font-bold">{fmt(item.AMOUNT)}</span>
+                                    cell: (item: any) => <span className="text-app-fg font-bold">{fmt(item.AMOUNT)}</span>
                                 },
                                 ...(hasRevenueTargetSplit
                                     ? [
@@ -424,7 +424,7 @@ export default function DashboardPage() {
                                               sortable: true,
                                               align: 'right' as const,
                                               cell: (item: any) => (
-                                                  <span className="text-gray-300">{Number(item.SHARE_PCT).toFixed(1)}%</span>
+                                                  <span className="text-app-fg-muted">{Number(item.SHARE_PCT).toFixed(1)}%</span>
                                               ),
                                           },
                                           {
@@ -442,7 +442,7 @@ export default function DashboardPage() {
                                               sortable: true,
                                               align: 'right' as const,
                                               cell: (item: any) => (
-                                                  <span className="text-gray-300">{Number(item.VS_TARGET_PCT).toFixed(0)}%</span>
+                                                  <span className="text-app-fg-muted">{Number(item.VS_TARGET_PCT).toFixed(0)}%</span>
                                               ),
                                           },
                                       ]
@@ -454,9 +454,9 @@ export default function DashboardPage() {
 
                 {/* Top Material Groups Table */}
                 <div className="bg-app-card border border-app-border rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-500">
-                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-app-border pb-4">Top Performers (Material Groups)</h3>
+                    <h3 className="text-lg font-semibold text-app-fg mb-1 border-b border-app-border pb-4">Top Performers (Material Groups)</h3>
                     {hasRevenueTargetSplit && (
-                        <p className="text-xs text-gray-500 mb-3 -mt-2">Same split rule as customers: each group’s % of total sales × your revenue goal.</p>
+                        <p className="text-xs text-app-fg-muted mb-3 -mt-2">Same split rule as customers: each group’s % of total sales × your revenue goal.</p>
                     )}
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
@@ -473,7 +473,7 @@ export default function DashboardPage() {
                                     accessorKey: 'AMOUNT',
                                     sortable: true,
                                     align: 'right',
-                                    cell: (item: any) => <span className="text-white font-bold">{fmt(item.AMOUNT)}</span>
+                                    cell: (item: any) => <span className="text-app-fg font-bold">{fmt(item.AMOUNT)}</span>
                                 },
                                 ...(hasRevenueTargetSplit
                                     ? [
@@ -483,7 +483,7 @@ export default function DashboardPage() {
                                               sortable: true,
                                               align: 'right' as const,
                                               cell: (item: any) => (
-                                                  <span className="text-gray-300">{Number(item.SHARE_PCT).toFixed(1)}%</span>
+                                                  <span className="text-app-fg-muted">{Number(item.SHARE_PCT).toFixed(1)}%</span>
                                               ),
                                           },
                                           {
@@ -501,7 +501,7 @@ export default function DashboardPage() {
                                               sortable: true,
                                               align: 'right' as const,
                                               cell: (item: any) => (
-                                                  <span className="text-gray-300">{Number(item.VS_TARGET_PCT).toFixed(0)}%</span>
+                                                  <span className="text-app-fg-muted">{Number(item.VS_TARGET_PCT).toFixed(0)}%</span>
                                               ),
                                           },
                                       ]

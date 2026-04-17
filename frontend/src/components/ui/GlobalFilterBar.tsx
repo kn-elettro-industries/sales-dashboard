@@ -56,14 +56,14 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                 <button
                     type="button"
                     title={longLabels && selected.length > 0 ? selected.join("\n") : undefined}
-                    className={`flex w-full items-start justify-between gap-2 bg-app-bg border border-app-border rounded-lg px-3 py-2 hover:border-gray-500 transition-colors text-sm text-gray-200 min-h-[36px] text-left ${
+                    className={`flex w-full items-start justify-between gap-2 bg-app-bg border border-app-border rounded-lg px-3 py-2 hover:border-app-border-strong transition-colors text-sm text-app-fg min-h-[36px] text-left ${
                         longLabels ? "min-w-0" : ""
                     }`}
                 >
                     <span className={longLabels ? "break-words whitespace-normal leading-snug min-w-0 flex-1" : "truncate"}>
                         {summary}
                     </span>
-                    <ChevronDown className="h-3 w-3 mt-0.5 text-gray-400 shrink-0" />
+                    <ChevronDown className="h-3 w-3 mt-0.5 text-app-fg-muted shrink-0" />
                 </button>
             </Popover.Trigger>
             <Popover.Portal>
@@ -82,7 +82,7 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                             placeholder={`Search ${label}...`}
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full bg-app-bg border border-app-border text-gray-200 rounded px-2 py-1.5 text-xs outline-none focus:border-app-gold"
+                            className="w-full bg-app-bg border border-app-border text-app-fg rounded px-2 py-1.5 text-xs outline-none focus:border-app-gold"
                         />
                     </div>
                     {selected.length > 0 && (
@@ -98,7 +98,7 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                         {filtered.map(opt => (
                             <label
                                 key={opt}
-                                className={`flex gap-2 px-2 py-1.5 hover:bg-app-muted rounded cursor-pointer text-sm text-gray-300 ${
+                                className={`flex gap-2 px-2 py-1.5 hover:bg-app-muted rounded cursor-pointer text-sm text-app-fg ${
                                     longLabels ? "items-start" : "items-center"
                                 }`}
                             >
@@ -125,7 +125,7 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                                 </span>
                             </label>
                         ))}
-                        {filtered.length === 0 && <div className="text-xs text-gray-500 p-2">No results</div>}
+                        {filtered.length === 0 && <div className="text-xs text-app-fg-muted p-2">No results</div>}
                     </div>
                 </Popover.Content>
             </Popover.Portal>
@@ -260,26 +260,26 @@ export default function GlobalFilterBar() {
             {/* Primary Row */}
             <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                    <div className="flex items-center gap-2 text-gray-400 mr-2 shrink-0">
+                    <div className="flex items-center gap-2 text-app-fg-muted mr-2 shrink-0">
                         <Filter className="h-4 w-4" />
                         <span className="text-sm font-medium">Filters:</span>
                     </div>
 
                     {/* Tenant Selector */}
-                    <div className="relative shrink-0 flex items-center bg-app-bg border border-app-border rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors">
+                    <div className="relative shrink-0 flex items-center bg-app-bg border border-app-border rounded-lg px-3 py-1.5 hover:border-app-border-strong transition-colors">
                         <Building2 className="h-4 w-4 text-app-gold mr-2" />
                         <select value={tenant} onChange={(e) => setTenant(e.target.value)}
-                            className="bg-transparent text-sm text-gray-200 outline-none cursor-pointer pr-4 appearance-none">
-                            <option value="default_elettro" className="bg-app-bg text-white">All India (Consolidated)</option>
-                            <option value="north_region" className="bg-app-bg text-white">North Region</option>
-                            <option value="south_region" className="bg-app-bg text-white">South Region</option>
+                            className="bg-transparent text-sm text-app-fg outline-none cursor-pointer pr-4 appearance-none">
+                            <option value="default_elettro" className="bg-app-card text-app-fg">All India (Consolidated)</option>
+                            <option value="north_region" className="bg-app-card text-app-fg">North Region</option>
+                            <option value="south_region" className="bg-app-card text-app-fg">South Region</option>
                         </select>
                     </div>
 
                     {/* Date Picker */}
                     <Popover.Root open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <Popover.Trigger asChild>
-                            <button className="flex shrink-0 items-center bg-app-bg border border-app-border rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors text-sm text-gray-200">
+                            <button className="flex shrink-0 items-center bg-app-bg border border-app-border rounded-lg px-3 py-1.5 hover:border-app-border-strong transition-colors text-sm text-app-fg">
                                 <CalendarIcon className="h-4 w-4 text-app-gold mr-2" />
                                 {dateRange?.from ? (
                                     dateRange.to ? (
@@ -290,28 +290,28 @@ export default function GlobalFilterBar() {
                         </Popover.Trigger>
                         <Popover.Portal>
                             <Popover.Content className="bg-app-card border border-app-border rounded-xl shadow-xl w-64 p-2 mt-2 z-50 text-sm" sideOffset={5} align="start">
-                                <div className="text-gray-400 mb-2 px-2 pt-1 font-medium">Quick Select</div>
+                                <div className="text-app-fg-muted mb-2 px-2 pt-1 font-medium">Quick Select</div>
                                 <div className="grid grid-cols-1 gap-1">
                                     {datePresets.map((preset) => (
                                         <button key={preset.label}
                                             onClick={() => { setDateRange(preset.getRange()); setIsCalendarOpen(false); }}
-                                            className="text-left px-3 py-2 hover:bg-app-muted hover:text-app-gold rounded-md transition-colors text-gray-300">
+                                            className="text-left px-3 py-2 hover:bg-app-muted hover:text-app-gold rounded-md transition-colors text-app-fg">
                                             {preset.label}
                                         </button>
                                     ))}
                                 </div>
                                 <div className="border-t border-app-border my-2"></div>
-                                <div className="text-gray-400 mb-2 px-2 pt-1 font-medium">Custom Range</div>
+                                <div className="text-app-fg-muted mb-2 px-2 pt-1 font-medium">Custom Range</div>
                                 <div className="px-2 flex flex-col gap-2 pb-2">
-                                    <div className="text-xs text-gray-500 px-1">Start Date</div>
+                                    <div className="text-xs text-app-fg-muted px-1">Start Date</div>
                                     <input type="date"
-                                        className="bg-app-bg border border-app-border text-gray-200 rounded p-1.5 text-sm w-full outline-none focus:border-app-gold"
+                                        className="bg-app-bg border border-app-border text-app-fg rounded p-1.5 text-sm w-full outline-none focus:border-app-gold"
                                         onChange={(e) => setDateRange({ ...dateRange, from: e.target.value ? new Date(e.target.value) : undefined })}
                                         value={dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : ""}
                                     />
-                                    <div className="text-xs text-gray-500 px-1 mt-1">End Date</div>
+                                    <div className="text-xs text-app-fg-muted px-1 mt-1">End Date</div>
                                     <input type="date"
-                                        className="bg-app-bg border border-app-border text-gray-200 rounded p-1.5 text-sm w-full outline-none focus:border-app-gold"
+                                        className="bg-app-bg border border-app-border text-app-fg rounded p-1.5 text-sm w-full outline-none focus:border-app-gold"
                                         onChange={(e) => setDateRange({ ...dateRange, to: e.target.value ? new Date(e.target.value) : undefined })}
                                         value={dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : ""}
                                     />
@@ -324,12 +324,12 @@ export default function GlobalFilterBar() {
                     <button onClick={() => setShowAdvanced(!showAdvanced)}
                         className={`flex items-center shrink-0 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${showAdvanced || (mounted && activeFilterCount > 0)
                             ? 'bg-app-gold/10 text-app-gold border-app-gold/30'
-                            : 'bg-app-bg text-gray-300 border-app-border hover:border-gray-500'
+                            : 'bg-app-bg text-app-fg border-app-border hover:border-app-border-strong'
                             }`}>
                         <Filter className="h-3.5 w-3.5 mr-1.5" />
                         Advanced
                         {mounted && activeFilterCount > 0 && (
-                            <span className="ml-1.5 bg-app-gold text-black text-xs font-bold px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
+                            <span className="ml-1.5 bg-app-gold text-app-on-gold text-xs font-bold px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
                         )}
                     </button>
                 </div>
@@ -337,7 +337,7 @@ export default function GlobalFilterBar() {
                 <div className="flex shrink-0 items-center gap-2">
                     <Popover.Root open={viewsOpen} onOpenChange={setViewsOpen}>
                         <Popover.Trigger asChild>
-                            <button className="flex items-center text-sm font-medium border px-3 py-1.5 rounded-lg border-app-border text-gray-300 bg-[#2d333b] hover:bg-[#3d444d]">
+                            <button className="flex items-center text-sm font-medium border px-3 py-1.5 rounded-lg border-app-border text-app-fg bg-app-muted hover:bg-app-hover">
                                 <Bookmark className="h-4 w-4 mr-2" />
                                 Views
                                 <ChevronDown className="h-3 w-3 ml-1" />
@@ -345,22 +345,22 @@ export default function GlobalFilterBar() {
                         </Popover.Trigger>
                         <Popover.Portal>
                             <Popover.Content className="bg-app-card border border-app-border rounded-xl shadow-xl w-56 p-3 mt-2 z-50 text-sm" sideOffset={5} align="end">
-                                <div className="font-medium text-gray-300 mb-2">Saved views</div>
+                                <div className="font-medium text-app-fg mb-2">Saved views</div>
                                 <div className="flex gap-2 mb-2">
-                                    <input type="text" placeholder="View name" value={saveViewName} onChange={(e) => setSaveViewName(e.target.value)} className="flex-1 bg-app-bg border border-app-border rounded px-2 py-1 text-white text-xs" />
+                                    <input type="text" placeholder="View name" value={saveViewName} onChange={(e) => setSaveViewName(e.target.value)} className="flex-1 bg-app-bg border border-app-border rounded px-2 py-1 text-app-fg text-xs placeholder:text-app-fg-muted" />
                                     <button type="button" onClick={() => { if (saveViewName.trim()) { saveCurrentView(saveViewName.trim()); setSaveViewName(""); } }} className="px-2 py-1 rounded bg-app-gold text-app-on-gold text-xs font-medium">Save</button>
                                 </div>
                                 {savedViewNames.length > 0 ? (
                                     <div className="space-y-1 max-h-40 overflow-y-auto">
                                         {savedViewNames.map((name) => (
-                                            <button key={name} type="button" onClick={() => { loadView(name); setViewsOpen(false); }} className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded hover:bg-app-muted text-gray-300">
+                                            <button key={name} type="button" onClick={() => { loadView(name); setViewsOpen(false); }} className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded hover:bg-app-muted text-app-fg">
                                                 <FolderOpen className="h-3.5 w-3.5 text-app-gold" />
                                                 {name}
                                             </button>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-500">No saved views yet. Enter a name and click Save.</p>
+                                    <p className="text-xs text-app-fg-muted">No saved views yet. Enter a name and click Save.</p>
                                 )}
                             </Popover.Content>
                         </Popover.Portal>
@@ -370,8 +370,8 @@ export default function GlobalFilterBar() {
                         disabled={exporting}
                         className={`flex items-center text-sm font-medium border px-4 py-1.5 rounded-lg transition-colors ${
                             exporting
-                                ? "bg-app-border-strong text-gray-400 border-app-border cursor-not-allowed"
-                                : "text-gray-300 bg-[#2d333b] hover:bg-[#3d444d] border-app-border"
+                                ? "bg-app-border-strong text-app-fg-muted border-app-border cursor-not-allowed"
+                                : "text-app-fg bg-app-muted hover:bg-app-hover border-app-border"
                         }`}
                     >
                         <Download className="h-4 w-4 mr-2" />
@@ -385,35 +385,35 @@ export default function GlobalFilterBar() {
                 <div className="px-4 pb-4 border-t border-app-border pt-3">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                         <div className="min-w-0">
-                            <label className="text-xs text-gray-500 mb-1 block">Fiscal Year (Apr–Mar)</label>
+                            <label className="text-xs text-app-fg-muted mb-1 block">Fiscal Year (Apr–Mar)</label>
                             <MultiSelect label="FY" options={options.fiscal_years} selected={selectedFiscalYears} onChange={setSelectedFiscalYears} />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-xs text-gray-500 mb-1 block">Month</label>
+                            <label className="text-xs text-app-fg-muted mb-1 block">Month</label>
                             <MultiSelect label="Months" options={options.months} selected={selectedMonths} onChange={setSelectedMonths} />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-xs text-gray-500 mb-1 block">State / Region</label>
+                            <label className="text-xs text-app-fg-muted mb-1 block">State / Region</label>
                             <MultiSelect label="States" options={options.states} selected={selectedStates} onChange={setSelectedStates} />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-xs text-gray-500 mb-1 block">City {selectedStates.length > 0 ? "(linked to selected states)" : ""}</label>
+                            <label className="text-xs text-app-fg-muted mb-1 block">City {selectedStates.length > 0 ? "(linked to selected states)" : ""}</label>
                             <MultiSelect label="Cities"
                                 options={cityOptionsForFilter}
                                 selected={selectedCities} onChange={setSelectedCities}
                             />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-xs text-gray-500 mb-1 block">Customer</label>
+                            <label className="text-xs text-app-fg-muted mb-1 block">Customer</label>
                             <MultiSelect label="Customers" options={options.customers} selected={selectedCustomers} onChange={setSelectedCustomers} />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-xs text-gray-500 mb-1 block">Material Group</label>
+                            <label className="text-xs text-app-fg-muted mb-1 block">Material Group</label>
                             <MultiSelect label="Groups" options={options.material_groups} selected={selectedMaterialGroups} onChange={setSelectedMaterialGroups} />
                         </div>
                     </div>
                     <div className="mt-3 min-w-0">
-                        <label className="text-xs text-gray-500 mb-1 block">
+                        <label className="text-xs text-app-fg-muted mb-1 block">
                             Item (SKU)
                             {selectedMaterialGroups.length > 0 ? (
                                 <span className="text-app-gold"> — only items in selected material group(s)</span>
@@ -430,37 +430,37 @@ export default function GlobalFilterBar() {
                     {activeFilterCount > 0 && (
                         <div className="flex items-center gap-2 mt-3 flex-wrap">
                             {selectedStates.map(s => (
-                                <span key={s} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
+                                <span key={s} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
                                     {s}
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedStates(selectedStates.filter(x => x !== s))} />
                                 </span>
                             ))}
                             {selectedCities.map(c => (
-                                <span key={c} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
+                                <span key={c} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
                                     {c}
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedCities(selectedCities.filter(x => x !== c))} />
                                 </span>
                             ))}
                             {selectedCustomers.map(c => (
-                                <span key={c} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
+                                <span key={c} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
                                     {c}
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedCustomers(selectedCustomers.filter(x => x !== c))} />
                                 </span>
                             ))}
                             {selectedMaterialGroups.map(m => (
-                                <span key={m} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
+                                <span key={m} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
                                     {m}
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedMaterialGroups(selectedMaterialGroups.filter(x => x !== m))} />
                                 </span>
                             ))}
                             {selectedFiscalYears.map(f => (
-                                <span key={f} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
+                                <span key={f} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
                                     FY: {f}
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedFiscalYears(selectedFiscalYears.filter(x => x !== f))} />
                                 </span>
                             ))}
                             {selectedMonths.map(m => (
-                                <span key={m} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
+                                <span key={m} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
                                     {m}
                                     <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedMonths(selectedMonths.filter(x => x !== m))} />
                                 </span>
@@ -469,7 +469,7 @@ export default function GlobalFilterBar() {
                                 <span
                                     key={it}
                                     title={it}
-                                    className="inline-flex items-start gap-1 max-w-full sm:max-w-xl bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-lg"
+                                    className="inline-flex items-start gap-1 max-w-full sm:max-w-xl bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-lg"
                                 >
                                     <span className="break-words whitespace-normal leading-snug min-w-0">
                                         Item: {it}

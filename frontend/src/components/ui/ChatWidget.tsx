@@ -54,7 +54,7 @@ export default function ChatWidget() {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 bg-gradient-to-r from-app-gold-hover to-app-gold text-black p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50 flex items-center justify-center glow-effect"
+                className="fixed bottom-6 right-6 bg-gradient-to-r from-app-gold-hover to-app-gold text-app-on-gold p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50 flex items-center justify-center glow-effect"
                 title="Open ELETTRO AI"
             >
                 <MessageSquare className="w-6 h-6" />
@@ -68,14 +68,14 @@ export default function ChatWidget() {
             <div className="bg-app-card px-4 py-3 border-b border-app-border flex justify-between items-center">
                 <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-app-gold-hover to-app-gold flex items-center justify-center">
-                        <MessageSquare className="w-4 h-4 text-black" />
+                        <MessageSquare className="w-4 h-4 text-app-on-gold" />
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold text-sm">ELETTRO AI</h3>
-                        <p className="text-xs text-gray-400">Sales Intelligence Assistant</p>
+                        <h3 className="text-app-fg font-semibold text-sm">ELETTRO AI</h3>
+                        <p className="text-xs text-app-fg-muted">Sales Intelligence Assistant</p>
                     </div>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                <button onClick={() => setIsOpen(false)} className="text-app-fg-muted hover:text-app-fg transition-colors">
                     <X className="w-5 h-5" />
                 </button>
             </div>
@@ -83,7 +83,7 @@ export default function ChatWidget() {
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-app-bg">
                 {messages.length === 0 && (
-                    <div className="text-center text-gray-500 text-sm mt-10">
+                    <div className="text-center text-app-fg-muted text-sm mt-10">
                         <p>Ask me anything about your current sales data!</p>
                         <ul className="mt-4 space-y-2 text-xs">
                             <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"Who are the top 5 customers?"</li>
@@ -96,8 +96,8 @@ export default function ChatWidget() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed ${msg.role === 'user'
-                            ? 'bg-gradient-to-r from-app-gold-hover to-app-gold text-black rounded-br-sm'
-                            : 'bg-app-hover border border-app-border text-gray-200 rounded-bl-sm'
+                            ? 'bg-gradient-to-r from-app-gold-hover to-app-gold text-app-on-gold rounded-br-sm'
+                            : 'bg-app-hover border border-app-border text-app-fg rounded-bl-sm'
                             }`}>
                             {msg.content}
                         </div>
@@ -108,7 +108,7 @@ export default function ChatWidget() {
                     <div className="flex justify-start">
                         <div className="bg-app-hover border border-app-border rounded-2xl rounded-bl-sm px-4 py-3 flex items-center space-x-2">
                             <Loader2 className="w-4 h-4 text-app-gold animate-spin" />
-                            <span className="text-xs text-gray-400">Analyzing database...</span>
+                            <span className="text-xs text-app-fg-muted">Analyzing database...</span>
                         </div>
                     </div>
                 )}
@@ -124,7 +124,7 @@ export default function ChatWidget() {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="Message ELETTRO AI..."
-                        className="w-full bg-app-bg border border-app-border rounded-full pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-app-gold transition-colors"
+                        className="w-full bg-app-bg border border-app-border rounded-full pl-4 pr-12 py-3 text-sm text-app-fg focus:outline-none focus:border-app-gold transition-colors"
                     />
                     <button
                         onClick={handleSend}

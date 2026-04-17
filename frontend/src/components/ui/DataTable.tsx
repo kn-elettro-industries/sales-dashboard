@@ -119,7 +119,7 @@ export function DataTable<T extends Record<string, any>>({
                 {searchable && searchKeys && (
                     <div className="relative w-full sm:w-64">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-gray-500" />
+                            <Search className="h-4 w-4 text-app-fg-muted" />
                         </div>
                         <input
                             type="text"
@@ -129,12 +129,12 @@ export function DataTable<T extends Record<string, any>>({
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="block w-full pl-10 pr-3 py-2 border border-app-border rounded-md leading-5 bg-app-bg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-full pl-10 pr-3 py-2 border border-app-border rounded-md leading-5 bg-app-bg text-app-fg placeholder:text-app-fg-muted focus:outline-none focus:ring-1 focus:ring-app-gold/50 focus:border-app-gold sm:text-sm"
                         />
                     </div>
                 )}
 
-                <div className="flex items-center space-x-2 text-sm text-gray-400 ml-auto">
+                <div className="flex items-center space-x-2 text-sm text-app-fg-muted ml-auto">
                     <span>Show</span>
                     <select
                         value={pageSize}
@@ -142,7 +142,7 @@ export function DataTable<T extends Record<string, any>>({
                             setPageSize(Number(e.target.value));
                             setCurrentPage(1);
                         }}
-                        className="bg-app-bg border border-app-border text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="bg-app-bg border border-app-border text-app-fg rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-app-gold/50"
                     >
                         {pageSizeOptions.map(size => (
                             <option key={size} value={size}>{size}</option>
@@ -156,7 +156,7 @@ export function DataTable<T extends Record<string, any>>({
             <div className="overflow-x-auto overflow-y-auto border border-app-border rounded-lg" style={{ maxHeight }}>
                 <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-app-card shadow-[0_1px_0_0_var(--app-border)] z-10">
-                        <tr className="text-gray-400">
+                        <tr className="text-app-fg-muted">
                             {columns.map((col, i) => (
                                 <th
                                     key={i}
@@ -196,7 +196,7 @@ export function DataTable<T extends Record<string, any>>({
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={columns.length} className="py-8 text-center text-gray-500 bg-app-bg">
+                                <td colSpan={columns.length} className="py-8 text-center text-app-fg-muted bg-app-bg">
                                     No data available
                                 </td>
                             </tr>
@@ -207,7 +207,7 @@ export function DataTable<T extends Record<string, any>>({
 
             {/* Pagination Controls */}
             {sortedData.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between mt-4 text-sm text-gray-400">
+                <div className="flex flex-col sm:flex-row items-center justify-between mt-4 text-sm text-app-fg-muted">
                     <div className="mb-4 sm:mb-0">
                         Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} entries
                     </div>

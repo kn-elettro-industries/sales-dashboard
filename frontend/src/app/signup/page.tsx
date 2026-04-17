@@ -79,10 +79,10 @@ export default function SignupPage() {
                 <div className="bg-app-card border border-app-border rounded-xl p-8 shadow-xl animate-scale-in opacity-0 animation-delay-150">
                     <h1 className="text-xl font-semibold text-app-fg mb-2">Create account</h1>
                     {signupEnabled === null ? (
-                        <p className="text-gray-400 text-sm">Loading...</p>
+                        <p className="text-app-fg-muted text-sm">Loading...</p>
                     ) : !signupEnabled ? (
                         <>
-                            <p className="text-gray-400 text-sm mb-6">
+                            <p className="text-app-fg-muted text-sm mb-6">
                                 Sign up is restricted. Only your administrator can create new accounts.
                             </p>
                             <p className="text-amber-400/90 text-sm mb-6">
@@ -97,10 +97,10 @@ export default function SignupPage() {
                         </>
                     ) : (
                         <>
-                            <p className="text-gray-400 text-sm mb-6">Set your username and password to get started.</p>
+                            <p className="text-app-fg-muted text-sm mb-6">Set your username and password to get started.</p>
                             <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="username" className="block text-sm font-medium text-app-fg-muted mb-1">
                                 Username
                             </label>
                             <input
@@ -115,7 +115,7 @@ export default function SignupPage() {
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-app-fg-muted mb-1">
                                 Password
                             </label>
                             <input
@@ -130,7 +130,7 @@ export default function SignupPage() {
                             />
                         </div>
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-app-fg-muted mb-1">
                                 Confirm password
                             </label>
                             <input
@@ -155,7 +155,7 @@ export default function SignupPage() {
                             {loading ? "Creating account..." : "Sign up"}
                         </button>
                             </form>
-                            <p className="text-center text-gray-400 text-sm mt-6">
+                            <p className="text-center text-app-fg-muted text-sm mt-6">
                                 Already have an account?{" "}
                                 <Link href="/login" className="text-app-gold hover:underline font-medium">
                                     Sign in
@@ -165,7 +165,7 @@ export default function SignupPage() {
                     )}
                 </div>
 
-                <p className="text-center text-gray-500 text-xs mt-6 animate-fade-in opacity-0 animation-delay-400">Phase: PROD-1.0 • Cloud ERP</p>
+                <p className="text-center text-app-fg-muted text-xs mt-6 animate-fade-in opacity-0 animation-delay-400">Phase: PROD-1.0 • Cloud ERP</p>
             </div>
         </div>
     );

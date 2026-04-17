@@ -195,21 +195,21 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
 
             {/* Gradient Legend */}
             <div className="absolute bottom-4 left-4 bg-app-bg/90 backdrop-blur-md border border-app-border rounded-lg px-4 py-3 z-[1000]">
-                <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 font-medium">Revenue Intensity</div>
+                <div className="text-[10px] text-app-fg-muted uppercase tracking-wider mb-2 font-medium">Revenue Intensity</div>
                 <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-gray-500">Low</span>
+                    <span className="text-[10px] text-app-fg-muted">Low</span>
                     <div className="flex h-3 rounded-sm overflow-hidden">
                         {["#1a1a2e", "#3d2200", "#663300", "#995500", "#cc8400", "#e6b800", "#FFD700"].map((c, i) => (
                             <div key={i} style={{ backgroundColor: c, width: "24px", height: "12px" }} />
                         ))}
                     </div>
-                    <span className="text-[10px] text-gray-500">High</span>
+                    <span className="text-[10px] text-app-fg-muted">High</span>
                 </div>
             </div>
 
             {/* Info Badge */}
             <div className="absolute top-4 left-4 bg-app-bg/80 backdrop-blur-md border border-app-border rounded-lg px-3 py-2 z-[1000]">
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-app-fg-muted">
                     <span className="text-app-gold font-semibold">{states.length}</span> states •{" "}
                     Hover to inspect • Click to drill down
                 </div>

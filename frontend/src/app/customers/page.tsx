@@ -153,16 +153,16 @@ export default function CustomersPage() {
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div>
-                <h2 className="text-2xl font-bold text-white">Customer Intelligence</h2>
-                <p className="text-gray-400 mt-1">RFM segmentation and customer analysis.</p>
+                <h2 className="text-2xl font-bold text-app-fg">Customer Intelligence</h2>
+                <p className="text-app-fg-muted mt-1">RFM segmentation and customer analysis.</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-gray-500 uppercase tracking-wide">Detail view</span>
+                    <span className="text-xs text-app-fg-muted uppercase tracking-wide">Detail view</span>
                     <div className="flex rounded-lg border border-app-border p-0.5 bg-app-bg">
                         <button
                             type="button"
                             onClick={() => setBuyerFocus("all")}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                                buyerFocus === "all" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"
+                                buyerFocus === "all" ? "bg-app-gold text-app-on-gold font-medium" : "text-app-fg-muted hover:text-app-fg"
                             }`}
                         >
                             <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
@@ -172,7 +172,7 @@ export default function CustomersPage() {
                             type="button"
                             onClick={() => setBuyerFocus("low")}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                                buyerFocus === "low" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"
+                                buyerFocus === "low" ? "bg-app-gold text-app-on-gold font-medium" : "text-app-fg-muted hover:text-app-fg"
                             }`}
                             title="Potential, At Risk, and Lost segments — lowest revenue table first"
                         >
@@ -181,17 +181,17 @@ export default function CustomersPage() {
                         </button>
                     </div>
                     {buyerFocus === "low" && (
-                        <span className="text-xs text-gray-500 max-w-xl">
+                        <span className="text-xs text-app-fg-muted max-w-xl">
                             Showing RFM segments <span className="text-app-gold">Potential</span>,{" "}
                             <span className="text-app-gold">At Risk</span>, <span className="text-app-gold">Lost</span> only.
-                            Revenue table is sorted with <strong className="text-gray-400">lowest spend first</strong>.
+                            Revenue table is sorted with <strong className="text-app-fg">lowest spend first</strong>.
                         </span>
                     )}
                 </div>
                 <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-app-border bg-app-bg/50 px-4 py-3">
                     <div className="flex flex-wrap items-end gap-2">
                         <div className="flex flex-col gap-1">
-                            <label htmlFor="min-rev-lakh" className="text-xs text-gray-500">
+                            <label htmlFor="min-rev-lakh" className="text-xs text-app-fg-muted">
                                 From (₹ lakh)
                             </label>
                             <input
@@ -200,13 +200,13 @@ export default function CustomersPage() {
                                 inputMode="decimal"
                                 value={minRevenueLakh}
                                 onChange={(e) => setMinRevenueLakh(e.target.value)}
-                                className="w-24 bg-app-bg border border-app-border rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-app-gold"
+                                className="w-24 bg-app-bg border border-app-border rounded-lg px-2 py-1.5 text-sm text-app-fg outline-none focus:border-app-gold"
                                 aria-describedby="export-below-help"
                             />
                         </div>
-                        <span className="text-gray-500 text-sm pb-2">–</span>
+                        <span className="text-app-fg-muted text-sm pb-2">–</span>
                         <div className="flex flex-col gap-1">
-                            <label htmlFor="max-rev-lakh" className="text-xs text-gray-500">
+                            <label htmlFor="max-rev-lakh" className="text-xs text-app-fg-muted">
                                 To (₹ lakh)
                             </label>
                             <input
@@ -215,15 +215,15 @@ export default function CustomersPage() {
                                 inputMode="decimal"
                                 value={maxRevenueLakh}
                                 onChange={(e) => setMaxRevenueLakh(e.target.value)}
-                                className="w-24 bg-app-bg border border-app-border rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-app-gold"
+                                className="w-24 bg-app-bg border border-app-border rounded-lg px-2 py-1.5 text-sm text-app-fg outline-none focus:border-app-gold"
                                 aria-describedby="export-below-help"
                             />
                         </div>
                     </div>
-                    <p id="export-below-help" className="text-xs text-gray-500 max-w-md flex-1 min-w-[12rem]">
+                    <p id="export-below-help" className="text-xs text-app-fg-muted max-w-md flex-1 min-w-[12rem]">
                         Export customers whose total revenue in the period falls between these bounds (inclusive). Same date range and global filters as the rest of the app. Revenue = sum of{" "}
-                        <strong className="text-gray-400">AMOUNT</strong> only (excludes tax). Example: 2–5 lakh lists customers with ₹2,00,000–₹5,00,000 in the period. Use{" "}
-                        <strong className="text-gray-400">0</strong> as the lower bound for “up to” the max only.
+                        <strong className="text-app-fg">AMOUNT</strong> only (excludes tax). Example: 2–5 lakh lists customers with ₹2,00,000–₹5,00,000 in the period. Use{" "}
+                        <strong className="text-app-fg">0</strong> as the lower bound for “up to” the max only.
                     </p>
                     <button
                         type="button"
@@ -245,30 +245,30 @@ export default function CustomersPage() {
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Customer Segments</h3>
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">Customer Segments</h3>
                 <div className="flex gap-3 flex-wrap">
                     {Object.entries(segCounts).length > 0 ? Object.entries(segCounts).map(([seg, count]) => (
                         <div key={seg} className={`${SEGMENT_COLORS[seg] || 'bg-gray-600'} rounded-lg px-4 py-3 text-center min-w-[120px]`}>
-                            <div className="text-2xl font-bold text-white">{count}</div>
-                            <div className="text-sm text-white/80">{seg}</div>
+                            <div className="text-2xl font-bold text-app-fg">{count}</div>
+                            <div className="text-sm text-app-fg-muted">{seg}</div>
                         </div>
-                    )) : <div className="text-gray-500">No segmented customers found in this period.</div>}
+                    )) : <div className="text-app-fg-muted">No segmented customers found in this period.</div>}
                 </div>
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4">RFM Customer Map</h3>
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4">RFM Customer Map</h3>
                 {filteredRfm.length > 0 ? (
                     <ScatterBubbleChart data={filteredRfm} xKey="Recency" yKey="Frequency" zKey="Monetary" nameKey="CUSTOMER_NAME" />
                 ) : (
-                    <div className="h-40 flex items-center justify-center text-gray-500">
+                    <div className="h-40 flex items-center justify-center text-app-fg-muted">
                         {buyerFocus === "low" ? "No low-purchase segments in this period. Try All customers or widen filters." : "No data"}
                     </div>
                 )}
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">RFM Analysis</h3>
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">RFM Analysis</h3>
                 <DataTable
                     data={filteredRfm}
                     searchable={true}
@@ -285,7 +285,7 @@ export default function CustomersPage() {
                             accessorKey: 'Monetary',
                             sortable: true,
                             align: 'right',
-                            cell: (item: any) => <span className="text-white font-semibold">{fmt(item.Monetary)}</span>
+                            cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Monetary)}</span>
                         },
                         {
                             header: 'Segment',
@@ -303,7 +303,7 @@ export default function CustomersPage() {
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">
                     {buyerFocus === "low" ? "Low purchase customers (revenue, lowest first)" : "Top Customers by Revenue"}
                 </h3>
                 <DataTable
@@ -318,7 +318,7 @@ export default function CustomersPage() {
                             header: '#',
                             accessorKey: '_index',
                             sortable: false,
-                            cell: (_, index) => <span className="text-gray-500">{index! + 1}</span> // Fixed index rendering
+                            cell: (_, index) => <span className="text-app-fg-muted">{index! + 1}</span> // Fixed index rendering
                         },
                         { header: 'Customer', accessorKey: 'CUSTOMER_NAME', sortable: true },
                         { header: 'City', accessorKey: 'CITY', sortable: true },
@@ -328,7 +328,7 @@ export default function CustomersPage() {
                             accessorKey: 'Revenue',
                             sortable: true,
                             align: 'right',
-                            cell: (item: any) => <span className="text-white font-semibold">{fmt(item.Revenue)}</span>
+                            cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
                         },
                         { header: 'Orders', accessorKey: 'Orders', sortable: true, align: 'right' },
                         {

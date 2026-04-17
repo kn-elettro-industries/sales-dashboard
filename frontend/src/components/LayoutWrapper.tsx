@@ -39,7 +39,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     if (!user) {
         return (
             <div className="min-h-screen w-full flex items-center justify-center">
-                <div className="animate-shimmer text-gray-500 text-sm">Loading...</div>
+                <div className="animate-shimmer text-app-fg-muted text-sm">Loading...</div>
             </div>
         );
     }

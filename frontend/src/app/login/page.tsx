@@ -44,11 +44,11 @@ export default function LoginPage() {
 
                 <div className="bg-app-card border border-app-border rounded-xl p-8 shadow-xl animate-scale-in opacity-0 animation-delay-150">
                     <h1 className="text-xl font-semibold text-app-fg mb-2">Sign in</h1>
-                    <p className="text-gray-400 text-sm mb-6">Enter your credentials to access the dashboard.</p>
+                    <p className="text-app-fg-muted text-sm mb-6">Enter your credentials to access the dashboard.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="username" className="block text-sm font-medium text-app-fg-muted mb-1">
                                 Username
                             </label>
                             <input
@@ -63,7 +63,7 @@ export default function LoginPage() {
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-app-fg-muted mb-1">
                                 Password
                             </label>
                             <input
@@ -87,14 +87,14 @@ export default function LoginPage() {
                         >
                             {loading ? "Signing in..." : "Sign in"}
                         </button>
-                        <p className="text-center text-gray-400 text-sm">
+                        <p className="text-center text-app-fg-muted text-sm">
                             Don&apos;t have an account?{" "}
                             <Link href="/signup" className="text-app-gold hover:underline font-medium">Sign up</Link>
                         </p>
                     </form>
                 </div>
 
-                <p className="text-center text-gray-500 text-xs mt-6 animate-fade-in opacity-0 animation-delay-400">Phase: PROD-1.0 • Cloud ERP</p>
+                <p className="text-center text-app-fg-muted text-xs mt-6 animate-fade-in opacity-0 animation-delay-400">Phase: PROD-1.0 • Cloud ERP</p>
             </div>
         </div>
     );

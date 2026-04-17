@@ -25,7 +25,7 @@ export default function AdminPage() {
     if (!isAdmin) {
         return (
             <div className="min-h-[50vh] flex items-center justify-center p-6">
-                <div className="text-center text-gray-400">
+                <div className="text-center text-app-fg-muted">
                     <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p className="font-medium">Admin access required.</p>
                     <p className="text-sm mt-1">Only administrators can add new users.</p>
@@ -83,31 +83,31 @@ export default function AdminPage() {
             <div className="flex items-center gap-3 mb-6">
                 <UserPlus className="h-8 w-8 text-app-gold" />
                 <div>
-                    <h1 className="text-xl font-semibold text-white">Add user</h1>
-                    <p className="text-gray-400 text-sm">Create accounts for your team.</p>
+                    <h1 className="text-xl font-semibold text-app-fg">Add user</h1>
+                    <p className="text-app-fg-muted text-sm">Create accounts for your team.</p>
                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="bg-app-card border border-app-border rounded-xl p-6 space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">New username</label>
+                    <label className="block text-sm font-medium text-app-fg-muted mb-1">New username</label>
                     <input
                         type="text"
                         value={newUsername}
                         onChange={(e) => setNewUsername(e.target.value)}
                         placeholder="e.g. sales1"
-                        className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-app-gold"
+                        className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2.5 text-app-fg placeholder:text-app-fg-muted focus:outline-none focus:ring-2 focus:ring-app-gold"
                         disabled={loading}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">New password</label>
+                    <label className="block text-sm font-medium text-app-fg-muted mb-1">New password</label>
                     <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Min 6 characters"
-                        className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-app-gold"
+                        className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2.5 text-app-fg placeholder:text-app-fg-muted focus:outline-none focus:ring-2 focus:ring-app-gold"
                         disabled={loading}
                     />
                 </div>

@@ -26,25 +26,25 @@ html.dark {
 }
 
 html.light {
-    --app-bg: #f4f6f9;
+    --app-bg: #f0f2f6;
     --app-card: #ffffff;
-    --app-hover: #eaeef2;
-    --app-muted: #e4e9ef;
-    --app-border: #d0d7de;
-    --app-border-strong: #b6c0cc;
-    --app-fg: #1f2328;
-    --app-fg-muted: #59636e;
-    --app-gold: #b8860b;
-    --app-gold-hover: #9a7209;
-    --app-on-gold: #1a1a1a;
-    --app-gold-muted: #f5ecd8;
+    --app-hover: #e2e7ec;
+    --app-muted: #dce3ea;
+    --app-border: #c8d0da;
+    --app-border-strong: #9aa6b2;
+    --app-fg: #12151a;
+    --app-fg-muted: #3a424d;
+    --app-gold: #8a6a0a;
+    --app-gold-hover: #6e5508;
+    --app-on-gold: #faf8f3;
+    --app-gold-muted: #ede4cf;
     --chart-panel-bg: #ffffff;
-    --chart-panel-border: #d0d7de;
-    --chart-grid-stroke: #c9d1d9;
-    --chart-invert: #f4f6f9;
-    --chart-treemap-deep: #e8ecf0;
-    --chart-axis: #59636e;
-    --chart-tooltip-row: #1f2328;
+    --chart-panel-border: #c8d0da;
+    --chart-grid-stroke: #aeb8c4;
+    --chart-invert: #f0f2f6;
+    --chart-treemap-deep: #dde3ea;
+    --chart-axis: #3a424d;
+    --chart-tooltip-row: #12151a;
     --chart-bar-cursor: rgba(0, 0, 0, 0.06);
 }
 

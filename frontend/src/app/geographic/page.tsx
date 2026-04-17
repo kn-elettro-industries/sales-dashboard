@@ -83,8 +83,8 @@ export default function GeographicPage() {
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div>
-                <h2 className="text-2xl font-bold text-white">Geographic Intelligence</h2>
-                <p className="text-gray-400 mt-1">Interactive map with state and city level revenue analysis.</p>
+                <h2 className="text-2xl font-bold text-app-fg">Geographic Intelligence</h2>
+                <p className="text-app-fg-muted mt-1">Interactive map with state and city level revenue analysis.</p>
             </div>
 
             {/* KPI Cards */}
@@ -98,9 +98,9 @@ export default function GeographicPage() {
             {/* Interactive National Map */}
             {!drilldownState && (
                 <div className="bg-app-card border border-app-border rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">
+                    <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">
                         National Sales Map
-                        <span className="text-sm font-normal text-gray-400 ml-2">Click a state to view details</span>
+                        <span className="text-sm font-normal text-app-fg-muted ml-2">Click a state to view details</span>
                     </h3>
                     {validStates.length > 0 ? (
                         <IndiaMap
@@ -108,7 +108,7 @@ export default function GeographicPage() {
                             onStateClick={(stateName) => setDrilldownState(stateName)}
                         />
                     ) : (
-                        <div className="h-80 flex items-center justify-center text-gray-500">No geographic data available</div>
+                        <div className="h-80 flex items-center justify-center text-app-fg-muted">No geographic data available</div>
                     )}
                 </div>
             )}
@@ -125,7 +125,7 @@ export default function GeographicPage() {
                                 <ChevronLeft className="h-4 w-4 mr-1" />
                                 Back to National View
                             </button>
-                            <h3 className="text-lg font-semibold text-white">
+                            <h3 className="text-lg font-semibold text-app-fg">
                                 {drilldownState} — State Details
                             </h3>
                         </div>
@@ -136,20 +136,20 @@ export default function GeographicPage() {
                             (s: any) =>
                                 String(s?.STATE ?? "").toLowerCase() === String(drilldownState ?? "").toLowerCase()
                         );
-                        if (!stateInfo) return <div className="text-gray-500">No data for this state</div>;
+                        if (!stateInfo) return <div className="text-app-fg-muted">No data for this state</div>;
                         return (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 <div className="bg-app-bg border border-app-border rounded-lg p-4">
-                                    <div className="text-xs text-gray-500 uppercase mb-1">State Revenue</div>
-                                    <div className="text-xl font-bold text-white">{fmtCrVal(stateInfo.Revenue)}</div>
+                                    <div className="text-xs text-app-fg-muted uppercase mb-1">State Revenue</div>
+                                    <div className="text-xl font-bold text-app-fg">{fmtCrVal(stateInfo.Revenue)}</div>
                                 </div>
                                 <div className="bg-app-bg border border-app-border rounded-lg p-4">
-                                    <div className="text-xs text-gray-500 uppercase mb-1">Market Share</div>
+                                    <div className="text-xs text-app-fg-muted uppercase mb-1">Market Share</div>
                                     <div className="text-xl font-bold text-app-gold">{stateInfo.MarketShare ?? 0}%</div>
                                 </div>
                                 <div className="bg-app-bg border border-app-border rounded-lg p-4">
-                                    <div className="text-xs text-gray-500 uppercase mb-1">Total Orders</div>
-                                    <div className="text-xl font-bold text-white">{stateInfo.Orders?.toLocaleString()}</div>
+                                    <div className="text-xs text-app-fg-muted uppercase mb-1">Total Orders</div>
+                                    <div className="text-xl font-bold text-app-fg">{stateInfo.Orders?.toLocaleString()}</div>
                                 </div>
                             </div>
                         );
@@ -159,20 +159,20 @@ export default function GeographicPage() {
 
             {/* State Revenue Rankings */}
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4">
+                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4">
                     State Revenue Rankings
                 </h3>
                 {validStates.length > 0 ? (
                     <BarChart data={validStates.slice(0, 15)} xKey="STATE" yKey="Revenue" />
                 ) : (
-                    <div className="h-80 flex items-center justify-center text-gray-500">No geographic data</div>
+                    <div className="h-80 flex items-center justify-center text-app-fg-muted">No geographic data</div>
                 )}
             </div>
 
             {/* Tables Side by Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div className="bg-app-card border border-app-border rounded-xl p-6 flex flex-col">
-                    <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">State Breakdown</h3>
+                    <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">State Breakdown</h3>
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
                             data={validStates}
@@ -189,7 +189,7 @@ export default function GeographicPage() {
                                     accessorKey: 'Revenue',
                                     sortable: true,
                                     align: 'right',
-                                    cell: (item: any) => <span className="text-white font-semibold">{fmt(item.Revenue)}</span>
+                                    cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
                                 },
                                 {
                                     header: 'Share %',
@@ -205,7 +205,7 @@ export default function GeographicPage() {
                 </div>
 
                 <div className="bg-app-card border border-app-border rounded-xl p-6 flex flex-col">
-                    <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Top Cities</h3>
+                    <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">Top Cities</h3>
                     <div className="flex-1 min-h-[400px]">
                         <DataTable
                             data={tableCities}
@@ -221,7 +221,7 @@ export default function GeographicPage() {
                                     accessorKey: 'Revenue',
                                     sortable: true,
                                     align: 'right',
-                                    cell: (item: any) => <span className="text-white font-semibold">{fmt(item.Revenue)}</span>
+                                    cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
                                 },
                                 { header: 'Customers', accessorKey: 'Customers', sortable: true, align: 'right' }
                             ]}

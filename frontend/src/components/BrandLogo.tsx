@@ -14,7 +14,7 @@ export function BrandLogo({
     const pad = size === "sm" ? "px-2 py-1.5" : size === "lg" ? "px-4 py-2.5" : "px-2.5 py-2";
     return (
         <span
-            className={`inline-flex max-w-full items-center justify-center rounded-lg bg-zinc-900 shadow-sm ring-1 ring-black/15 dark:bg-transparent dark:shadow-none dark:ring-0 dark:px-0 dark:py-0 ${pad} ${className}`}
+            className={`brand-logo-plate inline-flex max-w-full items-center justify-center rounded-lg bg-neutral-950 shadow-md ring-1 ring-black/25 dark:bg-transparent dark:shadow-none dark:ring-0 dark:px-0 dark:py-0 ${pad} ${className}`}
         >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="KN Elettro" className={`${h} w-auto max-w-full object-contain object-left`} />

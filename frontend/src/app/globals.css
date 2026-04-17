@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Match `dark:*` utilities to html class (ThemeContext), not system preference */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Semantic palette — toggled via html.light / html.dark (see ThemeContext) */
 :root,
 html.dark {

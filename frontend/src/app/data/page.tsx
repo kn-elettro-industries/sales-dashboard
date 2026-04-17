@@ -138,11 +138,11 @@ export default function DataUploadPage() {
             </div>
 
             {/* Customer Master Upload */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-2">Customer Master</h3>
                 <p className="text-sm text-gray-400 mb-4">Upload your customer master Excel (with CUSTOMER_NAME, STATE, CITY columns) so sales data gets enriched with geographic info.</p>
                 <div className="flex items-center gap-4">
-                    <label className="cursor-pointer px-4 py-2 rounded-lg bg-[#0d1117] border border-[#30363d] text-sm text-gray-200 hover:border-[#daa520] transition-colors">
+                    <label className="cursor-pointer px-4 py-2 rounded-lg bg-app-bg border border-app-border text-sm text-gray-200 hover:border-app-gold transition-colors">
                         {masterStatus === "uploading" ? "Uploading..." : "Choose Customer Master File"}
                         <input type="file" accept=".xlsx,.xls,.csv" onChange={handleMasterUpload} className="hidden" disabled={masterStatus === "uploading"} />
                     </label>
@@ -150,7 +150,7 @@ export default function DataUploadPage() {
                     {masterStatus === "error" && <span className="text-sm text-red-400">{masterMsg}</span>}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">Upload this <strong>before</strong> uploading sales files. The master is used to add STATE/CITY to each row during upload.</p>
-                <div className="mt-4 pt-4 border-t border-[#30363d]">
+                <div className="mt-4 pt-4 border-t border-app-border">
                     <p className="text-sm text-gray-400 mb-2">Already uploaded data without the master? Clear existing data and re-upload with the master loaded.</p>
                     <button
                         onClick={async () => {
@@ -179,9 +179,9 @@ export default function DataUploadPage() {
             </div>
 
             {/* Data Quality */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-[#daa520]" />
+                    <Activity className="h-5 w-5 text-app-gold" />
                     Data Quality Health
                 </h3>
                 {healthLoading ? (
@@ -190,23 +190,23 @@ export default function DataUploadPage() {
                     </div>
                 ) : health ? (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div className="bg-[#0d1117] rounded-lg p-4 border border-[#30363d]">
+                        <div className="bg-app-bg rounded-lg p-4 border border-app-border">
                             <p className="text-xs text-gray-500 uppercase">Total Rows</p>
                             <p className="text-xl font-bold text-white">{health.total_rows.toLocaleString()}</p>
                         </div>
-                        <div className="bg-[#0d1117] rounded-lg p-4 border border-[#30363d]">
+                        <div className="bg-app-bg rounded-lg p-4 border border-app-border">
                             <p className="text-xs text-gray-500 uppercase">Missing Dates</p>
                             <p className="text-xl font-bold text-white">{health.missing_dates.toLocaleString()}</p>
                         </div>
-                        <div className="bg-[#0d1117] rounded-lg p-4 border border-[#30363d]">
+                        <div className="bg-app-bg rounded-lg p-4 border border-app-border">
                             <p className="text-xs text-gray-500 uppercase">Duplicate Rows</p>
                             <p className="text-xl font-bold text-white">{health.duplicate_invoices.toLocaleString()}</p>
                         </div>
-                        <div className="bg-[#0d1117] rounded-lg p-4 border border-[#30363d]">
+                        <div className="bg-app-bg rounded-lg p-4 border border-app-border">
                             <p className="text-xs text-gray-500 uppercase">Negative Amounts</p>
                             <p className="text-xl font-bold text-white">{health.negative_amounts.toLocaleString()}</p>
                         </div>
-                        <div className="bg-[#0d1117] rounded-lg p-4 border border-[#30363d]">
+                        <div className="bg-app-bg rounded-lg p-4 border border-app-border">
                             <p className="text-xs text-gray-500 uppercase">Quality Score</p>
                             <p className={`text-xl font-bold ${health.status === "good" ? "text-green-400" : health.status === "warning" ? "text-yellow-400" : "text-red-400"}`}>{health.score}/100</p>
                         </div>
@@ -217,13 +217,13 @@ export default function DataUploadPage() {
                 {health?.message && <p className="text-sm text-gray-400 mt-3">{health.message}</p>}
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-8">
-                <div className="mb-6 flex items-center justify-between border-b border-[#30363d] pb-4">
+            <div className="bg-app-card border border-app-border rounded-xl p-8">
+                <div className="mb-6 flex items-center justify-between border-b border-app-border pb-4">
                     <div>
                         <h3 className="text-lg font-semibold text-white">Upload Pipeline</h3>
-                        <p className="text-sm text-gray-400">Targeting Tenant: <span className="text-[#daa520] font-medium">{tenant}</span></p>
+                        <p className="text-sm text-gray-400">Targeting Tenant: <span className="text-app-gold font-medium">{tenant}</span></p>
                     </div>
-                    <div className="text-sm px-3 py-1 bg-[#0d1117] border border-[#30363d] rounded-md text-gray-400">
+                    <div className="text-sm px-3 py-1 bg-app-bg border border-app-border rounded-md text-gray-400">
                         Accepts: .xlsx, .xls, .csv
                     </div>
                 </div>
@@ -232,12 +232,12 @@ export default function DataUploadPage() {
                 <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors
-            ${isDragActive ? 'border-[#daa520] bg-[#daa520]/10' : 'border-[#30363d] hover:border-gray-500 hover:bg-[#21262d]'}
+            ${isDragActive ? 'border-app-gold bg-app-gold/10' : 'border-app-border hover:border-gray-500 hover:bg-app-hover'}
             ${files.length > 0 ? 'border-green-500/50 bg-green-500/5' : ''}
           `}
                 >
                     <input {...getInputProps()} />
-                    <UploadCloud className={`mx-auto h-16 w-16 mb-4 ${isDragActive ? 'text-[#daa520]' : files.length > 0 ? 'text-green-500' : 'text-gray-500'}`} />
+                    <UploadCloud className={`mx-auto h-16 w-16 mb-4 ${isDragActive ? 'text-app-gold' : files.length > 0 ? 'text-green-500' : 'text-gray-500'}`} />
 
                     <div className="space-y-2">
                         <p className="text-lg font-medium text-white">
@@ -255,9 +255,9 @@ export default function DataUploadPage() {
                             <button onClick={() => setFiles([])} className="text-xs text-red-400 hover:text-red-300">Clear all</button>
                         </div>
                         {files.map((f, i) => (
-                            <div key={`${f.name}-${i}`} className="flex items-center justify-between bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2">
+                            <div key={`${f.name}-${i}`} className="flex items-center justify-between bg-app-bg border border-app-border rounded-lg px-4 py-2">
                                 <div className="flex items-center gap-3">
-                                    <FileSpreadsheet className="h-4 w-4 text-[#daa520]" />
+                                    <FileSpreadsheet className="h-4 w-4 text-app-gold" />
                                     <span className="text-sm text-white">{f.name}</span>
                                     <span className="text-xs text-gray-500">{(f.size / 1024 / 1024).toFixed(2)} MB</span>
                                 </div>
@@ -295,8 +295,8 @@ export default function DataUploadPage() {
                         disabled={files.length === 0 || status === "uploading"}
                         className={`flex items-center px-6 py-2.5 rounded-lg font-medium transition-all
               ${files.length === 0 || status === "uploading"
-                                ? 'bg-[#30363d] text-gray-500 cursor-not-allowed'
-                                : 'bg-[#daa520] text-[#0d1117] hover:bg-[#b8860b] hover:shadow-lg hover:shadow-[#daa520]/20'
+                                ? 'bg-app-border-strong text-gray-500 cursor-not-allowed'
+                                : 'bg-app-gold text-app-on-gold hover:bg-app-gold-hover hover:shadow-lg hover:ring-1 hover:ring-app-gold/30'
                             }
             `}
                     >

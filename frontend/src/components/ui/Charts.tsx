@@ -32,17 +32,17 @@ const COLORS = SEGMENT_COLORS;
 /** Recharts defaults tooltip *values* to black; itemStyle/labelStyle + globals.css fix contrast on dark UI */
 const CHART_TOOLTIP_BASE = {
     contentStyle: {
-        backgroundColor: "#161b22",
-        border: "1px solid #30363d",
+        backgroundColor: "var(--chart-panel-bg)",
+        border: "1px solid var(--chart-panel-border)",
         borderRadius: "8px",
         boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
     },
     labelStyle: {
-        color: "#daa520",
+        color: "var(--app-gold)",
         fontWeight: 600 as const,
     },
     itemStyle: {
-        color: "#e6edf3",
+        color: "var(--chart-tooltip-row)",
     },
     wrapperStyle: { outline: "none" as const, zIndex: 50 },
 };
@@ -75,15 +75,15 @@ export function GradientAreaChart({ data, xKey, yKey, formatCurrency = true }: {
                 <AreaChart data={data} margin={{ top: 16, right: 24, left: 8, bottom: 8 }}>
                     <defs>
                         <linearGradient id="colorYKey" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#daa520" stopOpacity={0.9} />
-                            <stop offset="95%" stopColor="#daa520" stopOpacity={0.08} />
+                            <stop offset="5%" stopColor="var(--app-gold)" stopOpacity={0.9} />
+                            <stop offset="95%" stopColor="var(--app-gold)" stopOpacity={0.08} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#30363d" vertical={false} opacity={0.8} />
-                    <XAxis dataKey={xKey} stroke="#8b949e" tick={{ fill: "#8b949e", fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" vertical={false} opacity={0.8} />
+                    <XAxis dataKey={xKey} stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)", fontSize: 12 }} tickLine={false} axisLine={false} />
                     <YAxis
-                        stroke="#8b949e"
-                        tick={{ fill: "#8b949e", fontSize: 12 }}
+                        stroke="var(--chart-axis)"
+                        tick={{ fill: "var(--chart-axis)", fontSize: 12 }}
                         tickLine={false}
                         axisLine={false}
                         width={48}
@@ -94,7 +94,7 @@ export function GradientAreaChart({ data, xKey, yKey, formatCurrency = true }: {
                         contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                         formatter={(value: any) => [formatCurrency ? `₹ ${Number(value || 0).toLocaleString("en-IN")}` : value, "Revenue"]}
                     />
-                    <Area type="monotone" dataKey={yKey} stroke="#daa520" strokeWidth={2.5} fillOpacity={1} fill="url(#colorYKey)" dot={false} activeDot={{ r: 5, fill: "#daa520", stroke: "#161b22", strokeWidth: 2 }} />
+                    <Area type="monotone" dataKey={yKey} stroke="var(--app-gold)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorYKey)" dot={false} activeDot={{ r: 5, fill: "var(--app-gold)", stroke: "var(--chart-panel-bg)", strokeWidth: 2 }} />
                 </AreaChart>
             </ResponsiveContainer>
         </ChartWrapper>
@@ -135,7 +135,7 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                                 outerRadius={100}
                                 dataKey={valueKey}
                                 nameKey={nameKey}
-                                stroke="#0d1117"
+                                stroke="var(--chart-invert)"
                                 strokeWidth={2}
                             >
                                 {chartData.map((entry, index) => (
@@ -151,7 +151,7 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Total</span>
-                        <span className="text-[#daa520] font-bold text-lg mt-0.5">{formatAmount(total)}</span>
+                        <span className="text-app-gold font-bold text-lg mt-0.5">{formatAmount(total)}</span>
                     </div>
                 </div>
                 {/* Legend: color box + name + percentage — below donut, easy to scan */}
@@ -159,15 +159,15 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
                     {chartData.map((entry, index) => (
                         <div
                             key={index}
-                            className="flex items-center gap-3 py-1.5 rounded px-2 -mx-2 hover:bg-[#21262d] cursor-default transition-colors"
+                            className="flex items-center gap-3 py-1.5 rounded px-2 -mx-2 hover:bg-app-hover cursor-default transition-colors"
                             onMouseEnter={() => setActiveIndex(index)}
                             onMouseLeave={() => setActiveIndex(null)}
                         >
-                            <div className="w-4 h-4 rounded flex-shrink-0 border border-[#30363d]" style={{ backgroundColor: entry.fill }} />
+                            <div className="w-4 h-4 rounded flex-shrink-0 border border-app-border" style={{ backgroundColor: entry.fill }} />
                             <span className="text-gray-200 text-sm truncate flex-1 min-w-0" title={String(entry[nameKey])}>
                                 {String(entry[nameKey]).length > 32 ? `${String(entry[nameKey]).slice(0, 30)}…` : entry[nameKey]}
                             </span>
-                            <span className="text-[#daa520] font-semibold text-sm flex-shrink-0">{entry._pct.toFixed(1)}%</span>
+                            <span className="text-app-gold font-semibold text-sm flex-shrink-0">{entry._pct.toFixed(1)}%</span>
                         </div>
                     ))}
                 </div>
@@ -186,9 +186,9 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
         <ChartWrapper className="min-h-[384px] w-full mt-4">
             <ResponsiveContainer width="100%" height={384}>
                 <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                    <XAxis type="number" dataKey={xKey} name="Recency (Days)" stroke="#8b949e" tick={{ fill: "#8b949e" }} />
-                    <YAxis type="number" dataKey={yKey} name="Frequency" stroke="#8b949e" tick={{ fill: "#8b949e" }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
+                    <XAxis type="number" dataKey={xKey} name="Recency (Days)" stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)" }} />
+                    <YAxis type="number" dataKey={yKey} name="Frequency" stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)" }} />
                     <ZAxis type="number" dataKey={zKey} range={[50, 800]} name="Monetary" />
                     <Tooltip
                         cursor={{ strokeDasharray: "3 3" }}
@@ -202,8 +202,8 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                             const rec = row[xKey];
                             const freq = row[yKey];
                             const mon = row[zKey];
-                            const rowStyle = { color: "#e6edf3" as const, fontSize: 12, margin: "2px 0 0 0" };
-                            const labelStyle = { color: "#8b949e" as const, fontSize: 11, margin: "6px 0 0 0" };
+                            const rowStyle = { color: "var(--chart-tooltip-row)" as const, fontSize: 12, margin: "2px 0 0 0" };
+                            const labelStyle = { color: "var(--chart-axis)" as const, fontSize: 11, margin: "6px 0 0 0" };
                             return (
                                 <div
                                     className="recharts-default-tooltip"
@@ -215,7 +215,7 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                                 >
                                     <div
                                         style={{
-                                            color: "#daa520",
+                                            color: "var(--app-gold)",
                                             fontWeight: 700,
                                             fontSize: 13,
                                             marginBottom: 8,
@@ -230,14 +230,14 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                                     <div style={labelStyle}>Frequency</div>
                                     <div style={rowStyle}>{freq != null ? Number(freq).toLocaleString("en-IN") : "—"}</div>
                                     <div style={labelStyle}>Monetary (revenue)</div>
-                                    <div style={{ ...rowStyle, color: "#daa520", fontWeight: 600 }}>
+                                    <div style={{ ...rowStyle, color: "var(--app-gold)", fontWeight: 600 }}>
                                         {mon != null ? formatAmt(Number(mon)) : "—"}
                                     </div>
                                 </div>
                             );
                         }}
                     />
-                    <Scatter name="Customers" data={data} fill="#daa520" fillOpacity={0.6}>
+                    <Scatter name="Customers" data={data} fill="var(--app-gold)" fillOpacity={0.6}>
                         {data.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
@@ -251,14 +251,14 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
 
 // 4. Treemap — clear tiles + legend below so every name is readable
 const TREEMAP_TILE_PADDING = 3;
-const TREEMAP_STROKE = "#0d1117";
+const TREEMAP_STROKE = "var(--chart-invert)";
 
 const CustomizedContent = (props: any) => {
     const { depth, x, y, width, height, index, value, payload, root } = props;
     const nodeVal = Number(value ?? payload?.value ?? payload?.AMOUNT ?? 0);
     const totalVal = Number(root?.value ?? 1);
     const pct = totalVal > 0 ? (nodeVal / totalVal) * 100 : 0;
-    const fill = depth < 2 ? SEGMENT_COLORS[index % SEGMENT_COLORS.length] : "#21262d";
+    const fill = depth < 2 ? SEGMENT_COLORS[index % SEGMENT_COLORS.length] : "var(--chart-treemap-deep)";
     const pad = TREEMAP_TILE_PADDING;
     const innerW = Math.max(0, width - pad * 2);
     const innerH = Math.max(0, height - pad * 2);
@@ -308,7 +308,7 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                             dataKey={valueKey}
                             nameKey={nameKey}
                             stroke={TREEMAP_STROKE}
-                            fill="#daa520"
+                            fill="var(--app-gold)"
                             content={<CustomizedContent />}
                         >
                             <Tooltip
@@ -329,12 +329,12 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                         const pct = total > 0 ? (val / total) * 100 : 0;
                         const name = String(entry[nameKey] ?? "").trim();
                         return (
-                            <div key={index} className="flex items-center gap-3 py-1.5 rounded px-2 -mx-2 hover:bg-[#21262d] transition-colors">
-                                <div className="w-4 h-4 rounded flex-shrink-0 border border-[#30363d]" style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }} />
+                            <div key={index} className="flex items-center gap-3 py-1.5 rounded px-2 -mx-2 hover:bg-app-hover transition-colors">
+                                <div className="w-4 h-4 rounded flex-shrink-0 border border-app-border" style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }} />
                                 <span className="text-gray-200 text-sm flex-1 min-w-0 break-words" title={name}>
                                     {name}
                                 </span>
-                                <span className="text-[#daa520] font-semibold text-sm flex-shrink-0">{pct.toFixed(1)}%</span>
+                                <span className="text-app-gold font-semibold text-sm flex-shrink-0">{pct.toFixed(1)}%</span>
                             </div>
                         );
                     })}
@@ -366,7 +366,7 @@ export function CategoryHorizontalBarChart({ data, nameKey, valueKey, title }: {
                             <span className="text-gray-200 text-sm min-w-0 flex-[1_1_35%] max-w-[50%] break-words" title={name}>
                                 {name}
                             </span>
-                            <div className="flex-1 min-w-0 h-7 bg-[#21262d] rounded overflow-hidden">
+                            <div className="flex-1 min-w-0 h-7 bg-app-hover rounded overflow-hidden">
                                 <div
                                     className="h-full rounded flex items-center justify-end pr-2 transition-all"
                                     style={{
@@ -382,7 +382,7 @@ export function CategoryHorizontalBarChart({ data, nameKey, valueKey, title }: {
                                     )}
                                 </div>
                             </div>
-                            <span className="text-[#daa520] font-semibold text-sm w-12 text-right flex-shrink-0">
+                            <span className="text-app-gold font-semibold text-sm w-12 text-right flex-shrink-0">
                                 {pct.toFixed(1)}%
                             </span>
                         </div>
@@ -401,28 +401,28 @@ export function BarChart({ data, xKey, yKey }: { data: any[]; xKey: string; yKey
         <ChartWrapper>
             <ResponsiveContainer width="100%" height={320}>
                 <RechartsBarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#30363d" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" vertical={false} />
                     <XAxis
                         dataKey={xKey}
-                        stroke="#8b949e"
-                        tick={{ fill: "#8b949e" }}
+                        stroke="var(--chart-axis)"
+                        tick={{ fill: "var(--chart-axis)" }}
                         tickLine={false}
                         axisLine={false}
                     />
                     <YAxis
-                        stroke="#8b949e"
-                        tick={{ fill: "#8b949e" }}
+                        stroke="var(--chart-axis)"
+                        tick={{ fill: "var(--chart-axis)" }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(val) => formatAxisTick(val)}
                     />
                     <Tooltip
                         {...CHART_TOOLTIP_BASE}
-                        cursor={{ fill: "rgba(255,255,255,0.06)" }}
+                        cursor={{ fill: "var(--chart-bar-cursor)" }}
                         contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                         formatter={(value: any) => formatTooltipAmount(Number(value || 0))}
                     />
-                    <Bar dataKey={yKey} fill="#daa520" radius={[4, 4, 0, 0]} barSize={40} />
+                    <Bar dataKey={yKey} fill="var(--app-gold)" radius={[4, 4, 0, 0]} barSize={40} />
                 </RechartsBarChart>
             </ResponsiveContainer>
         </ChartWrapper>

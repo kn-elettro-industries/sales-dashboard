@@ -225,7 +225,7 @@ export default function DashboardPage() {
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap p-4 bg-[#161b22] border border-[#30363d] rounded-xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap p-4 bg-app-card border border-app-border rounded-xl">
                 <div>
                     <h2 className="text-xl font-semibold text-white">Executive Summary</h2>
                     <p className="text-xs text-gray-500 mt-1 max-w-3xl">
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                             value={draftRevenue}
                             onChange={(e) => setDraftRevenue(e.target.value)}
                             placeholder="e.g. 50000000"
-                            className="bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white w-full sm:w-40"
+                            className="bg-app-bg border border-app-border rounded-lg px-3 py-2 text-sm text-white w-full sm:w-40"
                         />
                     </label>
                     <label className="flex flex-col gap-1 text-xs text-gray-400 min-w-[120px]">
@@ -256,14 +256,14 @@ export default function DashboardPage() {
                             value={draftOrders}
                             onChange={(e) => setDraftOrders(e.target.value)}
                             placeholder="e.g. 1200"
-                            className="bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white w-full sm:w-32"
+                            className="bg-app-bg border border-app-border rounded-lg px-3 py-2 text-sm text-white w-full sm:w-32"
                         />
                     </label>
                     <button
                         type="button"
                         onClick={handleSaveSalesTargets}
                         disabled={savingTargets || loading}
-                        className="px-4 py-2 rounded-lg text-sm font-medium bg-[#daa520] text-[#0d1117] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-lg text-sm font-medium bg-app-gold text-app-on-gold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {savingTargets ? "Saving…" : "Save targets"}
                     </button>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                     <h3 className="text-sm font-semibold text-red-400 flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-4 w-4" /> {loadError}
                     </h3>
-                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry</button>
+                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-app-gold hover:underline">Retry</button>
                 </div>
             )}
             {!loading && !loadError && (!data.summary || (data.summary.revenue === 0 && data.summary.orders === 0 && validTrend.length === 0 && validMat.length === 0 && validCust.length === 0)) && (
@@ -287,10 +287,10 @@ export default function DashboardPage() {
                     )}
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside mb-3">
                         <li>If you applied filters (e.g. <strong>FY</strong>, State, Date range), try <strong>Clear all filters</strong> or <strong>All Time</strong>.</li>
-                        <li>Ensure <code className="bg-[#0d1117] px-1 rounded">NEXT_PUBLIC_API_URL</code> points to your Render backend in Vercel env vars, then <strong>redeploy</strong>.</li>
-                        <li>Upload data via <strong><Link href="/data" className="text-[#daa520] hover:underline">Data / Cloud Data Uploader</Link></strong> (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT).</li>
+                        <li>Ensure <code className="bg-app-bg px-1 rounded">NEXT_PUBLIC_API_URL</code> points to your Render backend in Vercel env vars, then <strong>redeploy</strong>.</li>
+                        <li>Upload data via <strong><Link href="/data" className="text-app-gold hover:underline">Data / Cloud Data Uploader</Link></strong> (Excel/CSV with DATE, INVOICE_NO, CUSTOMER_NAME, AMOUNT).</li>
                     </ul>
-                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-[#daa520] hover:underline">Retry</button>
+                    <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="text-sm font-medium text-app-gold hover:underline">Retry</button>
                 </div>
             )}
             {anomalies.length > 0 && (
@@ -349,13 +349,13 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-[#161b22] border border-[#30363d] rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-200">
-                    <div className="border-l-4 border-[#daa520] pl-3 mb-4">
+                <div className="lg:col-span-2 bg-app-card border border-app-border rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-200">
+                    <div className="border-l-4 border-app-gold pl-3 mb-4">
                         <h3 className="text-lg font-semibold text-white">Monthly Sales Trend</h3>
                         <p className="text-sm text-gray-400 mt-0.5">Revenue over the selected period</p>
                     </div>
                     {loading ? (
-                        <div className="flex-1 min-h-[320px] rounded-lg bg-[#0d1117]/50 animate-pulse flex items-center justify-center border border-[#30363d]/50">
+                        <div className="flex-1 min-h-[320px] rounded-lg bg-app-bg/50 animate-pulse flex items-center justify-center border border-app-border/50">
                             <span className="text-gray-500 text-sm">Loading chart...</span>
                         </div>
                     ) : (
@@ -365,19 +365,19 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-300">
-                    <div className="border-l-4 border-[#daa520] pl-3 mb-4 flex items-center justify-between flex-wrap gap-2">
+                <div className="bg-app-card border border-app-border rounded-xl p-6 min-h-[420px] flex flex-col animate-fade-in opacity-0 animation-delay-300">
+                    <div className="border-l-4 border-app-gold pl-3 mb-4 flex items-center justify-between flex-wrap gap-2">
                         <div>
                             <h3 className="text-lg font-semibold text-white">Top Material Groups</h3>
                             <p className="text-sm text-gray-400 mt-0.5">By revenue share</p>
                         </div>
-                        <div className="flex rounded-lg border border-[#30363d] p-0.5 bg-[#0d1117]">
-                            <button type="button" onClick={() => setMaterialChartView("donut")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "donut" ? "bg-[#daa520] text-[#0d1117] font-medium" : "text-gray-400 hover:text-white"}`}>Donut</button>
-                            <button type="button" onClick={() => setMaterialChartView("bar")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "bar" ? "bg-[#daa520] text-[#0d1117] font-medium" : "text-gray-400 hover:text-white"}`}>Bar</button>
+                        <div className="flex rounded-lg border border-app-border p-0.5 bg-app-bg">
+                            <button type="button" onClick={() => setMaterialChartView("donut")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "donut" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"}`}>Donut</button>
+                            <button type="button" onClick={() => setMaterialChartView("bar")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${materialChartView === "bar" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"}`}>Bar</button>
                         </div>
                     </div>
                     {loading ? (
-                        <div className="flex-1 min-h-[320px] rounded-lg bg-[#0d1117]/50 animate-pulse flex items-center justify-center border border-[#30363d]/50">
+                        <div className="flex-1 min-h-[320px] rounded-lg bg-app-bg/50 animate-pulse flex items-center justify-center border border-app-border/50">
                             <span className="text-gray-500 text-sm">Loading chart...</span>
                         </div>
                     ) : (
@@ -394,8 +394,8 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 {/* Top Customers Table */}
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-400">
-                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-[#30363d] pb-4">Top Customers</h3>
+                <div className="bg-app-card border border-app-border rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-400">
+                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-app-border pb-4">Top Customers</h3>
                     {hasRevenueTargetSplit && (
                         <p className="text-xs text-gray-500 mb-3 -mt-2">Share % = row revenue ÷ total filtered revenue. Implied target = your saved revenue goal × same share.</p>
                     )}
@@ -433,7 +433,7 @@ export default function DashboardPage() {
                                               sortable: true,
                                               align: 'right' as const,
                                               cell: (item: any) => (
-                                                  <span className="text-[#daa520]">{fmt(item.TARGET_REVENUE)}</span>
+                                                  <span className="text-app-gold">{fmt(item.TARGET_REVENUE)}</span>
                                               ),
                                           },
                                           {
@@ -453,8 +453,8 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Top Material Groups Table */}
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-500">
-                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-[#30363d] pb-4">Top Performers (Material Groups)</h3>
+                <div className="bg-app-card border border-app-border rounded-xl p-6 flex flex-col animate-fade-in opacity-0 animation-delay-500">
+                    <h3 className="text-lg font-semibold text-white mb-1 border-b border-app-border pb-4">Top Performers (Material Groups)</h3>
                     {hasRevenueTargetSplit && (
                         <p className="text-xs text-gray-500 mb-3 -mt-2">Same split rule as customers: each group’s % of total sales × your revenue goal.</p>
                     )}
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                                               sortable: true,
                                               align: 'right' as const,
                                               cell: (item: any) => (
-                                                  <span className="text-[#daa520]">{fmt(item.TARGET_REVENUE)}</span>
+                                                  <span className="text-app-gold">{fmt(item.TARGET_REVENUE)}</span>
                                               ),
                                           },
                                           {

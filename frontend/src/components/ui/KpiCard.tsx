@@ -20,13 +20,13 @@ interface KpiCardProps {
 export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix = "vs previous period", goalPct, targetLabel, animationDelay = 0 }: KpiCardProps) {
     return (
         <div
-            className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 shadow-sm flex flex-col justify-between animate-slide-up opacity-0 hover:border-[#3d444d] transition-colors duration-200"
+            className="bg-app-card border border-app-border rounded-xl p-6 shadow-sm flex flex-col justify-between animate-slide-up opacity-0 hover:border-[#3d444d] transition-colors duration-200"
             style={{ animationDelay: `${animationDelay}ms` }}
         >
             <div className="flex justify-between items-start">
                 <p className="text-sm font-medium text-gray-400">{title}</p>
                 <div className="p-2 bg-[#2d333b] rounded-lg">
-                    <Icon className="h-5 w-5 text-[#daa520]" />
+                    <Icon className="h-5 w-5 text-app-gold" />
                 </div>
             </div>
             <div className="mt-4">
@@ -42,9 +42,9 @@ export function KpiCard({ title, value, icon: Icon, trend, trendUp, trendSuffix 
                         {targetLabel && (
                             <p className="text-xs text-gray-500 mb-1">{targetLabel}</p>
                         )}
-                        <div className="h-1.5 bg-[#30363d] rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-app-border-strong rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-[#daa520] rounded-full transition-all"
+                                className="h-full bg-app-gold rounded-full transition-all"
                                 style={{ width: `${Math.min(100, Math.max(0, goalPct))}%` }}
                             />
                         </div>

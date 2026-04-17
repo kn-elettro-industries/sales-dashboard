@@ -325,7 +325,7 @@ export default function ReportsPage() {
     const fmt = formatAmount;
 
     const exportDownloadSection = (
-        <div className="border-t border-[#30363d] pt-6 space-y-3">
+        <div className="border-t border-app-border pt-6 space-y-3">
             <p className="text-xs text-gray-500">
                 Respects <b className="text-gray-400">global filters</b> (date range, state, customer, material, etc.).
             </p>
@@ -335,8 +335,8 @@ export default function ReportsPage() {
                 disabled={downloading}
                 className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg
                     ${downloading
-                        ? "bg-[#30363d] text-gray-400 cursor-not-allowed shadow-none"
-                        : "bg-gradient-to-r from-[#b8860b] to-[#daa520] text-[#0d1117] hover:scale-[1.01] hover:shadow-[#daa520]/20"
+                        ? "bg-app-border-strong text-gray-400 cursor-not-allowed shadow-none"
+                        : "bg-gradient-to-r from-app-gold-hover to-app-gold text-app-on-gold hover:scale-[1.01] hover:shadow-lg hover:ring-1 hover:ring-app-gold/30"
                     }
                 `}
             >
@@ -368,12 +368,12 @@ export default function ReportsPage() {
             </div>
 
             {/* Custom Tabs */}
-            <div className="flex space-x-1 bg-[#161b22] border border-[#30363d] p-1 rounded-lg w-fit">
+            <div className="flex space-x-1 bg-app-card border border-app-border p-1 rounded-lg w-fit">
                 <button
                     onClick={() => setActiveTab('interactive')}
                     className={`flex items-center px-4 py-2 rounded-md transition-all text-sm font-medium ${activeTab === 'interactive'
-                        ? 'bg-[#daa520] text-[#0d1117] shadow-sm'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-[#21262d]'
+                        ? 'bg-app-gold text-app-on-gold shadow-sm'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-app-hover'
                         }`}
                 >
                     <LayoutDashboard size={16} className="mr-2" />
@@ -382,8 +382,8 @@ export default function ReportsPage() {
                 <button
                     onClick={() => setActiveTab('export')}
                     className={`flex items-center px-4 py-2 rounded-md transition-all text-sm font-medium ${activeTab === 'export'
-                        ? 'bg-[#daa520] text-[#0d1117] shadow-sm'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-[#21262d]'
+                        ? 'bg-app-gold text-app-on-gold shadow-sm'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-app-hover'
                         }`}
                 >
                     <FileBarChart size={16} className="mr-2" />
@@ -392,8 +392,8 @@ export default function ReportsPage() {
             </div>
 
             {/* YoY + period analysis: visible on both Interactive and Export tabs */}
-            <div className="bg-[#161b22] border-2 border-[#daa520]/35 rounded-xl p-4 md:p-6 shadow-lg shadow-black/20">
-                <h3 className="text-lg text-[#daa520] font-semibold mb-1 flex items-center gap-2 flex-wrap">
+            <div className="bg-app-card border-2 border-app-gold/35 rounded-xl p-4 md:p-6 shadow-lg shadow-black/20">
+                <h3 className="text-lg text-app-gold font-semibold mb-1 flex items-center gap-2 flex-wrap">
                     <GitCompare size={22} className="shrink-0" />
                     YoY &amp; period comparison
                 </h3>
@@ -405,12 +405,12 @@ export default function ReportsPage() {
                 {/* vs previous calendar period */}
                 <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                        <ArrowLeftRight size={16} className="text-[#daa520]" />
+                        <ArrowLeftRight size={16} className="text-app-gold" />
                         Selected period vs previous period
                     </h4>
                     {loadingPeriodComparison ? (
-                        <div className="h-16 flex items-center justify-center rounded-lg border border-[#30363d]/50 bg-[#0d1117]/30">
-                            <Loader2 className="w-6 h-6 animate-spin text-[#daa520]" />
+                        <div className="h-16 flex items-center justify-center rounded-lg border border-app-border/50 bg-app-bg/30">
+                            <Loader2 className="w-6 h-6 animate-spin text-app-gold" />
                         </div>
                     ) : periodComparison ? (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -424,7 +424,7 @@ export default function ReportsPage() {
                             ).map(([label, pct]) => (
                                 <div
                                     key={label}
-                                    className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-center"
+                                    className="rounded-lg border border-app-border bg-app-bg px-3 py-2 text-center"
                                 >
                                     <div className="text-[10px] uppercase tracking-wide text-gray-500">{label}</div>
                                     <div
@@ -439,19 +439,19 @@ export default function ReportsPage() {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-gray-500 rounded-lg border border-dashed border-[#30363d] bg-[#0d1117]/40 px-3 py-3">
+                        <p className="text-sm text-gray-500 rounded-lg border border-dashed border-app-border bg-app-bg/40 px-3 py-3">
                             Set a <strong className="text-gray-400">start and end date</strong> in the global filter bar (top of the page) to see percentage change vs the previous period of equal length.
                         </p>
                     )}
                 </div>
 
                 <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                    <TrendingUp size={16} className="text-[#daa520]" />
+                    <TrendingUp size={16} className="text-app-gold" />
                     Fiscal year breakdown &amp; YoY
                 </h4>
                 {isLoadingFyComparison ? (
-                    <div className="h-40 flex items-center justify-center rounded-lg border border-[#30363d]/50 bg-[#0d1117]/30">
-                        <Loader2 className="w-8 h-8 animate-spin text-[#daa520]" />
+                    <div className="h-40 flex items-center justify-center rounded-lg border border-app-border/50 bg-app-bg/30">
+                        <Loader2 className="w-8 h-8 animate-spin text-app-gold" />
                     </div>
                 ) : fyComparisonMessage && fyComparisonRows.length === 0 ? (
                     <p className="text-sm text-gray-500">{fyComparisonMessage}</p>
@@ -512,14 +512,14 @@ export default function ReportsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 md:p-6">
-                            <h3 className="text-[#daa520] font-medium mb-4 flex items-center">
+                        <div className="bg-app-card border border-app-border rounded-xl p-4 md:p-6">
+                            <h3 className="text-app-gold font-medium mb-4 flex items-center">
                                 <FileBarChart size={18} className="mr-2" />
                                 Material Group Breakdown
                             </h3>
                             {isLoadingInteractive ? (
                                 <div className="h-64 flex items-center justify-center">
-                                    <Loader2 className="w-8 h-8 animate-spin text-[#daa520]" />
+                                    <Loader2 className="w-8 h-8 animate-spin text-app-gold" />
                                 </div>
                             ) : (
                                 <DataTable
@@ -535,14 +535,14 @@ export default function ReportsPage() {
                             )}
                         </div>
 
-                        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 md:p-6">
-                            <h3 className="text-[#daa520] font-medium mb-4 flex items-center">
+                        <div className="bg-app-card border border-app-border rounded-xl p-4 md:p-6">
+                            <h3 className="text-app-gold font-medium mb-4 flex items-center">
                                 <LayoutDashboard size={18} className="mr-2" />
                                 Item Level Detail
                             </h3>
                             {isLoadingInteractive ? (
                                 <div className="h-64 flex items-center justify-center">
-                                    <Loader2 className="w-8 h-8 animate-spin text-[#daa520]" />
+                                    <Loader2 className="w-8 h-8 animate-spin text-app-gold" />
                                 </div>
                             ) : (
                                 <DataTable
@@ -563,7 +563,7 @@ export default function ReportsPage() {
 
             {activeTab === 'export' && (
                 <div className="animate-in fade-in duration-300">
-                    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 md:p-8">
+                    <div className="bg-app-card border border-app-border rounded-xl p-6 md:p-8">
                         <div className="hidden lg:block mb-3">
                             <span className="text-sm font-medium text-gray-300 leading-5">Select Report Type</span>
                         </div>
@@ -578,8 +578,8 @@ export default function ReportsPage() {
                                             type="button"
                                             onClick={() => setSelectedReport(report.id)}
                                             className={`flex items-center p-4 rounded-lg border transition-all text-left min-h-[3.25rem] ${selectedReport === report.id
-                                                ? 'bg-[#2a2414] border-[#daa520] text-[#daa520]'
-                                                : 'bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500 hover:text-gray-200'
+                                                ? 'bg-app-gold-muted border-app-gold text-app-gold'
+                                                : 'bg-app-bg border-app-border text-gray-400 hover:border-gray-500 hover:text-gray-200'
                                                 }`}
                                         >
                                             <report.icon size={20} className="mr-3 flex-shrink-0" />
@@ -589,12 +589,12 @@ export default function ReportsPage() {
                                 </div>
 
                                 {selectedReport === "Distributor Strategy Report" && (
-                                    <label className="flex items-start gap-3 rounded-lg border border-[#30363d] bg-[#0d1117]/60 px-4 py-3 text-sm text-gray-300 cursor-pointer select-none">
+                                    <label className="flex items-start gap-3 rounded-lg border border-app-border bg-app-bg/60 px-4 py-3 text-sm text-gray-300 cursor-pointer select-none">
                                         <input
                                             type="checkbox"
                                             checked={distributorIncludeCover}
                                             onChange={(e) => setDistributorIncludeCover(e.target.checked)}
-                                            className="accent-[#daa520] mt-0.5 shrink-0"
+                                            className="accent-app-gold mt-0.5 shrink-0"
                                         />
                                         <span>
                                             <span className="font-medium text-gray-200">Include cover page</span>
@@ -605,11 +605,11 @@ export default function ReportsPage() {
                                     </label>
                                 )}
 
-                                <div className="mt-4 rounded-lg border border-[#30363d]/90 bg-[#0d1117]/40 overflow-hidden">
+                                <div className="mt-4 rounded-lg border border-app-border/90 bg-app-bg/40 overflow-hidden">
                                     <button
                                         type="button"
                                         onClick={() => setAdvancedExportOpen((o) => !o)}
-                                        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-gray-400 hover:text-gray-200 hover:bg-[#161b22]/80 transition-colors"
+                                        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-gray-400 hover:text-gray-200 hover:bg-app-card/80 transition-colors"
                                         aria-expanded={advancedExportOpen}
                                     >
                                         <span>
@@ -622,9 +622,9 @@ export default function ReportsPage() {
                                         />
                                     </button>
                                     {advancedExportOpen && (
-                                        <div className="border-t border-[#30363d] px-3 py-4 space-y-4 bg-[#0d1117]">
+                                        <div className="border-t border-app-border px-3 py-4 space-y-4 bg-app-bg">
                                             <p className="text-xs text-gray-500 flex items-start gap-2">
-                                                <Filter size={14} className="mt-0.5 shrink-0 text-[#daa520]/80" />
+                                                <Filter size={14} className="mt-0.5 shrink-0 text-app-gold/80" />
                                                 Uses your current global filters. Choose primary/secondary dimensions and top-N.
                                             </p>
                                             <div className="grid grid-cols-1 gap-4">
@@ -637,7 +637,7 @@ export default function ReportsPage() {
                                                             setDynPrimary(next);
                                                             if (dynSecondary === next) setDynSecondary("");
                                                         }}
-                                                        className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                        className="w-full min-h-[2.75rem] bg-app-bg text-white border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
                                                     >
                                                         {DYNAMIC_DIMENSIONS.map((d) => (
                                                             <option key={d.id} value={d.id}>
@@ -651,7 +651,7 @@ export default function ReportsPage() {
                                                     <select
                                                         value={dynSecondary}
                                                         onChange={(e) => setDynSecondary(e.target.value)}
-                                                        className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                        className="w-full min-h-[2.75rem] bg-app-bg text-white border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
                                                     >
                                                         <option value="">None</option>
                                                         {DYNAMIC_DIMENSIONS.filter((d) => d.id !== dynPrimary).map((d) => (
@@ -670,7 +670,7 @@ export default function ReportsPage() {
                                                             max={50}
                                                             value={dynTopN}
                                                             onChange={(e) => setDynTopN(Number(e.target.value))}
-                                                            className="w-full min-h-[2.75rem] bg-[#0d1117] text-white border border-[#30363d] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#daa520]"
+                                                            className="w-full min-h-[2.75rem] bg-app-bg text-white border border-app-border rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
                                                         />
                                                     </div>
                                                     <label className="flex items-center gap-2 text-sm text-gray-300 select-none pb-1">
@@ -679,7 +679,7 @@ export default function ReportsPage() {
                                                             checked={dynIncludePivot}
                                                             onChange={(e) => setDynIncludePivot(e.target.checked)}
                                                             disabled={!dynSecondary}
-                                                            className="accent-[#daa520] shrink-0"
+                                                            className="accent-app-gold shrink-0"
                                                         />
                                                         Include Pivot Table
                                                     </label>
@@ -692,8 +692,8 @@ export default function ReportsPage() {
                                                 className={`w-full py-3 rounded-lg font-bold text-base flex items-center justify-center gap-3 transition-all border
                                                     ${
                                                         dynDownloading
-                                                            ? "bg-[#30363d] text-gray-400 cursor-not-allowed border-[#30363d]"
-                                                            : "bg-[#161b22] text-[#daa520] border-[#daa520]/40 hover:border-[#daa520] hover:bg-[#2a2414]"
+                                                            ? "bg-app-border-strong text-gray-400 cursor-not-allowed border-app-border"
+                                                            : "bg-app-card text-app-gold border-app-gold/40 hover:border-app-gold hover:bg-app-gold-muted"
                                                     }
                                                 `}
                                             >
@@ -718,8 +718,8 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
-                    <div className="mt-8 bg-[#0d1117] border border-[#30363d] rounded-xl p-6 flex items-start">
-                        <div className="bg-[#161b22] p-3 rounded-lg mr-4 border border-[#30363d]">
+                    <div className="mt-8 bg-app-bg border border-app-border rounded-xl p-6 flex items-start">
+                        <div className="bg-app-card p-3 rounded-lg mr-4 border border-app-border">
                             <FileText className="text-gray-400 w-6 h-6" />
                         </div>
                         <div>

@@ -1,50 +1,129 @@
 @import "tailwindcss";
 
+/* Semantic palette — toggled via html.light / html.dark (see ThemeContext) */
+:root,
+html.dark {
+    --app-bg: #0d1117;
+    --app-card: #161b22;
+    --app-hover: #21262d;
+    --app-muted: #2d333b;
+    --app-border: #30363d;
+    --app-border-strong: #30363d;
+    --app-fg: #e6edf3;
+    --app-fg-muted: #9ca3af;
+    --app-gold: #daa520;
+    --app-gold-hover: #b8860b;
+    --app-on-gold: #0d1117;
+    --app-gold-muted: #2a2414;
+    --chart-panel-bg: #161b22;
+    --chart-panel-border: #30363d;
+    --chart-grid-stroke: #30363d;
+    --chart-invert: #0d1117;
+    --chart-treemap-deep: #21262d;
+    --chart-axis: #8b949e;
+    --chart-tooltip-row: #e6edf3;
+    --chart-bar-cursor: rgba(255, 255, 255, 0.06);
+}
+
+html.light {
+    --app-bg: #f4f6f9;
+    --app-card: #ffffff;
+    --app-hover: #eaeef2;
+    --app-muted: #e4e9ef;
+    --app-border: #d0d7de;
+    --app-border-strong: #b6c0cc;
+    --app-fg: #1f2328;
+    --app-fg-muted: #59636e;
+    --app-gold: #b8860b;
+    --app-gold-hover: #9a7209;
+    --app-on-gold: #1a1a1a;
+    --app-gold-muted: #f5ecd8;
+    --chart-panel-bg: #ffffff;
+    --chart-panel-border: #d0d7de;
+    --chart-grid-stroke: #c9d1d9;
+    --chart-invert: #f4f6f9;
+    --chart-treemap-deep: #e8ecf0;
+    --chart-axis: #59636e;
+    --chart-tooltip-row: #1f2328;
+    --chart-bar-cursor: rgba(0, 0, 0, 0.06);
+}
+
 @theme {
     --color-brand-gold: #daa520;
     --color-brand-dark: #0d1117;
     --color-brand-card: #161b22;
     --color-brand-border: #30363d;
+    --color-app-bg: var(--app-bg);
+    --color-app-card: var(--app-card);
+    --color-app-hover: var(--app-hover);
+    --color-app-muted: var(--app-muted);
+    --color-app-border: var(--app-border);
+    --color-app-border-strong: var(--app-border-strong);
+    --color-app-fg: var(--app-fg);
+    --color-app-fg-muted: var(--app-fg-muted);
+    --color-app-gold: var(--app-gold);
+    --color-app-gold-hover: var(--app-gold-hover);
+    --color-app-on-gold: var(--app-on-gold);
+    --color-app-gold-muted: var(--app-gold-muted);
 }
 
 body {
-    background-color: var(--color-brand-dark);
-    color: #e6e6e6;
+    background-color: var(--app-bg);
+    color: var(--app-fg);
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Recharts: series values in tooltips default to black; keep readable on dark panel */
+/* Recharts tooltips */
+.choropleth-tooltip {
+    background: color-mix(in srgb, var(--app-card) 96%, transparent) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--app-border) !important;
+    border-radius: 10px !important;
+    color: var(--app-fg) !important;
+    padding: 10px 14px !important;
+    font-size: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 20px color-mix(in srgb, var(--app-gold) 12%, transparent) !important;
+}
+
+.choropleth-tooltip::before {
+    display: none !important;
+}
+
+.leaflet-choropleth-bg .leaflet-container {
+    background: var(--app-bg) !important;
+}
+
 .recharts-default-tooltip {
-    color: #e6edf3 !important;
+    color: var(--app-fg) !important;
 }
 .recharts-tooltip-item-list .recharts-tooltip-item-value,
 .recharts-tooltip-item-value {
-    color: #e6edf3 !important;
+    color: var(--app-fg) !important;
 }
 .recharts-tooltip-item-name {
-    color: #8b949e !important;
+    color: var(--app-fg-muted) !important;
 }
 .recharts-tooltip-label {
-    color: #daa520 !important;
+    color: var(--app-gold) !important;
 }
 
-/* Custom Webkit Scrollbar for Dark Theme */
+/* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #0d1117;
+    background: var(--app-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #30363d;
+    background: var(--app-border);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #daa520;
+    background: var(--app-gold);
 }
 
 /* Animations */

@@ -116,18 +116,18 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
                         if (stateData) {
                             layer.bindTooltip(
                                 `<div style="font-family: 'Inter', system-ui, sans-serif; min-width: 180px;">
-                                    <div style="font-size: 14px; font-weight: 700; color: #FFD700; margin-bottom: 6px; border-bottom: 1px solid #30363d; padding-bottom: 6px;">
+                                    <div style="font-size: 14px; font-weight: 700; color: var(--app-gold); margin-bottom: 6px; border-bottom: 1px solid var(--app-border); padding-bottom: 6px;">
                                         ${stateData.STATE}
                                     </div>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 12px;">
-                                        <span style="color: #8b949e;">Revenue</span>
-                                        <span style="color: #f0f6fc; font-weight: 600; text-align: right;">${formatCr(stateData.Revenue)}</span>
-                                        <span style="color: #8b949e;">Market Share</span>
-                                        <span style="color: #daa520; font-weight: 600; text-align: right;">${stateData.MarketShare}%</span>
-                                        <span style="color: #8b949e;">Orders</span>
-                                        <span style="color: #f0f6fc; font-weight: 600; text-align: right;">${stateData.Orders?.toLocaleString()}</span>
-                                        <span style="color: #8b949e;">Customers</span>
-                                        <span style="color: #f0f6fc; font-weight: 600; text-align: right;">${stateData.Customers ?? 0}</span>
+                                        <span style="color: var(--chart-axis);">Revenue</span>
+                                        <span style="color: var(--app-fg); font-weight: 600; text-align: right;">${formatCr(stateData.Revenue)}</span>
+                                        <span style="color: var(--chart-axis);">Market Share</span>
+                                        <span style="color: var(--app-gold); font-weight: 600; text-align: right;">${stateData.MarketShare}%</span>
+                                        <span style="color: var(--chart-axis);">Orders</span>
+                                        <span style="color: var(--app-fg); font-weight: 600; text-align: right;">${stateData.Orders?.toLocaleString()}</span>
+                                        <span style="color: var(--chart-axis);">Customers</span>
+                                        <span style="color: var(--app-fg); font-weight: 600; text-align: right;">${stateData.Customers ?? 0}</span>
                                     </div>
                                 </div>`,
                                 {
@@ -138,9 +138,9 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
                             );
                         } else {
                             layer.bindTooltip(
-                                `<div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #8b949e;">
+                                `<div style="font-family: 'Inter', sans-serif; font-size: 12px; color: var(--chart-axis);">
                                     ${feature?.properties?.NAME_1 || "Unknown"}<br/>
-                                    <span style="font-size: 11px; color: #555;">No sales data</span>
+                                    <span style="font-size: 11px; color: var(--app-fg-muted);">No sales data</span>
                                 </div>`,
                                 { direction: "auto", className: "choropleth-tooltip", sticky: true }
                             );
@@ -152,7 +152,7 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
                                 const l = e.target;
                                 l.setStyle({
                                     weight: 2,
-                                    color: "#FFD700",
+                                    color: "var(--app-gold)",
                                     fillOpacity: stateData ? 0.9 : 0.3,
                                 });
                                 l.bringToFront();
@@ -190,30 +190,11 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
     }, [states, onStateClick]);
 
     return (
-        <div className="relative">
-            <style jsx global>{`
-                .choropleth-tooltip {
-                    background: rgba(13, 17, 23, 0.95) !important;
-                    backdrop-filter: blur(12px) !important;
-                    border: 1px solid #30363d !important;
-                    border-radius: 10px !important;
-                    color: #f0f6fc !important;
-                    padding: 10px 14px !important;
-                    font-size: 12px !important;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(218,165,32,0.1) !important;
-                }
-                .choropleth-tooltip::before {
-                    display: none !important;
-                }
-                .leaflet-container {
-                    background: #0d1117 !important;
-                }
-            `}</style>
-
+        <div className="relative leaflet-choropleth-bg">
             <div ref={mapRef} style={{ height: "550px", width: "100%", borderRadius: "12px", overflow: "hidden" }} />
 
             {/* Gradient Legend */}
-            <div className="absolute bottom-4 left-4 bg-[#0d1117]/90 backdrop-blur-md border border-[#30363d] rounded-lg px-4 py-3 z-[1000]">
+            <div className="absolute bottom-4 left-4 bg-app-bg/90 backdrop-blur-md border border-app-border rounded-lg px-4 py-3 z-[1000]">
                 <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 font-medium">Revenue Intensity</div>
                 <div className="flex items-center gap-1">
                     <span className="text-[10px] text-gray-500">Low</span>
@@ -227,9 +208,9 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
             </div>
 
             {/* Info Badge */}
-            <div className="absolute top-4 left-4 bg-[#0d1117]/80 backdrop-blur-md border border-[#30363d] rounded-lg px-3 py-2 z-[1000]">
+            <div className="absolute top-4 left-4 bg-app-bg/80 backdrop-blur-md border border-app-border rounded-lg px-3 py-2 z-[1000]">
                 <div className="text-xs text-gray-400">
-                    <span className="text-[#daa520] font-semibold">{states.length}</span> states •{" "}
+                    <span className="text-app-gold font-semibold">{states.length}</span> states •{" "}
                     Hover to inspect • Click to drill down
                 </div>
             </div>

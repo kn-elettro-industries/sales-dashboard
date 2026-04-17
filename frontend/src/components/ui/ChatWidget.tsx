@@ -54,7 +54,7 @@ export default function ChatWidget() {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 bg-gradient-to-r from-[#b8860b] to-[#daa520] text-black p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50 flex items-center justify-center glow-effect"
+                className="fixed bottom-6 right-6 bg-gradient-to-r from-app-gold-hover to-app-gold text-black p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50 flex items-center justify-center glow-effect"
                 title="Open ELETTRO AI"
             >
                 <MessageSquare className="w-6 h-6" />
@@ -63,11 +63,11 @@ export default function ChatWidget() {
     }
 
     return (
-        <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-[#0d1117] border border-[#30363d] rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden font-sans">
+        <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-app-bg border border-app-border rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden font-sans">
             {/* Header */}
-            <div className="bg-[#161b22] px-4 py-3 border-b border-[#30363d] flex justify-between items-center">
+            <div className="bg-app-card px-4 py-3 border-b border-app-border flex justify-between items-center">
                 <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#b8860b] to-[#daa520] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-app-gold-hover to-app-gold flex items-center justify-center">
                         <MessageSquare className="w-4 h-4 text-black" />
                     </div>
                     <div>
@@ -81,14 +81,14 @@ export default function ChatWidget() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0d1117]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-app-bg">
                 {messages.length === 0 && (
                     <div className="text-center text-gray-500 text-sm mt-10">
                         <p>Ask me anything about your current sales data!</p>
                         <ul className="mt-4 space-y-2 text-xs">
-                            <li className="bg-[#161b22] py-2 px-3 rounded-lg border border-[#30363d]">"Who are the top 5 customers?"</li>
-                            <li className="bg-[#161b22] py-2 px-3 rounded-lg border border-[#30363d]">"What is the total revenue for wires?"</li>
-                            <li className="bg-[#161b22] py-2 px-3 rounded-lg border border-[#30363d]">"Total quantity ordered in Delhi"</li>
+                            <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"Who are the top 5 customers?"</li>
+                            <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"What is the total revenue for wires?"</li>
+                            <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"Total quantity ordered in Delhi"</li>
                         </ul>
                     </div>
                 )}
@@ -96,8 +96,8 @@ export default function ChatWidget() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed ${msg.role === 'user'
-                            ? 'bg-gradient-to-r from-[#b8860b] to-[#daa520] text-black rounded-br-sm'
-                            : 'bg-[#21262d] border border-[#30363d] text-gray-200 rounded-bl-sm'
+                            ? 'bg-gradient-to-r from-app-gold-hover to-app-gold text-black rounded-br-sm'
+                            : 'bg-app-hover border border-app-border text-gray-200 rounded-bl-sm'
                             }`}>
                             {msg.content}
                         </div>
@@ -106,8 +106,8 @@ export default function ChatWidget() {
 
                 {isLoading && (
                     <div className="flex justify-start">
-                        <div className="bg-[#21262d] border border-[#30363d] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center space-x-2">
-                            <Loader2 className="w-4 h-4 text-[#daa520] animate-spin" />
+                        <div className="bg-app-hover border border-app-border rounded-2xl rounded-bl-sm px-4 py-3 flex items-center space-x-2">
+                            <Loader2 className="w-4 h-4 text-app-gold animate-spin" />
                             <span className="text-xs text-gray-400">Analyzing database...</span>
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export default function ChatWidget() {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-[#161b22] border-t border-[#30363d]">
+            <div className="p-3 bg-app-card border-t border-app-border">
                 <div className="relative flex items-center">
                     <input
                         type="text"
@@ -124,12 +124,12 @@ export default function ChatWidget() {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="Message ELETTRO AI..."
-                        className="w-full bg-[#0d1117] border border-[#30363d] rounded-full pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-[#daa520] transition-colors"
+                        className="w-full bg-app-bg border border-app-border rounded-full pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-app-gold transition-colors"
                     />
                     <button
                         onClick={handleSend}
                         disabled={isLoading || !input.trim()}
-                        className="absolute right-2 p-2 bg-[#daa520] text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#b8860b] transition-colors"
+                        className="absolute right-2 p-2 bg-app-gold text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-app-gold-hover transition-colors"
                     >
                         <Send className="w-4 h-4" />
                     </button>

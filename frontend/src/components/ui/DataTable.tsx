@@ -129,7 +129,7 @@ export function DataTable<T extends Record<string, any>>({
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="block w-full pl-10 pr-3 py-2 border border-[#30363d] rounded-md leading-5 bg-[#0d1117] text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-full pl-10 pr-3 py-2 border border-app-border rounded-md leading-5 bg-app-bg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
                     </div>
                 )}
@@ -142,7 +142,7 @@ export function DataTable<T extends Record<string, any>>({
                             setPageSize(Number(e.target.value));
                             setCurrentPage(1);
                         }}
-                        className="bg-[#0d1117] border border-[#30363d] text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="bg-app-bg border border-app-border text-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                         {pageSizeOptions.map(size => (
                             <option key={size} value={size}>{size}</option>
@@ -153,14 +153,14 @@ export function DataTable<T extends Record<string, any>>({
             </div>
 
             {/* Table Area */}
-            <div className="overflow-x-auto overflow-y-auto border border-[#30363d] rounded-lg" style={{ maxHeight }}>
+            <div className="overflow-x-auto overflow-y-auto border border-app-border rounded-lg" style={{ maxHeight }}>
                 <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-[#161b22] shadow-[0_1px_0_0_#30363d] z-10">
+                    <thead className="sticky top-0 bg-app-card shadow-[0_1px_0_0_var(--app-border)] z-10">
                         <tr className="text-gray-400">
                             {columns.map((col, i) => (
                                 <th
                                     key={i}
-                                    className={`py-3 px-4 select-none ${getAlignClass(col.align)} ${col.className || ''} ${col.sortable !== false ? 'cursor-pointer hover:bg-[#2d333b]' : ''}`}
+                                    className={`py-3 px-4 select-none ${getAlignClass(col.align)} ${col.className || ''} ${col.sortable !== false ? 'cursor-pointer hover:bg-app-muted' : ''}`}
                                     onClick={() => col.sortable !== false && handleSort(col.accessorKey as string)}
                                 >
                                     <div className={`flex items-center space-x-1 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -176,12 +176,12 @@ export function DataTable<T extends Record<string, any>>({
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#30363d]">
+                    <tbody className="divide-y divide-app-border">
                         {paginatedData.length > 0 ? (
                             paginatedData.map((row, rowIndex) => (
                                 <tr
                                     key={rowIndex}
-                                    className={`bg-[#0d1117] hover:bg-[#21262d] transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                                    className={`bg-app-bg hover:bg-app-hover transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                                     onClick={() => onRowClick && onRowClick(row)}
                                 >
                                     {columns.map((col, colIndex) => {
@@ -196,7 +196,7 @@ export function DataTable<T extends Record<string, any>>({
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={columns.length} className="py-8 text-center text-gray-500 bg-[#0d1117]">
+                                <td colSpan={columns.length} className="py-8 text-center text-gray-500 bg-app-bg">
                                     No data available
                                 </td>
                             </tr>
@@ -215,7 +215,7 @@ export function DataTable<T extends Record<string, any>>({
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentPage === 1}
-                            className="p-1 rounded-md border border-[#30363d] bg-[#21262d] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#30363d] transition-colors"
+                            className="p-1 rounded-md border border-app-border bg-app-hover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-app-border-strong transition-colors"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
@@ -228,7 +228,7 @@ export function DataTable<T extends Record<string, any>>({
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                             disabled={currentPage === totalPages}
-                            className="p-1 rounded-md border border-[#30363d] bg-[#21262d] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#30363d] transition-colors"
+                            className="p-1 rounded-md border border-app-border bg-app-hover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-app-border-strong transition-colors"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>

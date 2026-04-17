@@ -69,8 +69,8 @@ export default function SalesPage() {
                 />
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4">Monthly Revenue Trend</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4">Monthly Revenue Trend</h3>
                 {Array.isArray(data.monthly) && data.monthly.length > 0 ? (
                     <GradientAreaChart data={data.monthly} xKey="MONTH" yKey="Revenue" formatCurrency={true} />
                 ) : (
@@ -78,8 +78,8 @@ export default function SalesPage() {
                 )}
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4">Daily Revenue (Last 30 Days)</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4">Daily Revenue (Last 30 Days)</h3>
                 {Array.isArray(data.daily) && data.daily.length > 0 ? (
                     <GradientAreaChart data={data.daily} xKey="DAY" yKey="Revenue" formatCurrency={true} />
                 ) : (
@@ -88,8 +88,8 @@ export default function SalesPage() {
             </div>
 
             {/* Monthly Breakdown Table */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">Monthly Breakdown</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Monthly Breakdown</h3>
                 <DataTable
                     data={Array.isArray(data.monthly) ? data.monthly : []}
                     pageSizeOptions={[12, 24]}

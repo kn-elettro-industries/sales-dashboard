@@ -56,7 +56,7 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                 <button
                     type="button"
                     title={longLabels && selected.length > 0 ? selected.join("\n") : undefined}
-                    className={`flex w-full items-start justify-between gap-2 bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 hover:border-gray-500 transition-colors text-sm text-gray-200 min-h-[36px] text-left ${
+                    className={`flex w-full items-start justify-between gap-2 bg-app-bg border border-app-border rounded-lg px-3 py-2 hover:border-gray-500 transition-colors text-sm text-gray-200 min-h-[36px] text-left ${
                         longLabels ? "min-w-0" : ""
                     }`}
                 >
@@ -70,26 +70,26 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                 <Popover.Content
                     className={
                         longLabels
-                            ? "bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl min-w-[min(100vw-1rem,28rem)] max-w-[min(100vw-1rem,42rem)] max-h-72 overflow-hidden mt-1 z-50"
-                            : "bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl w-64 max-h-72 overflow-hidden mt-1 z-50"
+                            ? "bg-app-card border border-app-border rounded-xl shadow-xl min-w-[min(100vw-1rem,28rem)] max-w-[min(100vw-1rem,42rem)] max-h-72 overflow-hidden mt-1 z-50"
+                            : "bg-app-card border border-app-border rounded-xl shadow-xl w-64 max-h-72 overflow-hidden mt-1 z-50"
                     }
                     sideOffset={5}
                     align="start"
                 >
-                    <div className="p-2 border-b border-[#30363d]">
+                    <div className="p-2 border-b border-app-border">
                         <input
                             type="text"
                             placeholder={`Search ${label}...`}
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full bg-[#0d1117] border border-[#30363d] text-gray-200 rounded px-2 py-1.5 text-xs outline-none focus:border-[#daa520]"
+                            className="w-full bg-app-bg border border-app-border text-gray-200 rounded px-2 py-1.5 text-xs outline-none focus:border-app-gold"
                         />
                     </div>
                     {selected.length > 0 && (
                         <button
                             type="button"
                             onClick={() => onChange([])}
-                            className="w-full text-left text-xs text-[#daa520] px-3 py-1.5 hover:bg-[#2d333b] border-b border-[#30363d]"
+                            className="w-full text-left text-xs text-app-gold px-3 py-1.5 hover:bg-app-muted border-b border-app-border"
                         >
                             Clear all
                         </button>
@@ -98,7 +98,7 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                         {filtered.map(opt => (
                             <label
                                 key={opt}
-                                className={`flex gap-2 px-2 py-1.5 hover:bg-[#2d333b] rounded cursor-pointer text-sm text-gray-300 ${
+                                className={`flex gap-2 px-2 py-1.5 hover:bg-app-muted rounded cursor-pointer text-sm text-gray-300 ${
                                     longLabels ? "items-start" : "items-center"
                                 }`}
                             >
@@ -112,7 +112,7 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                                                 : [...selected, opt]
                                         );
                                     }}
-                                    className="mr-0 mt-1 accent-[#daa520] shrink-0"
+                                    className="mr-0 mt-1 accent-app-gold shrink-0"
                                 />
                                 <span
                                     className={
@@ -256,7 +256,7 @@ export default function GlobalFilterBar() {
     };
 
     return (
-        <div className="bg-[#161b22] border-b border-[#30363d] sticky top-0 z-20 shadow-md">
+        <div className="bg-app-card border-b border-app-border sticky top-0 z-20 shadow-md">
             {/* Primary Row */}
             <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
@@ -266,21 +266,21 @@ export default function GlobalFilterBar() {
                     </div>
 
                     {/* Tenant Selector */}
-                    <div className="relative shrink-0 flex items-center bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors">
-                        <Building2 className="h-4 w-4 text-[#daa520] mr-2" />
+                    <div className="relative shrink-0 flex items-center bg-app-bg border border-app-border rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors">
+                        <Building2 className="h-4 w-4 text-app-gold mr-2" />
                         <select value={tenant} onChange={(e) => setTenant(e.target.value)}
                             className="bg-transparent text-sm text-gray-200 outline-none cursor-pointer pr-4 appearance-none">
-                            <option value="default_elettro" className="bg-[#0d1117] text-white">All India (Consolidated)</option>
-                            <option value="north_region" className="bg-[#0d1117] text-white">North Region</option>
-                            <option value="south_region" className="bg-[#0d1117] text-white">South Region</option>
+                            <option value="default_elettro" className="bg-app-bg text-white">All India (Consolidated)</option>
+                            <option value="north_region" className="bg-app-bg text-white">North Region</option>
+                            <option value="south_region" className="bg-app-bg text-white">South Region</option>
                         </select>
                     </div>
 
                     {/* Date Picker */}
                     <Popover.Root open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <Popover.Trigger asChild>
-                            <button className="flex shrink-0 items-center bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors text-sm text-gray-200">
-                                <CalendarIcon className="h-4 w-4 text-[#daa520] mr-2" />
+                            <button className="flex shrink-0 items-center bg-app-bg border border-app-border rounded-lg px-3 py-1.5 hover:border-gray-500 transition-colors text-sm text-gray-200">
+                                <CalendarIcon className="h-4 w-4 text-app-gold mr-2" />
                                 {dateRange?.from ? (
                                     dateRange.to ? (
                                         <>{format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}</>
@@ -289,29 +289,29 @@ export default function GlobalFilterBar() {
                             </button>
                         </Popover.Trigger>
                         <Popover.Portal>
-                            <Popover.Content className="bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl w-64 p-2 mt-2 z-50 text-sm" sideOffset={5} align="start">
+                            <Popover.Content className="bg-app-card border border-app-border rounded-xl shadow-xl w-64 p-2 mt-2 z-50 text-sm" sideOffset={5} align="start">
                                 <div className="text-gray-400 mb-2 px-2 pt-1 font-medium">Quick Select</div>
                                 <div className="grid grid-cols-1 gap-1">
                                     {datePresets.map((preset) => (
                                         <button key={preset.label}
                                             onClick={() => { setDateRange(preset.getRange()); setIsCalendarOpen(false); }}
-                                            className="text-left px-3 py-2 hover:bg-[#2d333b] hover:text-[#daa520] rounded-md transition-colors text-gray-300">
+                                            className="text-left px-3 py-2 hover:bg-app-muted hover:text-app-gold rounded-md transition-colors text-gray-300">
                                             {preset.label}
                                         </button>
                                     ))}
                                 </div>
-                                <div className="border-t border-[#30363d] my-2"></div>
+                                <div className="border-t border-app-border my-2"></div>
                                 <div className="text-gray-400 mb-2 px-2 pt-1 font-medium">Custom Range</div>
                                 <div className="px-2 flex flex-col gap-2 pb-2">
                                     <div className="text-xs text-gray-500 px-1">Start Date</div>
                                     <input type="date"
-                                        className="bg-[#0d1117] border border-[#30363d] text-gray-200 rounded p-1.5 text-sm w-full outline-none focus:border-[#daa520]"
+                                        className="bg-app-bg border border-app-border text-gray-200 rounded p-1.5 text-sm w-full outline-none focus:border-app-gold"
                                         onChange={(e) => setDateRange({ ...dateRange, from: e.target.value ? new Date(e.target.value) : undefined })}
                                         value={dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : ""}
                                     />
                                     <div className="text-xs text-gray-500 px-1 mt-1">End Date</div>
                                     <input type="date"
-                                        className="bg-[#0d1117] border border-[#30363d] text-gray-200 rounded p-1.5 text-sm w-full outline-none focus:border-[#daa520]"
+                                        className="bg-app-bg border border-app-border text-gray-200 rounded p-1.5 text-sm w-full outline-none focus:border-app-gold"
                                         onChange={(e) => setDateRange({ ...dateRange, to: e.target.value ? new Date(e.target.value) : undefined })}
                                         value={dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : ""}
                                     />
@@ -323,13 +323,13 @@ export default function GlobalFilterBar() {
                     {/* Advanced Filters Toggle - badge only after mount to avoid hydration mismatch */}
                     <button onClick={() => setShowAdvanced(!showAdvanced)}
                         className={`flex items-center shrink-0 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${showAdvanced || (mounted && activeFilterCount > 0)
-                            ? 'bg-[#daa520]/10 text-[#daa520] border-[#daa520]/30'
-                            : 'bg-[#0d1117] text-gray-300 border-[#30363d] hover:border-gray-500'
+                            ? 'bg-app-gold/10 text-app-gold border-app-gold/30'
+                            : 'bg-app-bg text-gray-300 border-app-border hover:border-gray-500'
                             }`}>
                         <Filter className="h-3.5 w-3.5 mr-1.5" />
                         Advanced
                         {mounted && activeFilterCount > 0 && (
-                            <span className="ml-1.5 bg-[#daa520] text-black text-xs font-bold px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
+                            <span className="ml-1.5 bg-app-gold text-black text-xs font-bold px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
                         )}
                     </button>
                 </div>
@@ -337,24 +337,24 @@ export default function GlobalFilterBar() {
                 <div className="flex shrink-0 items-center gap-2">
                     <Popover.Root open={viewsOpen} onOpenChange={setViewsOpen}>
                         <Popover.Trigger asChild>
-                            <button className="flex items-center text-sm font-medium border px-3 py-1.5 rounded-lg border-[#30363d] text-gray-300 bg-[#2d333b] hover:bg-[#3d444d]">
+                            <button className="flex items-center text-sm font-medium border px-3 py-1.5 rounded-lg border-app-border text-gray-300 bg-[#2d333b] hover:bg-[#3d444d]">
                                 <Bookmark className="h-4 w-4 mr-2" />
                                 Views
                                 <ChevronDown className="h-3 w-3 ml-1" />
                             </button>
                         </Popover.Trigger>
                         <Popover.Portal>
-                            <Popover.Content className="bg-[#161b22] border border-[#30363d] rounded-xl shadow-xl w-56 p-3 mt-2 z-50 text-sm" sideOffset={5} align="end">
+                            <Popover.Content className="bg-app-card border border-app-border rounded-xl shadow-xl w-56 p-3 mt-2 z-50 text-sm" sideOffset={5} align="end">
                                 <div className="font-medium text-gray-300 mb-2">Saved views</div>
                                 <div className="flex gap-2 mb-2">
-                                    <input type="text" placeholder="View name" value={saveViewName} onChange={(e) => setSaveViewName(e.target.value)} className="flex-1 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-white text-xs" />
-                                    <button type="button" onClick={() => { if (saveViewName.trim()) { saveCurrentView(saveViewName.trim()); setSaveViewName(""); } }} className="px-2 py-1 rounded bg-[#daa520] text-[#0d1117] text-xs font-medium">Save</button>
+                                    <input type="text" placeholder="View name" value={saveViewName} onChange={(e) => setSaveViewName(e.target.value)} className="flex-1 bg-app-bg border border-app-border rounded px-2 py-1 text-white text-xs" />
+                                    <button type="button" onClick={() => { if (saveViewName.trim()) { saveCurrentView(saveViewName.trim()); setSaveViewName(""); } }} className="px-2 py-1 rounded bg-app-gold text-app-on-gold text-xs font-medium">Save</button>
                                 </div>
                                 {savedViewNames.length > 0 ? (
                                     <div className="space-y-1 max-h-40 overflow-y-auto">
                                         {savedViewNames.map((name) => (
-                                            <button key={name} type="button" onClick={() => { loadView(name); setViewsOpen(false); }} className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded hover:bg-[#2d333b] text-gray-300">
-                                                <FolderOpen className="h-3.5 w-3.5 text-[#daa520]" />
+                                            <button key={name} type="button" onClick={() => { loadView(name); setViewsOpen(false); }} className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded hover:bg-app-muted text-gray-300">
+                                                <FolderOpen className="h-3.5 w-3.5 text-app-gold" />
                                                 {name}
                                             </button>
                                         ))}
@@ -370,8 +370,8 @@ export default function GlobalFilterBar() {
                         disabled={exporting}
                         className={`flex items-center text-sm font-medium border px-4 py-1.5 rounded-lg transition-colors ${
                             exporting
-                                ? "bg-[#30363d] text-gray-400 border-[#30363d] cursor-not-allowed"
-                                : "text-gray-300 bg-[#2d333b] hover:bg-[#3d444d] border-[#30363d]"
+                                ? "bg-app-border-strong text-gray-400 border-app-border cursor-not-allowed"
+                                : "text-gray-300 bg-[#2d333b] hover:bg-[#3d444d] border-app-border"
                         }`}
                     >
                         <Download className="h-4 w-4 mr-2" />
@@ -382,7 +382,7 @@ export default function GlobalFilterBar() {
 
             {/* Advanced Filters Row */}
             {showAdvanced && (
-                <div className="px-4 pb-4 border-t border-[#30363d] pt-3">
+                <div className="px-4 pb-4 border-t border-app-border pt-3">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                         <div className="min-w-0">
                             <label className="text-xs text-gray-500 mb-1 block">Fiscal Year (Apr–Mar)</label>
@@ -416,7 +416,7 @@ export default function GlobalFilterBar() {
                         <label className="text-xs text-gray-500 mb-1 block">
                             Item (SKU)
                             {selectedMaterialGroups.length > 0 ? (
-                                <span className="text-[#daa520]"> — only items in selected material group(s)</span>
+                                <span className="text-app-gold"> — only items in selected material group(s)</span>
                             ) : null}
                         </label>
                         <MultiSelect
@@ -432,37 +432,37 @@ export default function GlobalFilterBar() {
                             {selectedStates.map(s => (
                                 <span key={s} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
                                     {s}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedStates(selectedStates.filter(x => x !== s))} />
+                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedStates(selectedStates.filter(x => x !== s))} />
                                 </span>
                             ))}
                             {selectedCities.map(c => (
                                 <span key={c} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
                                     {c}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedCities(selectedCities.filter(x => x !== c))} />
+                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedCities(selectedCities.filter(x => x !== c))} />
                                 </span>
                             ))}
                             {selectedCustomers.map(c => (
                                 <span key={c} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
                                     {c}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedCustomers(selectedCustomers.filter(x => x !== c))} />
+                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedCustomers(selectedCustomers.filter(x => x !== c))} />
                                 </span>
                             ))}
                             {selectedMaterialGroups.map(m => (
                                 <span key={m} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
                                     {m}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedMaterialGroups(selectedMaterialGroups.filter(x => x !== m))} />
+                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedMaterialGroups(selectedMaterialGroups.filter(x => x !== m))} />
                                 </span>
                             ))}
                             {selectedFiscalYears.map(f => (
                                 <span key={f} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
                                     FY: {f}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedFiscalYears(selectedFiscalYears.filter(x => x !== f))} />
+                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedFiscalYears(selectedFiscalYears.filter(x => x !== f))} />
                                 </span>
                             ))}
                             {selectedMonths.map(m => (
                                 <span key={m} className="inline-flex items-center bg-[#2d333b] text-gray-300 text-xs px-2 py-1 rounded-full">
                                     {m}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-[#daa520]" onClick={() => setSelectedMonths(selectedMonths.filter(x => x !== m))} />
+                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedMonths(selectedMonths.filter(x => x !== m))} />
                                 </span>
                             ))}
                             {selectedItems.map(it => (
@@ -475,13 +475,13 @@ export default function GlobalFilterBar() {
                                         Item: {it}
                                     </span>
                                     <X
-                                        className="h-3 w-3 mt-0.5 cursor-pointer shrink-0 hover:text-[#daa520]"
+                                        className="h-3 w-3 mt-0.5 cursor-pointer shrink-0 hover:text-app-gold"
                                         onClick={() => setSelectedItems(selectedItems.filter(x => x !== it))}
                                     />
                                 </span>
                             ))}
                             <button onClick={() => { setSelectedStates([]); setSelectedCities([]); setSelectedCustomers([]); setSelectedMaterialGroups([]); setSelectedFiscalYears([]); setSelectedMonths([]); setSelectedItems([]); }}
-                                className="text-xs text-[#daa520] hover:underline ml-2">
+                                className="text-xs text-app-gold hover:underline ml-2">
                                 Clear all filters
                             </button>
                         </div>

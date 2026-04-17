@@ -72,8 +72,8 @@ export default function RiskPage() {
                 <KpiCard title="Total Customers" value={validCustomers.length.toString()} icon={Users} />
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">Revenue Concentration Risk</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Revenue Concentration Risk</h3>
                 <DataTable
                     data={validCustomers}
                     searchable={true}
@@ -99,7 +99,7 @@ export default function RiskPage() {
                                 return (
                                     <div className="flex items-center gap-3 w-48">
                                         <div className="flex-1 bg-[#2d333b] rounded-full h-2.5 overflow-hidden">
-                                            <div className="bg-[#daa520] h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
+                                            <div className="bg-app-gold h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
                                         </div>
                                         <span className="text-gray-300 text-xs w-10 text-right">{pct.toFixed(1)}%</span>
                                     </div>
@@ -117,8 +117,8 @@ export default function RiskPage() {
                 />
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">Inactive Customers (90+ Days)</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Inactive Customers (90+ Days)</h3>
                 <DataTable
                     data={inactiveCustomers}
                     searchable={true}

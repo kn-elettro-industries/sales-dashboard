@@ -157,12 +157,12 @@ export default function CustomersPage() {
                 <p className="text-gray-400 mt-1">RFM segmentation and customer analysis.</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                     <span className="text-xs text-gray-500 uppercase tracking-wide">Detail view</span>
-                    <div className="flex rounded-lg border border-[#30363d] p-0.5 bg-[#0d1117]">
+                    <div className="flex rounded-lg border border-app-border p-0.5 bg-app-bg">
                         <button
                             type="button"
                             onClick={() => setBuyerFocus("all")}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                                buyerFocus === "all" ? "bg-[#daa520] text-[#0d1117] font-medium" : "text-gray-400 hover:text-white"
+                                buyerFocus === "all" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"
                             }`}
                         >
                             <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
@@ -172,7 +172,7 @@ export default function CustomersPage() {
                             type="button"
                             onClick={() => setBuyerFocus("low")}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                                buyerFocus === "low" ? "bg-[#daa520] text-[#0d1117] font-medium" : "text-gray-400 hover:text-white"
+                                buyerFocus === "low" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"
                             }`}
                             title="Potential, At Risk, and Lost segments — lowest revenue table first"
                         >
@@ -182,13 +182,13 @@ export default function CustomersPage() {
                     </div>
                     {buyerFocus === "low" && (
                         <span className="text-xs text-gray-500 max-w-xl">
-                            Showing RFM segments <span className="text-[#daa520]">Potential</span>,{" "}
-                            <span className="text-[#daa520]">At Risk</span>, <span className="text-[#daa520]">Lost</span> only.
+                            Showing RFM segments <span className="text-app-gold">Potential</span>,{" "}
+                            <span className="text-app-gold">At Risk</span>, <span className="text-app-gold">Lost</span> only.
                             Revenue table is sorted with <strong className="text-gray-400">lowest spend first</strong>.
                         </span>
                     )}
                 </div>
-                <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-[#30363d] bg-[#0d1117]/50 px-4 py-3">
+                <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-app-border bg-app-bg/50 px-4 py-3">
                     <div className="flex flex-wrap items-end gap-2">
                         <div className="flex flex-col gap-1">
                             <label htmlFor="min-rev-lakh" className="text-xs text-gray-500">
@@ -200,7 +200,7 @@ export default function CustomersPage() {
                                 inputMode="decimal"
                                 value={minRevenueLakh}
                                 onChange={(e) => setMinRevenueLakh(e.target.value)}
-                                className="w-24 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-[#daa520]"
+                                className="w-24 bg-app-bg border border-app-border rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-app-gold"
                                 aria-describedby="export-below-help"
                             />
                         </div>
@@ -215,7 +215,7 @@ export default function CustomersPage() {
                                 inputMode="decimal"
                                 value={maxRevenueLakh}
                                 onChange={(e) => setMaxRevenueLakh(e.target.value)}
-                                className="w-24 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-[#daa520]"
+                                className="w-24 bg-app-bg border border-app-border rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-app-gold"
                                 aria-describedby="export-below-help"
                             />
                         </div>
@@ -229,7 +229,7 @@ export default function CustomersPage() {
                         type="button"
                         onClick={handleDownloadBelowThreshold}
                         disabled={exportingBelow}
-                        className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#161b22] border border-[#daa520]/50 text-[#daa520] hover:bg-[#2a2414] disabled:opacity-50"
+                        className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-app-card border border-app-gold/50 text-app-gold hover:bg-app-gold-muted disabled:opacity-50"
                     >
                         <Download className="h-4 w-4" />
                         {exportingBelow ? "Downloading…" : "Download CSV"}
@@ -244,8 +244,8 @@ export default function CustomersPage() {
                 <KpiCard title="Lost" value={(segCounts["Lost"] || 0).toString()} icon={UserX} />
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">Customer Segments</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">Customer Segments</h3>
                 <div className="flex gap-3 flex-wrap">
                     {Object.entries(segCounts).length > 0 ? Object.entries(segCounts).map(([seg, count]) => (
                         <div key={seg} className={`${SEGMENT_COLORS[seg] || 'bg-gray-600'} rounded-lg px-4 py-3 text-center min-w-[120px]`}>
@@ -256,8 +256,8 @@ export default function CustomersPage() {
                 </div>
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4">RFM Customer Map</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4">RFM Customer Map</h3>
                 {filteredRfm.length > 0 ? (
                     <ScatterBubbleChart data={filteredRfm} xKey="Recency" yKey="Frequency" zKey="Monetary" nameKey="CUSTOMER_NAME" />
                 ) : (
@@ -267,8 +267,8 @@ export default function CustomersPage() {
                 )}
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">RFM Analysis</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">RFM Analysis</h3>
                 <DataTable
                     data={filteredRfm}
                     searchable={true}
@@ -302,8 +302,8 @@ export default function CustomersPage() {
                 />
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">
                     {buyerFocus === "low" ? "Low purchase customers (revenue, lowest first)" : "Top Customers by Revenue"}
                 </h3>
                 <DataTable

@@ -81,14 +81,14 @@ export default function AdminPage() {
     return (
         <div className="max-w-lg mx-auto p-6">
             <div className="flex items-center gap-3 mb-6">
-                <UserPlus className="h-8 w-8 text-[#daa520]" />
+                <UserPlus className="h-8 w-8 text-app-gold" />
                 <div>
                     <h1 className="text-xl font-semibold text-white">Add user</h1>
                     <p className="text-gray-400 text-sm">Create accounts for your team.</p>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="bg-app-card border border-app-border rounded-xl p-6 space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">New username</label>
                     <input
@@ -96,7 +96,7 @@ export default function AdminPage() {
                         value={newUsername}
                         onChange={(e) => setNewUsername(e.target.value)}
                         placeholder="e.g. sales1"
-                        className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#daa520]"
+                        className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-app-gold"
                         disabled={loading}
                     />
                 </div>
@@ -107,7 +107,7 @@ export default function AdminPage() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Min 6 characters"
-                        className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#daa520]"
+                        className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-app-gold"
                         disabled={loading}
                     />
                 </div>
@@ -116,7 +116,7 @@ export default function AdminPage() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 rounded-lg bg-[#daa520] text-[#0d1117] font-semibold hover:bg-[#b8860b] disabled:opacity-50 transition-all"
+                    className="w-full py-3 rounded-lg bg-app-gold text-app-on-gold font-semibold hover:bg-app-gold-hover disabled:opacity-50 transition-all"
                 >
                     {loading ? "Creating..." : "Create user"}
                 </button>

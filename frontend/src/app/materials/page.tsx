@@ -81,12 +81,12 @@ export default function MaterialsPage() {
                 <KpiCard title="Class B + C" value={`${classB + classC} items`} icon={Layers} />
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#30363d] pb-4 mb-4">
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-app-border pb-4 mb-4">
                     <h3 className="text-lg font-semibold text-white">Revenue by Material Group</h3>
-                    <div className="flex rounded-lg border border-[#30363d] p-0.5 bg-[#0d1117]">
-                        <button type="button" onClick={() => setRevenueChartView("treemap")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${revenueChartView === "treemap" ? "bg-[#daa520] text-[#0d1117] font-medium" : "text-gray-400 hover:text-white"}`}>Treemap</button>
-                        <button type="button" onClick={() => setRevenueChartView("bar")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${revenueChartView === "bar" ? "bg-[#daa520] text-[#0d1117] font-medium" : "text-gray-400 hover:text-white"}`}>Bar</button>
+                    <div className="flex rounded-lg border border-app-border p-0.5 bg-app-bg">
+                        <button type="button" onClick={() => setRevenueChartView("treemap")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${revenueChartView === "treemap" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"}`}>Treemap</button>
+                        <button type="button" onClick={() => setRevenueChartView("bar")} className={`px-3 py-1.5 text-sm rounded-md transition-colors ${revenueChartView === "bar" ? "bg-app-gold text-app-on-gold font-medium" : "text-gray-400 hover:text-white"}`}>Bar</button>
                     </div>
                 </div>
                 {validPerf.length > 0 ? (
@@ -100,8 +100,8 @@ export default function MaterialsPage() {
                 )}
             </div>
 
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white border-b border-[#30363d] pb-4 mb-4">ABC Classification (Pareto)</h3>
+            <div className="bg-app-card border border-app-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white border-b border-app-border pb-4 mb-4">ABC Classification (Pareto)</h3>
                 <DataTable
                     data={tablePareto}
                     searchable={true}

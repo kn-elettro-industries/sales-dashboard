@@ -28,14 +28,14 @@ export function OnboardingBanner() {
     if (!show) return null;
 
     return (
-        <div className="bg-[#2a2414] border-b border-[#daa520]/30 px-4 py-2 flex items-center justify-between gap-4 text-sm text-gray-200">
+        <div className="bg-app-gold-muted border-b border-app-gold/30 px-4 py-2 flex items-center justify-between gap-4 text-sm text-gray-200">
             <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-[#daa520] shrink-0" />
+                <Lightbulb className="h-4 w-4 text-app-gold shrink-0" />
                 <span>
-                    First time? Use <strong className="text-[#daa520]">Filters</strong> above to narrow data, then open <strong className="text-[#daa520]">Reports</strong> to download PDFs. Press <kbd className="px-1.5 py-0.5 rounded bg-[#0d1117] text-[#daa520] font-mono text-xs">G</kbd> then <kbd className="px-1.5 py-0.5 rounded bg-[#0d1117] text-[#daa520] font-mono text-xs">R</kbd> to jump to Reports.
+                    First time? Use <strong className="text-app-gold">Filters</strong> above to narrow data, then open <strong className="text-app-gold">Reports</strong> to download PDFs. Press <kbd className="px-1.5 py-0.5 rounded bg-app-bg text-app-gold font-mono text-xs">G</kbd> then <kbd className="px-1.5 py-0.5 rounded bg-app-bg text-app-gold font-mono text-xs">R</kbd> to jump to Reports.
                 </span>
             </div>
-            <button type="button" onClick={dismiss} className="p-1 rounded hover:bg-[#30363d] text-gray-400 hover:text-white" aria-label="Dismiss">
+            <button type="button" onClick={dismiss} className="p-1 rounded hover:bg-app-border-strong text-gray-400 hover:text-white" aria-label="Dismiss">
                 <X className="h-4 w-4" />
             </button>
         </div>

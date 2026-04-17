@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
+import { ThemeCornerToggle } from "@/components/ThemeCornerToggle";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -32,16 +33,17 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#0d1117] p-6">
+        <div className="min-h-screen w-full flex items-center justify-center bg-app-bg p-6">
+            <ThemeCornerToggle />
             <div className="w-full max-w-md">
                 <div className="text-center mb-8 animate-slide-down opacity-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/logo.png" alt="ELETTRO" className="h-14 mx-auto object-contain" />
-                    <p className="text-[#daa520] text-sm font-semibold uppercase tracking-[0.25em] mt-4">Intelligence</p>
+                    <p className="text-app-gold text-sm font-semibold uppercase tracking-[0.25em] mt-4">Intelligence</p>
                 </div>
 
-                <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-8 shadow-xl animate-scale-in opacity-0 animation-delay-150">
-                    <h1 className="text-xl font-semibold text-white mb-2">Sign in</h1>
+                <div className="bg-app-card border border-app-border rounded-xl p-8 shadow-xl animate-scale-in opacity-0 animation-delay-150">
+                    <h1 className="text-xl font-semibold text-app-fg mb-2">Sign in</h1>
                     <p className="text-gray-400 text-sm mb-6">Enter your credentials to access the dashboard.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +57,7 @@ export default function LoginPage() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="Enter username"
-                                className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#daa520] focus:border-transparent transition-all duration-200"
+                                className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-fg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-app-gold focus:border-transparent transition-all duration-200"
                                 autoComplete="username"
                                 disabled={loading}
                             />
@@ -70,7 +72,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Enter password"
-                                className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#daa520] focus:border-transparent transition-all duration-200"
+                                className="w-full bg-app-bg border border-app-border rounded-lg px-4 py-3 text-app-fg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-app-gold focus:border-transparent transition-all duration-200"
                                 autoComplete="current-password"
                                 disabled={loading}
                             />
@@ -81,13 +83,13 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 rounded-lg bg-[#daa520] text-[#0d1117] font-semibold hover:bg-[#b8860b] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            className="w-full py-3 rounded-lg bg-app-gold text-app-on-gold font-semibold hover:bg-app-gold-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
                             {loading ? "Signing in..." : "Sign in"}
                         </button>
                         <p className="text-center text-gray-400 text-sm">
                             Don&apos;t have an account?{" "}
-                            <Link href="/signup" className="text-[#daa520] hover:underline font-medium">Sign up</Link>
+                            <Link href="/signup" className="text-app-gold hover:underline font-medium">Sign up</Link>
                         </p>
                     </form>
                 </div>

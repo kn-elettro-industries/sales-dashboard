@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, Package, MapPin, ShieldAlert, FileText, Database, LogIn, LogOut, UserPlus, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
+import { useTheme } from "@/components/ThemeContext";
 
 const navItems = [
     {
@@ -28,6 +29,7 @@ const navItems = [
 export default function Sidebar() {
     const pathname = usePathname();
     const { user, login, logout } = useAuth();
+    const { theme, toggleTheme, mounted } = useTheme();
     const [showLogin, setShowLogin] = useState(false);
     const [uname, setUname] = useState("");
     const [pwd, setPwd] = useState("");
@@ -44,11 +46,11 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="w-64 bg-[#161b22] border-r border-[#30363d] flex flex-col h-screen sticky top-0">
-            <div className="p-5 border-b border-[#30363d] flex flex-col items-start">
+        <aside className="w-64 bg-app-card border-r border-app-border flex flex-col h-screen sticky top-0">
+            <div className="p-5 border-b border-app-border flex flex-col items-start">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="KN Elettro" className="h-10 object-contain" />
-                <span className="text-[#daa520] text-xs font-semibold uppercase tracking-[0.25em] mt-2">KN Elettro Intelligence</span>
+                <span className="text-app-gold text-xs font-semibold uppercase tracking-[0.25em] mt-2">KN Elettro Intelligence</span>
             </div>
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -62,8 +64,8 @@ export default function Sidebar() {
                                     key={item.href}
                                     href={item.href}
                                     className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 ${isActive
-                                        ? "bg-[#daa520] text-[#0d1117] font-medium"
-                                        : "text-gray-400 hover:bg-[#2d333b] hover:text-white"
+                                        ? "bg-app-gold text-app-on-gold font-medium"
+                                        : "text-gray-400 hover:bg-app-muted hover:text-app-fg"
                                         }`}
                                 >
                                     <item.icon className="h-5 w-5" />
@@ -79,8 +81,8 @@ export default function Sidebar() {
                         <Link
                             href="/admin"
                             className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 ${pathname === "/admin"
-                                ? "bg-[#daa520] text-[#0d1117] font-medium"
-                                : "text-gray-400 hover:bg-[#2d333b] hover:text-white"
+                                ? "bg-app-gold text-app-on-gold font-medium"
+                                : "text-gray-400 hover:bg-app-muted hover:text-app-fg"
                                 }`}
                         >
                             <UserPlus className="h-5 w-5" />
@@ -90,26 +92,50 @@ export default function Sidebar() {
                 )}
             </nav>
 
-            <div className="p-4 border-t border-[#30363d] text-sm text-gray-500 space-y-2">
+            <div className="p-4 border-t border-app-border text-sm text-gray-500 space-y-2">
+                <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-app-border bg-app-hover px-3 py-2 text-app-fg-muted transition-colors hover:border-app-gold/40 hover:text-app-fg"
+                    title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                    aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                    <span className="text-xs font-medium uppercase tracking-wide">Theme</span>
+                    <span className="flex items-center gap-1.5 text-app-gold">
+                        {!mounted ? (
+                            <Moon className="h-4 w-4 opacity-50" />
+                        ) : theme === "dark" ? (
+                            <>
+                                <Sun className="h-4 w-4" />
+                                <span className="text-[11px] text-app-fg-muted">Light</span>
+                            </>
+                        ) : (
+                            <>
+                                <Moon className="h-4 w-4" />
+                                <span className="text-[11px] text-app-fg-muted">Dark</span>
+                            </>
+                        )}
+                    </span>
+                </button>
                 {user ? (
                     <>
-                        <p className="text-gray-400 truncate" title={user.user}>{user.user} <span className="text-[#daa520]">({user.role})</span></p>
+                        <p className="text-gray-400 truncate" title={user.user}>{user.user} <span className="text-app-gold">({user.role})</span></p>
                         <button type="button" onClick={logout} className="flex items-center gap-2 text-red-400 hover:text-red-300">
                             <LogOut size={14} /> Log out
                         </button>
                     </>
                 ) : showLogin ? (
                     <div className="space-y-2">
-                        <input type="text" placeholder="Username" value={uname} onChange={(e) => setUname(e.target.value)} className="w-full bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-white text-sm" />
-                        <input type="password" placeholder="Password" value={pwd} onChange={(e) => setPwd(e.target.value)} className="w-full bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-white text-sm" />
+                        <input type="text" placeholder="Username" value={uname} onChange={(e) => setUname(e.target.value)} className="w-full bg-app-bg border border-app-border rounded px-2 py-1 text-app-fg text-sm" />
+                        <input type="password" placeholder="Password" value={pwd} onChange={(e) => setPwd(e.target.value)} className="w-full bg-app-bg border border-app-border rounded px-2 py-1 text-app-fg text-sm" />
                         {loginErr && <p className="text-red-400 text-xs">Login failed</p>}
                         <div className="flex gap-2">
-                            <button type="button" onClick={handleLogin} className="flex-1 py-1 rounded bg-[#daa520] text-[#0d1117] text-xs font-medium">Log in</button>
-                            <button type="button" onClick={() => { setShowLogin(false); setLoginErr(false); }} className="py-1 px-2 rounded border border-[#30363d] text-gray-400 text-xs">Cancel</button>
+                            <button type="button" onClick={handleLogin} className="flex-1 py-1 rounded bg-app-gold text-app-on-gold text-xs font-medium">Log in</button>
+                            <button type="button" onClick={() => { setShowLogin(false); setLoginErr(false); }} className="py-1 px-2 rounded border border-app-border text-gray-400 text-xs">Cancel</button>
                         </div>
                     </div>
                 ) : (
-                    <button type="button" onClick={() => setShowLogin(true)} className="flex items-center gap-2 text-[#daa520] hover:text-[#b8860b]">
+                    <button type="button" onClick={() => setShowLogin(true)} className="flex items-center gap-2 text-app-gold hover:text-app-gold-hover">
                         <LogIn size={14} /> Log in
                     </button>
                 )}

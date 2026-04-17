@@ -73,9 +73,7 @@ export default function SignupPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8 animate-slide-down opacity-0">
                     <BrandLogo size="lg" className="mx-auto" />
-                    <p className="text-amber-950 dark:text-app-gold text-sm font-semibold uppercase tracking-[0.25em] mt-4">
-                        Intelligence
-                    </p>
+                    <p className="text-app-gold text-sm font-semibold uppercase tracking-[0.25em] mt-4">Intelligence</p>
                 </div>
 
                 <div className="bg-app-card border border-app-border rounded-xl p-8 shadow-xl animate-scale-in opacity-0 animation-delay-150">

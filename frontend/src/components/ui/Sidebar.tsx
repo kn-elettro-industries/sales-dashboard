@@ -50,7 +50,7 @@ export default function Sidebar() {
         <aside className="w-64 bg-app-card border-r border-app-border flex flex-col h-screen sticky top-0">
             <div className="p-5 border-b border-app-border flex flex-col items-start gap-2">
                 <BrandLogo size="md" />
-                <span className="text-amber-950 dark:text-app-gold text-xs font-semibold uppercase tracking-[0.25em]">
+                <span className="text-app-gold text-xs font-semibold uppercase tracking-[0.25em]">
                     KN Elettro Intelligence
                 </span>
             </div>

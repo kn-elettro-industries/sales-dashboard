@@ -23,7 +23,7 @@ import {
 
 // High-contrast segment colors — each slice clearly distinct (donut & treemap)
 const SEGMENT_COLORS = [
-    "#daa520", "#0ea5e9", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899",
+    "#f4c430", "#0ea5e9", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899",
     "#14b8a6", "#e11d48", "#6366f1", "#84cc16", "#f97316", "#06b6d4"
 ];
 // Legacy alias for other charts

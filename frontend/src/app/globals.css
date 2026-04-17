@@ -3,17 +3,18 @@
 /* Semantic palette — toggled via html.light / html.dark (see ThemeContext) */
 :root,
 html.dark {
+    /* Dark shell + vivid brand gold (wordmark “TTRO” / icon ring) */
     --app-bg: #0d1117;
     --app-card: #161b22;
     --app-hover: #21262d;
     --app-muted: #2d333b;
     --app-border: #30363d;
-    --app-border-strong: #30363d;
+    --app-border-strong: #3d444d;
     --app-fg: #e6edf3;
     --app-fg-muted: #9ca3af;
-    --app-gold: #daa520;
-    --app-gold-hover: #b8860b;
-    --app-on-gold: #0d1117;
+    --app-gold: #f4c430;
+    --app-gold-hover: #ffd54f;
+    --app-on-gold: #141109;
     --app-gold-muted: #2a2414;
     --chart-panel-bg: #161b22;
     --chart-panel-border: #30363d;
@@ -26,30 +27,31 @@ html.dark {
 }
 
 html.light {
-    --app-bg: #f0f2f6;
+    /* White / near-white surfaces; deep gold + tagline gray like brand lockup */
+    --app-bg: #fafafa;
     --app-card: #ffffff;
-    --app-hover: #e2e7ec;
-    --app-muted: #dce3ea;
-    --app-border: #c8d0da;
-    --app-border-strong: #9aa6b2;
-    --app-fg: #12151a;
-    --app-fg-muted: #3a424d;
-    --app-gold: #8a6a0a;
-    --app-gold-hover: #6e5508;
-    --app-on-gold: #faf8f3;
-    --app-gold-muted: #ede4cf;
+    --app-hover: #f3efe4;
+    --app-muted: #f5f0e6;
+    --app-border: #e8e0d0;
+    --app-border-strong: #cfc4b0;
+    --app-fg: #1a1a1a;
+    --app-fg-muted: #555555;
+    --app-gold: #8b6914;
+    --app-gold-hover: #6e5410;
+    --app-on-gold: #fffef8;
+    --app-gold-muted: #fdf6e8;
     --chart-panel-bg: #ffffff;
     --chart-panel-border: #c8d0da;
     --chart-grid-stroke: #aeb8c4;
     --chart-invert: #f0f2f6;
     --chart-treemap-deep: #dde3ea;
-    --chart-axis: #3a424d;
-    --chart-tooltip-row: #12151a;
+    --chart-axis: #555555;
+    --chart-tooltip-row: #1a1a1a;
     --chart-bar-cursor: rgba(0, 0, 0, 0.06);
 }
 
 @theme {
-    --color-brand-gold: #daa520;
+    --color-brand-gold: #f4c430;
     --color-brand-dark: #0d1117;
     --color-brand-card: #161b22;
     --color-brand-border: #30363d;

@@ -4,7 +4,7 @@ import os
 import tempfile
 import gc
 import numpy as np
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from .fiscal_year import fy_selection_to_timeline_month_labels, parse_fy_label_to_apr_mar_years
 
@@ -696,6 +696,92 @@ def _safe_top_series(df: pd.DataFrame, col: str, value_col: str = "AMOUNT", top_
     return s
 
 
+# ── Zero-sales inclusion helpers ─────────────────────────────────────────────
+# When a user explicitly selects entities (e.g. 30 customers) in the global
+# filter bar, some may have zero sales in the current date/other-filter window.
+# `groupby` drops them. These helpers let us pad the result so every selected
+# entity appears (with zero revenue/orders) in the generated PDF sections.
+
+def _selected_values_for_column(
+    df: pd.DataFrame,
+    col: str,
+    customers: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    material_groups: Optional[str] = None,
+    months: Optional[str] = None,
+    fiscal_years: Optional[str] = None,
+) -> List[str]:
+    """Return the list of explicit user selections that apply to `col`, or []
+    if no explicit filter targets that column. Values are returned verbatim
+    (the apply_filters layer already does exact-match filtering)."""
+    if not col:
+        return []
+
+    def _split(v: Optional[str]) -> List[str]:
+        if v is None:
+            return []
+        return [p.strip() for p in str(v).split(",") if p.strip()]
+
+    col_u = str(col).upper()
+    if col_u == "CUSTOMER_NAME":
+        return _split(customers)
+    if col_u == "STATE":
+        return _split(states)
+    if col_u == "CITY":
+        return _split(cities)
+    if col_u in ("ITEM_NAME_GROUP", "MATERIALGROUP"):
+        return _split(material_groups)
+    if col_u == "MONTH":
+        return _split(months)
+    if col_u == "FINANCIAL_YEAR":
+        return _split(fiscal_years)
+    return []
+
+
+def _pad_groupby_with_zero(
+    grp_df: pd.DataFrame,
+    key_col: str,
+    selected: List[str],
+) -> pd.DataFrame:
+    """Append zero-valued rows to a reset-index groupby result for every name in
+    `selected` that is missing from `grp_df[key_col]`. Numeric columns get 0,
+    object columns get an empty string. Returns a new DataFrame."""
+    if grp_df is None or not selected:
+        return grp_df
+    if key_col not in grp_df.columns:
+        return grp_df
+    existing = {str(x).strip() for x in grp_df[key_col].astype(str).tolist()}
+    missing = [s for s in selected if str(s).strip() not in existing]
+    if not missing:
+        return grp_df
+    pad_rows = []
+    for m in missing:
+        row: Dict[str, object] = {}
+        for c in grp_df.columns:
+            if c == key_col:
+                row[c] = m
+            elif pd.api.types.is_numeric_dtype(grp_df[c].dtype):
+                row[c] = 0
+            else:
+                row[c] = ""
+        pad_rows.append(row)
+    return pd.concat([grp_df, pd.DataFrame(pad_rows)], ignore_index=True)
+
+
+def _pad_series_with_zero(series: pd.Series, selected: List[str]) -> pd.Series:
+    """Append zero entries to a Series (index = entity name) for every missing
+    selected name. Preserves original dtype where possible."""
+    if series is None or not selected:
+        return series
+    existing = {str(x).strip() for x in series.index.astype(str).tolist()}
+    missing = [s for s in selected if str(s).strip() not in existing]
+    if not missing:
+        return series
+    add = pd.Series([0.0] * len(missing), index=missing)
+    return pd.concat([series, add])
+
+
 def generate_dynamic_pdf_report(
     df: pd.DataFrame,
     title: str,
@@ -922,12 +1008,29 @@ def _generate_dynamic_pdf_report_inner(
             _pdf_section_rule(pdf)
             pdf.add_page()
         pdf.set_font("Arial", "B", 12)
-        pdf.cell(0, 8, _pdf_text(f"4. Top {max(3, int(top_n))} by Revenue ({primary_col})"), 0, 1)
         grp = df.groupby(primary_col).agg(
             Revenue=("AMOUNT", "sum"),
             Orders=("INVOICE_NO", "nunique") if "INVOICE_NO" in df.columns else ("AMOUNT", "size"),
             Customers=("CUSTOMER_NAME", "nunique") if "CUSTOMER_NAME" in df.columns else ("AMOUNT", "size"),
-        ).sort_values("Revenue", ascending=False).head(max(3, int(top_n))).reset_index()
+        ).reset_index()
+        # Include explicitly selected entities that have zero sales (e.g. a
+        # customer picked in the filter bar with no invoices in this period),
+        # so every entity the user selected still appears in the PDF table.
+        primary_selected = _selected_values_for_column(
+            df, primary_col,
+            customers=customers, states=states, cities=cities,
+            material_groups=material_groups, months=months, fiscal_years=fiscal_years,
+        )
+        _top_title_n = max(max(3, int(top_n)), len(primary_selected)) if primary_selected else max(3, int(top_n))
+        pdf.cell(0, 8, _pdf_text(f"4. Top {_top_title_n} by Revenue ({primary_col})"), 0, 1)
+        if primary_selected:
+            grp = _pad_groupby_with_zero(grp, primary_col, primary_selected)
+        # Honour explicit selections over top_n: when the user selected N
+        # specific entities in the filter bar, guarantee all N appear even if
+        # top_n is smaller (zero-sales ones still get listed at the bottom).
+        _top_n_int = max(3, int(top_n))
+        _row_cap = max(_top_n_int, len(primary_selected)) if primary_selected else _top_n_int
+        grp = grp.sort_values("Revenue", ascending=False).head(_row_cap).reset_index(drop=True)
 
         def _dyn_top_header() -> None:
             pdf.set_font("Arial", "B", 9)
@@ -985,11 +1088,37 @@ def _generate_dynamic_pdf_report_inner(
         pdf.set_text_color(0, 0, 0)
         pdf.cell(0, 8, _pdf_text(f"5. Breakdown: {primary_col} -> {secondary_col}"), 0, 1)
 
-        top_primary = df.groupby(primary_col)["AMOUNT"].sum().sort_values(ascending=False).head(8).index.tolist()
-        top_secondary = df.groupby(secondary_col)["AMOUNT"].sum().sort_values(ascending=False).head(6).index.tolist()
+        # Rank primary/secondary by revenue, but guarantee explicitly-selected
+        # entities still appear in the breakdown even if they have no sales.
+        primary_rank = df.groupby(primary_col)["AMOUNT"].sum().sort_values(ascending=False)
+        secondary_rank = df.groupby(secondary_col)["AMOUNT"].sum().sort_values(ascending=False)
+
+        _pivot_primary_selected = _selected_values_for_column(
+            df, primary_col,
+            customers=customers, states=states, cities=cities,
+            material_groups=material_groups, months=months, fiscal_years=fiscal_years,
+        )
+        _pivot_secondary_selected = _selected_values_for_column(
+            df, secondary_col,
+            customers=customers, states=states, cities=cities,
+            material_groups=material_groups, months=months, fiscal_years=fiscal_years,
+        )
+        primary_rank = _pad_series_with_zero(primary_rank, _pivot_primary_selected)
+        secondary_rank = _pad_series_with_zero(secondary_rank, _pivot_secondary_selected)
+
+        top_primary = primary_rank.sort_values(ascending=False).head(8).index.tolist()
+        top_secondary = secondary_rank.sort_values(ascending=False).head(6).index.tolist()
         sub = df[df[primary_col].isin(top_primary) & df[secondary_col].isin(top_secondary)]
-        if not sub.empty:
-            pivot = sub.pivot_table(index=primary_col, columns=secondary_col, values="AMOUNT", aggfunc="sum", fill_value=0)
+        if top_primary and top_secondary:
+            if sub.empty:
+                pivot = pd.DataFrame(0, index=top_primary, columns=top_secondary)
+            else:
+                pivot = sub.pivot_table(
+                    index=primary_col, columns=secondary_col,
+                    values="AMOUNT", aggfunc="sum", fill_value=0,
+                )
+            # Reindex so every selected primary/secondary shows up, even with zeros.
+            pivot = pivot.reindex(index=top_primary, columns=top_secondary, fill_value=0)
             # Limit columns so cell width never too small (fpdf "Not enough horizontal space")
             max_cols = 10
             cols = list(pivot.columns)[:max_cols]
@@ -2126,11 +2255,30 @@ def _generate_pdf_report_inner(
     if report_type == "Material Group Wise":
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "9. Top 10 Customers", 0, 1)
+        _selected_customers_list = _selected_values_for_column(
+            df, "CUSTOMER_NAME",
+            customers=customers, states=states, cities=cities,
+            material_groups=material_groups, months=months, fiscal_years=fiscal_years,
+        )
+        _cust_section_title = (
+            f"9. Selected Customers ({len(_selected_customers_list)})"
+            if _selected_customers_list
+            else "9. Top 10 Customers"
+        )
+        pdf.cell(0, 10, _cust_section_title, 0, 1)
         pdf.ln(5)
         
         if "CUSTOMER_NAME" in df.columns:
-            cust_data = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(15)
+            cust_data = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False)
+            # Keep every customer the user picked in the filter bar, even if
+            # they have zero sales in this period.
+            if _selected_customers_list:
+                cust_data = _pad_series_with_zero(cust_data, _selected_customers_list)
+                cust_data = cust_data.sort_values(ascending=False).head(
+                    max(15, len(_selected_customers_list))
+                )
+            else:
+                cust_data = cust_data.head(15)
             
             def _mg_top_cust_header() -> None:
                 pdf.set_font("Arial", 'B', 10)
@@ -2195,19 +2343,38 @@ def _generate_pdf_report_inner(
         pdf.cell(100, 8, value, 0, 1, 'R', 1)
     pdf.ln(5)
     
-    # Top 5 Customers
+    # Top 5 Customers (or every selected customer when the user picked specific
+    # customers in the global filter — so zero-sales companies still appear).
     if "CUSTOMER_NAME" in df.columns:
+        _mgmt_selected_customers = _selected_values_for_column(
+            df, "CUSTOMER_NAME",
+            customers=customers, states=states, cities=cities,
+            material_groups=material_groups, months=months, fiscal_years=fiscal_years,
+        )
+        _mgmt_cust_heading = (
+            f"  SELECTED CUSTOMERS ({len(_mgmt_selected_customers)})"
+            if _mgmt_selected_customers
+            else "  TOP 5 CUSTOMERS"
+        )
+
         def _mgmt_top5_cust_header() -> None:
             pdf.set_font("Arial", 'B', 12)
             pdf.set_fill_color(33, 37, 41)
             pdf.set_text_color(255, 255, 255)
-            pdf.cell(0, 8, "  TOP 5 CUSTOMERS", 0, 1, 'L', 1)
+            pdf.cell(0, 8, _mgmt_cust_heading, 0, 1, 'L', 1)
             pdf.set_text_color(0, 0, 0)
             pdf.set_font("Arial", '', 10)
             pdf.ln(2)
 
         _mgmt_top5_cust_header()
-        top5_cust = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(5)
+        _mgmt_cust_series = df.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False)
+        if _mgmt_selected_customers:
+            _mgmt_cust_series = _pad_series_with_zero(_mgmt_cust_series, _mgmt_selected_customers)
+            top5_cust = _mgmt_cust_series.sort_values(ascending=False).head(
+                max(5, len(_mgmt_selected_customers))
+            )
+        else:
+            top5_cust = _mgmt_cust_series.head(5)
         tc_i = 0
         for i, (cust, amt) in enumerate(top5_cust.items(), 1):
             if pdf.get_y() + 9 > pdf.h - pdf.b_margin:

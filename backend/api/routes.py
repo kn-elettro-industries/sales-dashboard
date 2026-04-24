@@ -20,7 +20,11 @@ from .db import (
     list_distributor_targets,
     upsert_distributor_target,
 )
-from .customer_geo_overrides import apply_customer_geo_overrides, apply_customer_name_canonical
+from .customer_geo_overrides import (
+    apply_customer_director_groups,
+    apply_customer_geo_overrides,
+    apply_customer_name_canonical,
+)
 from .sales_dates import (
     parse_invoice_dates,
     fiscal_year_india,
@@ -577,6 +581,7 @@ def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[p
     df = _coalesce_state_region(df)
     df = _merge_customer_master(df, tenant_id)
     df = apply_customer_name_canonical(df)
+    df = apply_customer_director_groups(df)
     df = apply_customer_geo_overrides(df)
     if "DATE" not in df.columns:
         raise HTTPException(

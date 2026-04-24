@@ -244,9 +244,11 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
         from .customer_geo_overrides import (
             apply_customer_name_canonical as _name_fix,
             apply_customer_geo_overrides as _geo_fix,
+            apply_customer_director_groups as _director_groups,
         )
 
         df = _name_fix(df)
+        df = _director_groups(df)
         df = _geo_fix(df)
     except Exception as e:
         logging.warning("apply_customer_overrides: %s", e)

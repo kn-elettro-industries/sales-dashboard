@@ -20,25 +20,34 @@ CUSTOMER_NAME_CANONICAL: dict[str, str] = {
 #          punctuation/dots/whitespace collapsed), so minor spelling differences
 #          like "R.D ASSOCIATES" vs "R D ASSOCIATES" vs "RD ASSOCIATES" all hit.
 CUSTOMER_DIRECTOR_GROUPS: dict[str, list[str]] = {
-    "SINGHI ELECTRIC CO. / P B ENTERPRISES": [
-        "SINGHI ELECTRIC CO.",
+    # DB names: 'SINGHI ELECTRIC CO'  +  'P B ENTERPRISE'
+    "SINGHI ELECTRIC CO / P B ENTERPRISE": [
         "SINGHI ELECTRIC CO",
+        "SINGHI ELECTRIC CO.",
         "SINGHI ELECTRIC COMPANY",
+        "P B ENTERPRISE",
         "P B ENTERPRISES",
+        "P.B ENTERPRISE",
         "P.B ENTERPRISES",
+        "P.B. ENTERPRISE",
         "P.B. ENTERPRISES",
+        "PB ENTERPRISE",
         "PB ENTERPRISES",
     ],
-    "R.D ASSOCIATES / V.V ENTERPRISES": [
+    # DB names: 'R.D.ASSOCIATES'  +  'V.V.ENGINEERS'
+    "R.D. ASSOCIATES / V.V. ENGINEERS": [
+        "R.D.ASSOCIATES",
         "R.D ASSOCIATES",
         "R D ASSOCIATES",
         "RD ASSOCIATES",
         "R.D. ASSOCIATES",
-        "V.V ENTERPRISES",
-        "V V ENTERPRISES",
-        "VV ENTERPRISES",
-        "V.V. ENTERPRISES",
+        "V.V.ENGINEERS",
+        "V.V ENGINEERS",
+        "V V ENGINEERS",
+        "VV ENGINEERS",
+        "V.V. ENGINEERS",
     ],
+    # DB names: 'SHAH ENTERPRISES'  +  'LASER ENTERPRISES'
     "SHAH ENTERPRISES / LASER ENTERPRISES": [
         "SHAH ENTERPRISES",
         "LASER ENTERPRISES",

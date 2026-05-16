@@ -321,8 +321,26 @@ export default function CustomersPage() {
                             cell: (_, index) => <span className="text-app-fg-muted">{index! + 1}</span> // Fixed index rendering
                         },
                         { header: 'Customer', accessorKey: 'CUSTOMER_NAME', sortable: true },
-                        { header: 'City', accessorKey: 'CITY', sortable: true },
-                        { header: 'State', accessorKey: 'STATE', sortable: true },
+                        {
+                            header: 'City',
+                            accessorKey: 'CITY',
+                            sortable: true,
+                            cell: (item: any) => (
+                                <span className={item.CITY && !String(item.CITY).toUpperCase().includes('NOT FOUND') ? 'text-app-fg' : 'text-app-fg-muted'}>
+                                    {item.CITY && !String(item.CITY).toUpperCase().includes('NOT FOUND') ? item.CITY : '—'}
+                                </span>
+                            )
+                        },
+                        {
+                            header: 'State',
+                            accessorKey: 'STATE',
+                            sortable: true,
+                            cell: (item: any) => (
+                                <span className={item.STATE && !String(item.STATE).toUpperCase().includes('NOT FOUND') ? 'text-app-fg' : 'text-app-fg-muted'}>
+                                    {item.STATE && !String(item.STATE).toUpperCase().includes('NOT FOUND') ? item.STATE : '—'}
+                                </span>
+                            )
+                        },
                         {
                             header: 'Revenue',
                             accessorKey: 'Revenue',

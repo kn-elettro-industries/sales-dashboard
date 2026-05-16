@@ -2213,7 +2213,128 @@ def _generate_pdf_report_inner(
             pdf.cell(0, 8, details, 0, 1, 'L', 1)
             pdf.ln(3)
 
-    # 9. Customer Specific Enhancement: Material Group Preference
+    # 9. State/Region Deep Dive (State Wise report only)
+    if report_type == "State Wise" and "STATE" in df.columns:
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(0, 10, "9. State / Region Revenue Breakdown", 0, 1)
+        pdf.ln(5)
+
+        # Exclude the "State Not Found" placeholder from state analytics
+        state_df = df[~df["STATE"].astype(str).str.upper().str.contains("NOT FOUND", na=False)].copy()
+
+        if not state_df.empty:
+            state_agg = state_df.groupby("STATE").agg(
+                Revenue=("AMOUNT", "sum"),
+                Orders=("INVOICE_NO", "nunique"),
+                Customers=("CUSTOMER_NAME", "nunique") if "CUSTOMER_NAME" in state_df.columns else ("INVOICE_NO", "count"),
+            ).sort_values("Revenue", ascending=False)
+
+            total_state_rev = state_agg["Revenue"].sum()
+
+            # Horizontal bar chart — top 15 states by revenue
+            top_states = state_agg.head(15)
+            chart_h = max(3.5, len(top_states) * 0.45)
+            fig = Figure(figsize=(10, chart_h))
+            canvas = FigureCanvas(fig)
+            ax = fig.add_subplot(111)
+            fig.patch.set_facecolor("white")
+            ax.set_facecolor("white")
+            sorted_st = top_states["Revenue"].sort_values()
+            ax.barh(range(len(sorted_st)), sorted_st.values, color="#333333", edgecolor="#FFD700", height=0.65)
+            ax.set_yticks(range(len(sorted_st)))
+            ax.set_yticklabels([str(s)[:30] for s in sorted_st.index], fontsize=9)
+            ax.set_title("State Revenue Ranking (Top 15)", fontsize=13, fontweight="bold", pad=12)
+            ax.set_xlabel("Revenue", fontsize=10, fontweight="bold")
+            _configure_matplotlib_revenue_ticks(ax, "x")
+            _max_val = sorted_st.values[-1] if len(sorted_st) else 1
+            for i, v in enumerate(sorted_st.values):
+                ax.text(v + (_max_val * 0.01), i, format_currency_pdf(v), va="center", fontsize=8)
+            fig.tight_layout()
+            img_path = create_chart(fig)
+            _pdf_need_space(pdf, 110.0)
+            pdf.image(img_path, x=10, w=185)
+            os.remove(img_path)
+            pdf.ln(6)
+
+            # State summary table (all states)
+            def _state_tbl_header() -> None:
+                pdf.set_font("Arial", "B", 9)
+                pdf.set_fill_color(33, 37, 41)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(65, 10, "State", 0, 0, "L", 1)
+                pdf.cell(45, 10, "Revenue", 0, 0, "R", 1)
+                pdf.cell(25, 10, "Share %", 0, 0, "R", 1)
+                pdf.cell(25, 10, "Orders", 0, 0, "R", 1)
+                pdf.cell(25, 10, "Customers", 0, 1, "R", 1)
+                pdf.set_font("Arial", "", 9)
+                pdf.set_text_color(0, 0, 0)
+
+            _state_tbl_header()
+            st_i = 0
+            for state_name, row in state_agg.iterrows():
+                if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                    pdf.add_page()
+                    _state_tbl_header()
+                st_i += 1
+                fill = st_i % 2 == 0
+                share = (row["Revenue"] / total_state_rev * 100) if total_state_rev > 0 else 0
+                pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                pdf.cell(65, 8, _pdf_text(str(state_name)[:32]), 0, 0, "L", fill)
+                pdf.cell(45, 8, format_currency_pdf(row["Revenue"]), 0, 0, "R", fill)
+                pdf.cell(25, 8, f"{share:.1f}%", 0, 0, "R", fill)
+                pdf.cell(25, 8, str(int(row["Orders"])), 0, 0, "R", fill)
+                pdf.cell(25, 8, str(int(row["Customers"])), 0, 1, "R", fill)
+            pdf.ln(5)
+
+            # If a specific state is selected via filter_state, show top customers for it
+            _focused_state = None
+            if filter_state and str(filter_state).strip() and str(filter_state).strip().lower() != "all":
+                _focused_state = str(filter_state).strip()
+            elif specific_entity and str(specific_entity).strip() and str(specific_entity).strip().lower() != "all":
+                _focused_state = str(specific_entity).strip()
+
+            if _focused_state and "CUSTOMER_NAME" in state_df.columns:
+                state_rows = state_df[state_df["STATE"].astype(str).str.strip().str.upper() == _focused_state.upper()]
+                if not state_rows.empty:
+                    _pdf_need_space(pdf, 24.0)
+                    pdf.set_font("Arial", "B", 12)
+                    pdf.set_fill_color(33, 37, 41)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(0, 8, f"  Top Customers - {_focused_state}", 0, 1, "L", 1)
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.set_font("Arial", "", 10)
+                    pdf.ln(2)
+
+                    cust_st = state_rows.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(20)
+
+                    def _st_cust_header() -> None:
+                        pdf.set_font("Arial", "B", 9)
+                        pdf.set_fill_color(33, 37, 41)
+                        pdf.set_text_color(255, 255, 255)
+                        pdf.cell(130, 10, "Customer", 0, 0, "L", 1)
+                        pdf.cell(55, 10, "Revenue", 0, 1, "R", 1)
+                        pdf.set_font("Arial", "", 9)
+                        pdf.set_text_color(0, 0, 0)
+
+                    _st_cust_header()
+                    sc_i = 0
+                    for cust, amt in cust_st.items():
+                        if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                            pdf.add_page()
+                            _st_cust_header()
+                        sc_i += 1
+                        fill = sc_i % 2 == 0
+                        pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                        pdf.cell(130, 8, _pdf_text(str(cust)[:65]), 0, 0, "L", fill)
+                        pdf.cell(55, 8, format_currency_pdf(amt), 0, 1, "R", fill)
+        else:
+            pdf.set_font("Arial", "", 11)
+            pdf.set_text_color(100, 100, 100)
+            pdf.cell(0, 10, "No state/region data found in the selected dataset.", 0, 1)
+            pdf.set_text_color(0, 0, 0)
+
+    # 10. Customer Specific Enhancement: Material Group Preference
     if report_type == "Customer Wise":
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
@@ -2459,11 +2580,13 @@ def _generate_pdf_report_inner(
         else:
             insights.append(f"ORDER SIZE: Average order value is {format_currency_pdf(avg_order)} - strong per-order commitment.")
 
-    # Geographic insight
+    # Geographic insight (exclude placeholder values)
     if "STATE" in df.columns and not df.empty:
-        num_states = df["STATE"].nunique()
-        top_state = df.groupby("STATE")["AMOUNT"].sum().idxmax()
-        insights.append(f"GEOGRAPHY: Active across {num_states} states. Top state: {top_state}.")
+        _geo_df = df[~df["STATE"].astype(str).str.upper().str.contains("NOT FOUND", na=False)]
+        if not _geo_df.empty:
+            num_states = _geo_df["STATE"].nunique()
+            top_state = _geo_df.groupby("STATE")["AMOUNT"].sum().idxmax()
+            insights.append(f"GEOGRAPHY: Active across {num_states} states. Top state: {top_state}.")
 
     for insight in insights:
         _pdf_need_space(pdf, 14.0)

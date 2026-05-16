@@ -605,6 +605,27 @@ export default function ReportsPage() {
                                     </label>
                                 )}
 
+                                {selectedReport === "State Wise" && (
+                                    <div className="flex flex-col gap-1 rounded-lg border border-app-border bg-app-bg/60 px-4 py-3">
+                                        <label className="text-xs text-app-fg-muted font-medium">
+                                            Focus State <span className="text-app-fg-muted font-normal">(optional — show customer breakdown for one state)</span>
+                                        </label>
+                                        <select
+                                            value={filterState}
+                                            onChange={(e) => setFilterState(e.target.value)}
+                                            className="w-full bg-app-bg border border-app-border text-app-fg rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
+                                        >
+                                            <option value="All">All States (summary only)</option>
+                                            {stateOptions.map((s) => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                        </select>
+                                        <p className="text-xs text-app-fg-muted mt-1">
+                                            The report always includes the full state ranking. Selecting a state adds a customer-level breakdown for that state.
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="mt-4 rounded-lg border border-app-border/90 bg-app-bg/40 overflow-hidden">
                                     <button
                                         type="button"

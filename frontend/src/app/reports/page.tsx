@@ -525,10 +525,10 @@ export default function ReportsPage() {
             {activeTab === 'interactive' && (
                 <div className="space-y-6 animate-in fade-in duration-300">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <KpiCard title="Filtered Revenue" value={kpiData ? fmtCr(kpiData.revenue) : "0"} icon={DollarSign} />
-                        <KpiCard title="Total Orders" value={kpiData ? kpiData.orders?.toLocaleString() : "0"} icon={ShoppingCart} />
-                        <KpiCard title="Active Customers" value={kpiData ? kpiData.customers?.toLocaleString() : "0"} icon={Users} />
-                        <KpiCard title="Avg Order Value" value={kpiData ? fmt(kpiData.revenue / Math.max(kpiData.orders, 1)) : "0"} icon={TrendingUp} />
+                        <KpiCard title="Filtered Revenue" value={isLoadingInteractive ? "…" : kpiData ? fmtCr(kpiData.revenue) : "—"} icon={DollarSign} />
+                        <KpiCard title="Total Orders" value={isLoadingInteractive ? "…" : kpiData ? kpiData.orders?.toLocaleString() : "—"} icon={ShoppingCart} />
+                        <KpiCard title="Active Customers" value={isLoadingInteractive ? "…" : kpiData ? kpiData.customers?.toLocaleString() : "—"} icon={Users} />
+                        <KpiCard title="Avg Order Value" value={isLoadingInteractive ? "…" : kpiData ? fmt(kpiData.revenue / Math.max(kpiData.orders, 1)) : "—"} icon={TrendingUp} />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -540,6 +540,10 @@ export default function ReportsPage() {
                             {isLoadingInteractive ? (
                                 <div className="h-64 flex items-center justify-center">
                                     <Loader2 className="w-8 h-8 animate-spin text-app-gold" />
+                                </div>
+                            ) : materialData.length === 0 ? (
+                                <div className="h-40 flex items-center justify-center text-app-fg-muted text-sm">
+                                    No material data for the current filters.
                                 </div>
                             ) : (
                                 <DataTable
@@ -563,6 +567,10 @@ export default function ReportsPage() {
                             {isLoadingInteractive ? (
                                 <div className="h-64 flex items-center justify-center">
                                     <Loader2 className="w-8 h-8 animate-spin text-app-gold" />
+                                </div>
+                            ) : itemData.length === 0 ? (
+                                <div className="h-40 flex items-center justify-center text-app-fg-muted text-sm">
+                                    No item data for the current filters.
                                 </div>
                             ) : (
                                 <DataTable

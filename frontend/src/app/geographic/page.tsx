@@ -76,14 +76,14 @@ export default function GeographicPage() {
 
     const tableCities = useMemo(() => {
         return validCities.map((c: any) => {
-            const cityKey = Object.keys(c).find(k => !['Revenue', 'Customers'].includes(k)) || 'CITY';
+            const cityKey = ['CITY', 'CITY_NAME', 'CityName', 'city'].find(k => k in c) || Object.keys(c).find(k => !['Revenue', 'Customers', 'Orders'].includes(k)) || 'CITY';
             return { ...c, CityName: c[cityKey] || 'Unknown' };
         });
     }, [validCities]);
 
     const drilldownTableCities = useMemo(() => {
         return drilldownCities.map((c: any) => {
-            const cityKey = Object.keys(c).find(k => !['Revenue', 'Customers'].includes(k)) || 'CITY';
+            const cityKey = ['CITY', 'CITY_NAME', 'CityName', 'city'].find(k => k in c) || Object.keys(c).find(k => !['Revenue', 'Customers', 'Orders'].includes(k)) || 'CITY';
             return { ...c, CityName: c[cityKey] || 'Unknown' };
         });
     }, [drilldownCities]);

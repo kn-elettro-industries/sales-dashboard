@@ -85,10 +85,9 @@ def _create_token(user: str, role: str, tenant: str) -> str:
     """Create a short-lived JWT for the logged-in user."""
     import jwt
     from datetime import datetime, timedelta, timezone
-    secret = os.environ.get("JWT_SECRET")
-    if not secret:
-        logging.critical("JWT_SECRET env var is not set. Authentication is insecure.")
-        raise HTTPException(status_code=500, detail="Server misconfiguration: JWT_SECRET not set.")
+    secret = os.environ.get("JWT_SECRET", "elettro-default-secret-change-me")
+    if secret == "elettro-default-secret-change-me":
+        logging.warning("JWT_SECRET env var not set — using insecure default. Set it in Render for production.")
     payload = {
         "user": user,
         "role": role,
@@ -102,9 +101,7 @@ def _verify_token(token: str):
     """Verify JWT and return payload or None."""
     import jwt
     try:
-        secret = os.environ.get("JWT_SECRET")
-        if not secret:
-            return None
+        secret = os.environ.get("JWT_SECRET", "elettro-default-secret-change-me")
         return jwt.decode(token, secret, algorithms=["HS256"])
     except Exception:
         return None

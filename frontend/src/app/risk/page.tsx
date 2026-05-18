@@ -27,6 +27,7 @@ export default function RiskPage() {
                 materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
                 fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
                 months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+                items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
             };
 
             try {

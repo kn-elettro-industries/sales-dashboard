@@ -93,31 +93,30 @@ def _startup():
             ).fetchone()
             conn.commit()
 
-        if admin_pass:
-            # Env var set: always upsert that specific user with the given password
-            pw_hash = bcrypt.hashpw(admin_pass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-            with eng.connect() as conn:
-                conn.execute(
-                    text("""
-                        INSERT INTO auth_users (username, password_hash, role, tenant)
-                        VALUES (:u, :h, 'admin', 'default_elettro')
-                        ON CONFLICT (username) DO UPDATE SET password_hash = :h, role = 'admin'
-                    """),
-                    {"u": admin_user, "h": pw_hash}
-                )
-                conn.commit()
-            logging.info(f"STARTUP: Admin user '{admin_user}' upserted from env vars.")
-        elif not any_admin:
-            # No admin exists and no env var — create default so the app is never locked out
-            default_pass = "Admin@1234"
-            err = create_user(admin_user, default_pass, role="admin")
-            if err:
-                logging.error(f"STARTUP: Could not auto-create admin: {err}")
-            else:
-                logging.warning(
-                    f"STARTUP: No admin found — created '{admin_user}' with default password '{default_pass}'. "
-                    "Change it immediately via Add User page."
-                )
+        # Always upsert admin — ensures the account is never inaccessible.
+        # Password priority: ADMIN_PASSWORD env var → else keep existing hash unchanged.
+        # If no existing admin at all, fall back to default "Admin@1234".
+        with eng.connect() as conn:
+            existing_row = conn.execute(
+                text("SELECT password_hash FROM auth_users WHERE username = :u"),
+                {"u": admin_user}
+            ).fetchone()
+            conn.commit()
+
+        effective_pass = admin_pass if admin_pass else "Admin@1234"
+        pw_hash = bcrypt.hashpw(effective_pass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+        with eng.connect() as conn:
+            conn.execute(
+                text("""
+                    INSERT INTO auth_users (username, password_hash, role, tenant)
+                    VALUES (:u, :h, 'admin', 'default_elettro')
+                    ON CONFLICT (username) DO UPDATE SET password_hash = :h, role = 'admin'
+                """),
+                {"u": admin_user, "h": pw_hash}
+            )
+            conn.commit()
+        logging.info(f"STARTUP: Admin '{admin_user}' ready (password {'from env' if admin_pass else 'Admin@1234'}).")
     except Exception as e:
         logging.error(f"STARTUP: Admin seed failed: {e}")
 

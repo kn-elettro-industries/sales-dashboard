@@ -9,6 +9,7 @@ import { FilterProvider } from "@/components/FilterContext";
 import { useAuth } from "@/components/AuthContext";
 import { OnboardingBanner } from "@/components/OnboardingBanner";
 import { ClientKeyboardShortcuts } from "@/components/ClientKeyboardShortcuts";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -52,7 +53,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                 <OnboardingBanner />
                 <ClientKeyboardShortcuts />
                 <div className="p-8 flex-1 overflow-y-auto">
-                    {children}
+                    <ErrorBoundary>{children}</ErrorBoundary>
                 </div>
             </main>
             <ChatWidget />

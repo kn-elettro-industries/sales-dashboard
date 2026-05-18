@@ -52,8 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: username.trim(), password }),
             });
-            if (!res.ok) return false;
             const data = await res.json();
+            if (!res.ok) throw new Error(data?.detail || "Invalid credentials");
+
             const u = { user: data.user, role: data.role || "viewer", tenant: data.tenant || "default_elettro" };
             setUser(u);
             localStorage.setItem(AUTH_KEY, JSON.stringify(u));

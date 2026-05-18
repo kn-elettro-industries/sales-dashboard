@@ -70,9 +70,46 @@ app.include_router(api_router, prefix="/api")
 
 @app.on_event("startup")
 def _startup():
-    """Startup: log that server is ready. Data loads on first request to keep RAM low."""
+    """Startup: log that server is ready. Seed admin user from env vars if set."""
     import logging
     logging.info("ELETTRO API started. Data will load on first dashboard request.")
+    # Auto-seed admin user from ADMIN_USERNAME / ADMIN_PASSWORD env vars.
+    # Set these in Render → Environment to reset or create the admin account on deploy.
+    admin_user = os.environ.get("ADMIN_USERNAME", "").strip()
+    admin_pass = os.environ.get("ADMIN_PASSWORD", "").strip()
+    if admin_user and admin_pass:
+        try:
+            from api.db import create_user, get_engine
+            from sqlalchemy import text
+            eng = get_engine()
+            if eng:
+                with eng.connect() as conn:
+                    from api.db import _ensure_auth_users_table
+                    _ensure_auth_users_table(conn)
+                    existing = conn.execute(
+                        text("SELECT username FROM auth_users WHERE username = :u"),
+                        {"u": admin_user.lower()}
+                    ).fetchone()
+                    conn.commit()
+                if existing:
+                    # Update password
+                    import bcrypt
+                    pw_hash = bcrypt.hashpw(admin_pass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+                    with eng.connect() as conn:
+                        conn.execute(
+                            text("UPDATE auth_users SET password_hash = :h, role = 'admin' WHERE username = :u"),
+                            {"h": pw_hash, "u": admin_user.lower()}
+                        )
+                        conn.commit()
+                    logging.info(f"STARTUP: Admin user '{admin_user}' password updated from env.")
+                else:
+                    err = create_user(admin_user, admin_pass, role="admin")
+                    if err:
+                        logging.error(f"STARTUP: Could not create admin user: {err}")
+                    else:
+                        logging.info(f"STARTUP: Admin user '{admin_user}' created from env.")
+        except Exception as e:
+            logging.error(f"STARTUP: Admin seed failed: {e}")
 
 
 @app.api_route("/", methods=["GET", "HEAD"])

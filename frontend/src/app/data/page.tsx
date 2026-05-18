@@ -157,8 +157,9 @@ export default function DataUploadPage() {
                             if (!confirm("This will DELETE all sales data for this tenant. You will need to re-upload your Excel files. Continue?")) return;
                             const formData = new FormData();
                             formData.append("tenant_id", tenant);
+                            const tok = localStorage.getItem("elettro_token") || "";
                             try {
-                                const res = await fetch(`${API_BASE_URL}/data/clear`, { method: "POST", body: formData });
+                                const res = await fetch(`${API_BASE_URL}/data/clear`, { method: "POST", body: formData, headers: { Authorization: `Bearer ${tok}` } });
                                 const data = await res.json();
                                 if (res.ok) {
                                     setMasterMsg(`Cleared ${data.deleted_rows} rows. Now upload your customer master, then re-upload sales files.`);

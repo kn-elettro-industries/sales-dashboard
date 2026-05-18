@@ -149,6 +149,7 @@ export default function ReportsPage() {
     // Load Interactive Data
     useEffect(() => {
         if (activeTab !== 'interactive') return;
+        let cancelled = false;
 
         const loadDocs = async () => {
             setIsLoadingInteractive(true);
@@ -158,18 +159,19 @@ export default function ReportsPage() {
                     fetchMaterialPerformance(baseReportParams),
                     fetchItemDetails(baseReportParams),
                 ]);
-
+                if (cancelled) return;
                 setKpiData(kpis);
                 setMaterialData(mats || []);
                 setItemData(items || []);
             } catch (e) {
-                console.error("Failed to load interactive report data", e);
+                if (!cancelled) console.error("Failed to load interactive report data", e);
             } finally {
-                setIsLoadingInteractive(false);
+                if (!cancelled) setIsLoadingInteractive(false);
             }
         };
 
         loadDocs();
+        return () => { cancelled = true; };
     }, [activeTab, baseReportParams]);
 
     // Load Advanced Options once

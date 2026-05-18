@@ -785,6 +785,7 @@ def download_pdf_report(
     specific_entity: Optional[str] = None,
     filter_customer: Optional[str] = None,
     filter_state: Optional[str] = None,
+    filter_city: Optional[str] = None,
     filter_material: Optional[str] = None,
     # Global filter bar params
     states: Optional[str] = None,
@@ -878,6 +879,7 @@ def download_pdf_report(
                 specific_entity,
                 filter_customer,
                 filter_state,
+                filter_city,
                 filter_material,
                 customers=customers,
                 states=states,
@@ -1690,7 +1692,7 @@ def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str]
     return serialize_df(state)
 
 @router.get("/geographic/cities")
-def get_city_data(tenant_id: str = "default_elettro", limit: int = 20, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
+def get_city_data(tenant_id: str = "default_elettro", limit: int = 500, start_date: Optional[str] = None, end_date: Optional[str] = None, states: Optional[str] = None, cities: Optional[str] = None, customers: Optional[str] = None, material_groups: Optional[str] = None, fiscal_years: Optional[str] = None, months: Optional[str] = None, items: Optional[str] = None):
     df = get_tenant_data(tenant_id, start_date, end_date)
     df = apply_filters(df, states, cities, customers, material_groups, fiscal_years, months, items)
     col = "CITY" if "CITY" in df.columns else "STATE"

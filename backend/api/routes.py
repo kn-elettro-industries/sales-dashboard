@@ -1701,6 +1701,9 @@ def get_city_data(tenant_id: str = "default_elettro", limit: int = 500, start_da
     df = df.copy()
     df[col] = df[col].astype(str).str.strip()
     df = df[df[col].str.len() > 0]
+    df = df[~df[col].str.upper().str.contains("NOT FOUND", na=False)]
+    if df.empty:
+        return []
     key_col = "_GEO_KEY"
     df[key_col] = df[col].str.upper()
     city = df.groupby(key_col).agg(

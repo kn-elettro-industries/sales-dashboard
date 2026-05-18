@@ -1,44 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 108" role="img" aria-label="KN Elettro Industries">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 116" role="img" aria-label="ELETTRO">
 
   <!-- ── Circular connector emblem ── -->
-  <circle cx="54" cy="54" r="50" stroke="#D4920A" stroke-width="5" fill="white"/>
 
-  <!-- 4 parallel cable lines inside circle -->
-  <g stroke="#1C1C1C" stroke-width="5" stroke-linecap="round">
-    <line x1="10" y1="38" x2="70" y2="38"/>
-    <line x1="10" y1="50" x2="70" y2="50"/>
-    <line x1="10" y1="62" x2="70" y2="62"/>
-    <line x1="10" y1="74" x2="70" y2="74"/>
-  </g>
+  <!-- Dark interior fill -->
+  <circle cx="58" cy="58" r="50" fill="#111111"/>
+
+  <!-- Gold outer ring -->
+  <circle cx="58" cy="58" r="50" stroke="#D4920A" stroke-width="7" fill="none"/>
+
+  <!-- Inner ring accent (subtle separator) -->
+  <circle cx="58" cy="58" r="41" stroke="#D4920A" stroke-width="1.5" fill="none" opacity="0.35"/>
+
+  <!-- 4 parallel cable lines (silver/gray), left portion of circle -->
+  <line x1="12" y1="43" x2="66" y2="43" stroke="#9AA0A8" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="12" y1="52" x2="66" y2="52" stroke="#9AA0A8" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="12" y1="61" x2="66" y2="61" stroke="#9AA0A8" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="12" y1="70" x2="66" y2="70" stroke="#9AA0A8" stroke-width="4.5" stroke-linecap="round"/>
 
   <!-- Gold right-pointing chevron (connector arrow) -->
-  <polyline points="62,34 86,54 62,74"
+  <polyline points="62,37 90,58 62,79"
             stroke="#D4920A" stroke-width="9"
             stroke-linecap="round" stroke-linejoin="round"
             fill="none"/>
 
-  <!-- ── ELETTRO wordmark: EL black, ETTRO gold ── -->
-  <text x="118" y="76"
-        font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif"
+  <!-- ── Wordmark ── -->
+  <!-- "EL" in dark, "ETTRO" in gold — both heavy weight -->
+  <text x="130" y="82"
+        font-family="'Arial Black', 'Impact', 'Helvetica Neue', Arial, sans-serif"
         font-weight="900"
-        font-size="62">
-    <tspan fill="#1C1C1C">EL</tspan><tspan fill="#D4920A">ETTRO</tspan>
+        font-size="68"
+        letter-spacing="-1">
+    <tspan fill="#141414">EL</tspan><tspan fill="#D4920A">ETTRO</tspan>
   </text>
 
   <!-- ® superscript -->
-  <text x="418" y="28"
-        font-family="Arial,Helvetica,sans-serif"
-        font-size="18"
-        fill="#666666">®</text>
+  <text x="506" y="26"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="19"
+        fill="#AAAAAA">®</text>
 
-  <!-- Gold underline -->
-  <rect x="118" y="81" width="302" height="3.5" fill="#D4920A" rx="1"/>
+  <!-- Gold underline bar -->
+  <rect x="130" y="90" width="384" height="4" fill="#D4920A" rx="2"/>
 
   <!-- Tagline -->
-  <text x="118" y="100"
-        font-family="Arial,Helvetica,sans-serif"
-        font-size="12"
-        fill="#555555"
-        font-style="italic">Strong Connections, Stronger Performance....</text>
+  <text x="130" y="110"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="12.5"
+        fill="#AAAAAA"
+        font-style="italic"
+        letter-spacing="0.2">Strong Connections, Stronger Performance....</text>
 
 </svg>

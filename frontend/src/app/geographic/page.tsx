@@ -8,7 +8,7 @@ import { fetchStateData, fetchCityData } from "@/lib/api";
 import { BarChart } from "@/components/ui/Charts";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
-import { MapPin, Building2, Globe, TrendingUp, ChevronLeft } from "lucide-react";
+import { MapPin, Building2, Globe, TrendingUp, ChevronLeft, Loader2 } from "lucide-react";
 import { formatAmount, formatCr } from "@/lib/format";
 import dynamic from "next/dynamic";
 
@@ -20,65 +20,79 @@ export default function GeographicPage() {
     const [data, setData] = useState<any>({ states: [], cities: [] });
     const [loading, setLoading] = useState(true);
     const [drilldownState, setDrilldownState] = useState<string | null>(null);
+    const [drilldownCities, setDrilldownCities] = useState<any[]>([]);
+    const [drilldownLoading, setDrilldownLoading] = useState(false);
+
+    const baseParams = useMemo(() => ({
+        tenant,
+        startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+        endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+        states: selectedStates.length > 0 ? selectedStates.join(',') : undefined,
+        cities: selectedCities.length > 0 ? selectedCities.join(',') : undefined,
+        customers: selectedCustomers.length > 0 ? selectedCustomers.join(',') : undefined,
+        materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
+        fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
+        months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+        items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
+    }), [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
 
     useEffect(() => {
+        let cancelled = false;
         async function loadData() {
             setLoading(true);
-            const p = {
-                tenant,
-                startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
-                endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
-                states: selectedStates.length > 0 ? selectedStates.join(',') : undefined,
-                cities: selectedCities.length > 0 ? selectedCities.join(',') : undefined,
-                customers: selectedCustomers.length > 0 ? selectedCustomers.join(',') : undefined,
-                materialGroups: selectedMaterialGroups.length > 0 ? selectedMaterialGroups.join(',') : undefined,
-                fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
-                months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
-                items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
-            };
-
             try {
                 const [states, cities] = await Promise.all([
-                    fetchStateData(p).catch(() => []),
-                    fetchCityData(p).catch(() => []),
+                    fetchStateData(baseParams).catch(() => []),
+                    fetchCityData(baseParams).catch(() => []),
                 ]);
-                setData({ states, cities });
+                if (!cancelled) setData({ states, cities });
             } catch (e) {
                 console.error("Failed to fetch geographic data", e);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         }
-
         loadData();
-    }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
+        return () => { cancelled = true; };
+    }, [baseParams]);
+
+    // Fetch cities filtered to the drilled-down state
+    useEffect(() => {
+        if (!drilldownState) {
+            setDrilldownCities([]);
+            return;
+        }
+        let cancelled = false;
+        setDrilldownLoading(true);
+        fetchCityData({ ...baseParams, states: drilldownState })
+            .then((cities) => { if (!cancelled) setDrilldownCities(Array.isArray(cities) ? cities : []); })
+            .catch(() => { if (!cancelled) setDrilldownCities([]); })
+            .finally(() => { if (!cancelled) setDrilldownLoading(false); });
+        return () => { cancelled = true; };
+    }, [drilldownState, baseParams]);
 
     const validStates = Array.isArray(data.states) ? data.states : [];
     const validCities = Array.isArray(data.cities) ? data.cities : [];
 
-    const tableCities = React.useMemo(() => {
+    const tableCities = useMemo(() => {
         return validCities.map((c: any) => {
             const cityKey = Object.keys(c).find(k => !['Revenue', 'Customers'].includes(k)) || 'CITY';
-            return {
-                ...c,
-                CityName: c[cityKey] || 'Unknown'
-            };
+            return { ...c, CityName: c[cityKey] || 'Unknown' };
         });
     }, [validCities]);
+
+    const drilldownTableCities = useMemo(() => {
+        return drilldownCities.map((c: any) => {
+            const cityKey = Object.keys(c).find(k => !['Revenue', 'Customers'].includes(k)) || 'CITY';
+            return { ...c, CityName: c[cityKey] || 'Unknown' };
+        });
+    }, [drilldownCities]);
 
     const fmt = formatAmount;
     const fmtCrVal = formatCr;
 
     const topState = validStates.length > 0 ? validStates[0] : null;
     const totalRevenue = validStates.reduce((sum: number, s: any) => sum + (s.Revenue || 0), 0);
-
-    // Drilldown data
-    const drilldownData = drilldownState
-        ? validCities.filter((c: any) => {
-            // If cities have state info, filter by state. Otherwise show all.
-            return true;
-        })
-        : [];
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
@@ -89,10 +103,10 @@ export default function GeographicPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <KpiCard title="Active States" value={validStates.length.toString()} icon={Globe} />
-                <KpiCard title="Active Cities" value={validCities.length.toString()} icon={Building2} />
-                <KpiCard title="Top State" value={topState?.STATE || 'N/A'} icon={MapPin} />
-                <KpiCard title="Avg Revenue/State" value={validStates.length > 0 ? fmtCrVal(totalRevenue / validStates.length) : '₹ 0'} icon={TrendingUp} />
+                <KpiCard title="Active States" value={validStates.length.toString()} icon={Globe} animationDelay={0} />
+                <KpiCard title="Active Cities" value={validCities.length.toString()} icon={Building2} animationDelay={75} />
+                <KpiCard title="Top State" value={topState?.STATE || 'N/A'} icon={MapPin} animationDelay={150} />
+                <KpiCard title="Avg Revenue/State" value={validStates.length > 0 ? fmtCrVal(totalRevenue / validStates.length) : '₹ 0'} icon={TrendingUp} animationDelay={225} />
             </div>
 
             {/* Interactive National Map */}
@@ -100,7 +114,7 @@ export default function GeographicPage() {
                 <div className="bg-app-card border border-app-border rounded-xl p-6">
                     <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">
                         National Sales Map
-                        <span className="text-sm font-normal text-app-fg-muted ml-2">Click a state to view details</span>
+                        <span className="text-sm font-normal text-app-fg-muted ml-2">Click a state to view city details</span>
                     </h3>
                     {validStates.length > 0 ? (
                         <IndiaMap
@@ -114,48 +128,110 @@ export default function GeographicPage() {
             )}
 
             {/* State Drilldown View */}
-            {drilldownState && (
-                <div className="bg-app-card border border-app-border rounded-xl p-6">
-                    <div className="flex items-center justify-between border-b border-app-border pb-4 mb-4">
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setDrilldownState(null)}
-                                className="flex items-center text-sm text-app-gold hover:underline"
-                            >
-                                <ChevronLeft className="h-4 w-4 mr-1" />
-                                Back to National View
-                            </button>
-                            <h3 className="text-lg font-semibold text-app-fg">
-                                {drilldownState} — State Details
-                            </h3>
-                        </div>
-                    </div>
-
-                    {(() => {
-                        const stateInfo = validStates.find(
-                            (s: any) =>
-                                String(s?.STATE ?? "").toLowerCase() === String(drilldownState ?? "").toLowerCase()
-                        );
-                        if (!stateInfo) return <div className="text-app-fg-muted">No data for this state</div>;
-                        return (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div className="bg-app-bg border border-app-border rounded-lg p-4">
-                                    <div className="text-xs text-app-fg-muted uppercase mb-1">State Revenue</div>
-                                    <div className="text-xl font-bold text-app-fg">{fmtCrVal(stateInfo.Revenue)}</div>
-                                </div>
-                                <div className="bg-app-bg border border-app-border rounded-lg p-4">
-                                    <div className="text-xs text-app-fg-muted uppercase mb-1">Market Share</div>
-                                    <div className="text-xl font-bold text-app-gold">{stateInfo.MarketShare ?? 0}%</div>
-                                </div>
-                                <div className="bg-app-bg border border-app-border rounded-lg p-4">
-                                    <div className="text-xs text-app-fg-muted uppercase mb-1">Total Orders</div>
-                                    <div className="text-xl font-bold text-app-fg">{stateInfo.Orders?.toLocaleString()}</div>
+            {drilldownState && (() => {
+                const stateInfo = validStates.find(
+                    (s: any) => String(s?.STATE ?? "").toLowerCase() === String(drilldownState ?? "").toLowerCase()
+                );
+                return (
+                    <div className="space-y-6">
+                        {/* Drilldown header */}
+                        <div className="bg-app-card border border-app-border rounded-xl p-6">
+                            <div className="flex items-center justify-between border-b border-app-border pb-4 mb-6">
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setDrilldownState(null)}
+                                        className="flex items-center gap-1 text-sm text-app-gold hover:underline"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        Back to National View
+                                    </button>
+                                    <span className="text-app-fg-muted">|</span>
+                                    <h3 className="text-lg font-semibold text-app-fg flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-app-gold" />
+                                        {drilldownState}
+                                    </h3>
                                 </div>
                             </div>
-                        );
-                    })()}
-                </div>
-            )}
+
+                            {/* State KPI Cards — use same visual as KpiCard */}
+                            {stateInfo ? (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="bg-app-bg border border-app-border rounded-xl p-5 hover:border-app-border-strong transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-medium text-app-fg-muted">State Revenue</p>
+                                            <div className="p-2 rounded-lg bg-app-muted border border-app-border">
+                                                <TrendingUp className="h-4 w-4 text-app-gold" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-app-fg tracking-tight mt-4">{fmtCrVal(stateInfo.Revenue)}</h3>
+                                    </div>
+                                    <div className="bg-app-bg border border-app-border rounded-xl p-5 hover:border-app-border-strong transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-medium text-app-fg-muted">Market Share</p>
+                                            <div className="p-2 rounded-lg bg-app-muted border border-app-border">
+                                                <Globe className="h-4 w-4 text-app-gold" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-app-gold tracking-tight mt-4">{stateInfo.MarketShare ?? 0}%</h3>
+                                    </div>
+                                    <div className="bg-app-bg border border-app-border rounded-xl p-5 hover:border-app-border-strong transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-medium text-app-fg-muted">Total Orders</p>
+                                            <div className="p-2 rounded-lg bg-app-muted border border-app-border">
+                                                <Building2 className="h-4 w-4 text-app-gold" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-app-fg tracking-tight mt-4">{stateInfo.Orders?.toLocaleString() ?? '—'}</h3>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-app-fg-muted">No state summary available.</p>
+                            )}
+                        </div>
+
+                        {/* City breakdown for selected state */}
+                        <div className="bg-app-card border border-app-border rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4 flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-app-gold" />
+                                Cities in {drilldownState}
+                            </h3>
+                            {drilldownLoading ? (
+                                <div className="h-48 flex items-center justify-center text-app-fg-muted gap-2">
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    Loading city data...
+                                </div>
+                            ) : drilldownTableCities.length > 0 ? (
+                                <div className="space-y-6">
+                                    <BarChart data={drilldownTableCities.slice(0, 15)} xKey="CityName" yKey="Revenue" />
+                                    <DataTable
+                                        data={drilldownTableCities}
+                                        searchable={true}
+                                        searchPlaceholder="Search cities..."
+                                        searchKeys={['CityName']}
+                                        pageSizeOptions={[5, 10, 20]}
+                                        defaultPageSize={10}
+                                        columns={[
+                                            { header: 'City', accessorKey: 'CityName', sortable: true },
+                                            {
+                                                header: 'Revenue',
+                                                accessorKey: 'Revenue',
+                                                sortable: true,
+                                                align: 'right',
+                                                cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
+                                            },
+                                            { header: 'Customers', accessorKey: 'Customers', sortable: true, align: 'right' }
+                                        ]}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="h-48 flex items-center justify-center text-app-fg-muted">
+                                    No city data for {drilldownState}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* State Revenue Rankings */}
             <div className="bg-app-card border border-app-border rounded-xl p-6">

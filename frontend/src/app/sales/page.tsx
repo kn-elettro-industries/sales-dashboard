@@ -95,7 +95,7 @@ export default function SalesPage() {
                     pageSizeOptions={[12, 24]}
                     defaultPageSize={12}
                     columns={[
-                        { header: 'Month', accessorKey: 'MONTH', sortable: false }, // Month sorting requires custom logic or parsing, disabling for simplicity
+                        { header: 'Month', accessorKey: 'MONTH', sortable: true },
                         {
                             header: 'Revenue',
                             accessorKey: 'Revenue',

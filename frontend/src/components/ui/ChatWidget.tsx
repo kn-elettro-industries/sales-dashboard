@@ -28,6 +28,8 @@ export default function ChatWidget() {
         setIsLoading(true);
 
         try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 30000);
             const res = await fetch(`${API_BASE_URL}/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -36,15 +38,22 @@ export default function ChatWidget() {
                     tenant: tenant,
                     startDate: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
                     endDate: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
-                })
+                }),
+                signal: controller.signal,
             });
+            clearTimeout(timeout);
 
             if (!res.ok) throw new Error("Failed to reach AI");
             const data = await res.json();
-
-            setMessages(prev => [...prev, { role: 'bot', content: data.response }]);
-        } catch (err) {
-            setMessages(prev => [...prev, { role: 'bot', content: "⚠️ Sorry, I encountered an error connecting to the intelligence engine." }]);
+            const reply = typeof data?.response === "string" && data.response.trim()
+                ? data.response
+                : "No response received from the intelligence engine.";
+            setMessages(prev => [...prev, { role: 'bot', content: reply }]);
+        } catch (err: any) {
+            const msg = err?.name === "AbortError"
+                ? "⚠️ Request timed out. The AI engine is taking too long to respond."
+                : "⚠️ Sorry, I encountered an error connecting to the intelligence engine.";
+            setMessages(prev => [...prev, { role: 'bot', content: msg }]);
         } finally {
             setIsLoading(false);
         }

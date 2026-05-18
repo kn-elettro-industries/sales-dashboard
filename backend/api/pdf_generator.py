@@ -1762,7 +1762,6 @@ def _generate_pdf_report_inner(
     Figure, FigureCanvas, cm,
 ) -> bytes:
     import sys
-    print("PDF_GEN - ENTERED generate_pdf_report", flush=True); sys.stdout.flush()
 
     # UI / API may send alternate labels; normalize so filters match and layout is consistent
     _rt_raw = (report_type or "").strip()
@@ -1815,7 +1814,6 @@ def _generate_pdf_report_inner(
             nm = df["STATE"].astype(str).str.strip().str.upper()
             df = df[nm == se.upper()]
 
-    print("PDF_GEN - Filters applied. Creating PDF object...", flush=True); sys.stdout.flush()
     # Use the df provided. Don't filter since FastAPI applies frontend filters before passing this DF.
     pdf = PDF()
     pdf.alias_nb_pages()
@@ -1835,7 +1833,6 @@ def _generate_pdf_report_inner(
         fiscal_years=fiscal_years,
     )
 
-    print("PDF_GEN - Creating cover page...", flush=True); sys.stdout.flush()
     t_cap, t_left, t_right = _cover_timeline_from_params(
         start_date, end_date, months, fiscal_years, df,
     )
@@ -1846,7 +1843,6 @@ def _generate_pdf_report_inner(
         timeline_start=t_left,
         timeline_end=t_right,
     )
-    print("PDF_GEN - Cover page done. Adding main page...", flush=True); sys.stdout.flush()
     
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=22)
@@ -1877,13 +1873,11 @@ def _generate_pdf_report_inner(
     _df_fy = _ensure_financial_year_column(df)
 
     # 2. KPI Grid 
-    print("PDF Gen - Calculating KPIs...")
     total_rev = df["AMOUNT"].sum() if "AMOUNT" in df.columns else 0
     total_orders = df["INVOICE_NO"].nunique() if "INVOICE_NO" in df.columns else 0
     total_qty = df["QUANTITY"].sum() if "QUANTITY" in df.columns else 0
     avg_order = total_rev / total_orders if total_orders > 0 else 0
 
-    print("PDF Gen - Adding KPI Grid to PDF...")
     pdf.set_font("Arial", 'B', 14)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 10, "1. Executive Summary", 0, 1)
@@ -1919,7 +1913,6 @@ def _generate_pdf_report_inner(
     pdf.set_y(y_start + box_height + 10)
 
     # 3. Monthly Trend Graph (limit to last 24 months for speed)
-    print("PDF_GEN - Starting Monthly Trend Graph...", flush=True); sys.stdout.flush()
     if "MONTH" in df.columns and "AMOUNT" in df.columns:
         trend = df.groupby("MONTH")["AMOUNT"].sum().reset_index()
         try:
@@ -1951,9 +1944,7 @@ def _generate_pdf_report_inner(
                 ax.annotate(format_currency_pdf(y), (x, y), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=7,
                             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#dddddd", alpha=0.8))
 
-        print("PDF_GEN - Saving trend chart...", flush=True); sys.stdout.flush()
         img_path = create_chart(fig)
-        print("PDF_GEN - Trend chart saved.", flush=True); sys.stdout.flush()
         
         _pdf_need_space(pdf, 118.0)
         pdf.set_font("Arial", 'B', 12)
@@ -1962,7 +1953,6 @@ def _generate_pdf_report_inner(
         os.remove(img_path)
         pdf.ln(5)
 
-    print("PDF_GEN - Starting Page 2: Distribution...", flush=True); sys.stdout.flush()
     # --- Page 2+: Distribution (category pie optional) ---
     pdf.add_page()
     grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
@@ -2005,7 +1995,6 @@ def _generate_pdf_report_inner(
         _pdf_section_rule(pdf)
         pie_drawn = True
 
-    print("PDF_GEN - Starting Horizontal Bar chart...", flush=True); sys.stdout.flush()
     # Top 10 bar: new page only after a pie chart (otherwise use the same page)
     if pie_drawn:
         pdf.add_page()

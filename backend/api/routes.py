@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response, Request
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Response, Request, Header
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 import logging
@@ -85,7 +85,10 @@ def _create_token(user: str, role: str, tenant: str) -> str:
     """Create a short-lived JWT for the logged-in user."""
     import jwt
     from datetime import datetime, timedelta, timezone
-    secret = os.environ.get("JWT_SECRET", "elettro-dev-secret-change-in-production")
+    secret = os.environ.get("JWT_SECRET")
+    if not secret:
+        logging.critical("JWT_SECRET env var is not set. Authentication is insecure.")
+        raise HTTPException(status_code=500, detail="Server misconfiguration: JWT_SECRET not set.")
     payload = {
         "user": user,
         "role": role,
@@ -99,7 +102,9 @@ def _verify_token(token: str):
     """Verify JWT and return payload or None."""
     import jwt
     try:
-        secret = os.environ.get("JWT_SECRET", "elettro-dev-secret-change-in-production")
+        secret = os.environ.get("JWT_SECRET")
+        if not secret:
+            return None
         return jwt.decode(token, secret, algorithms=["HS256"])
     except Exception:
         return None
@@ -547,10 +552,14 @@ def _merge_customer_master(df: pd.DataFrame, tenant_id: str) -> pd.DataFrame:
 
 
 @router.post("/data/clear")
-def clear_data(tenant_id: str = Form("default_elettro")):
+def clear_data(tenant_id: str = Form("default_elettro"), authorization: Optional[str] = Header(None)):
     """Clear all sales data for a tenant so it can be re-uploaded with enrichment."""
+    payload = _verify_token(authorization.replace("Bearer ", "") if authorization else "")
+    if not payload or payload.get("role") not in ("admin", "superadmin"):
+        raise HTTPException(status_code=403, detail="Admin access required to clear data.")
     from .db import clear_tenant_data
     deleted = clear_tenant_data(tenant_id)
+    logging.warning(f"DATA CLEARED: tenant={tenant_id}, deleted={deleted}, by={payload.get('user')}")
     return {"deleted_rows": deleted, "tenant": tenant_id}
 
 
@@ -1034,10 +1043,12 @@ def get_filter_options(
     # Exclude placeholders; collapse "Pune" / "PUNE" / spacing variants so picklists do not show duplicates
     states = _unique_labels_ci(df["STATE"], exclude_substr=("NOT FOUND",)) if "STATE" in df.columns else []
     cities = _unique_labels_ci(df["CITY"], exclude_substr=("NOT FOUND", "UNKNOWN")) if "CITY" in df.columns else []
-    customers = sorted(df["CUSTOMER_NAME"].dropna().unique().tolist()) if "CUSTOMER_NAME" in df.columns else []
-    
+    _CUST_CAP = 2000
+    customers = sorted(df["CUSTOMER_NAME"].dropna().unique().tolist())[:_CUST_CAP] if "CUSTOMER_NAME" in df.columns else []
+
+    _MG_CAP = 500
     grp_col = _material_group_column(df)
-    material_group_choices = sorted(df[grp_col].dropna().unique().tolist()) if grp_col else []
+    material_group_choices = sorted(df[grp_col].dropna().unique().tolist())[:_MG_CAP] if grp_col else []
     
     fiscal_years = sorted(df["FINANCIAL_YEAR"].dropna().unique().tolist()) if "FINANCIAL_YEAR" in df.columns else []
     months = []
@@ -1047,7 +1058,7 @@ def get_filter_options(
             month_df = pd.DataFrame({"MONTH": unique_months})
             month_df["SortKey"] = month_df["MONTH"].map(parse_month_label_for_sort)
             months = month_df.sort_values("SortKey")["MONTH"].tolist()
-        except:
+        except Exception:
             months = sorted(df["MONTH"].dropna().unique().tolist())
 
     _ITEM_CAP = 4000
@@ -1671,7 +1682,8 @@ def get_state_data(tenant_id: str = "default_elettro", start_date: Optional[str]
         from shared.geo_data import STATE_COORDS
         state["lat"] = state["STATE"].map(lambda x: STATE_COORDS.get(str(x).strip(), [20.5937, 78.9629])[0])
         state["lon"] = state["STATE"].map(lambda x: STATE_COORDS.get(str(x).strip(), [20.5937, 78.9629])[1])
-    except:
+    except Exception:
+        logging.warning("geo_data import failed; using India centre coords as fallback.")
         state["lat"] = 20.5937
         state["lon"] = 78.9629
     

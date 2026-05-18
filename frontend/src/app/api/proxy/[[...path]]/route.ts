@@ -114,7 +114,6 @@ async function proxy(
         return new NextResponse(null, { status: res.status, statusText: res.statusText, headers: resHeaders });
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        console.error("[proxy]", message, e);
-        return NextResponse.json({ error: "Backend unreachable", message }, { status: 502 });
+        return NextResponse.json({ detail: "Backend unreachable", message }, { status: 502 });
     }
 }

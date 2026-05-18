@@ -101,7 +101,23 @@ export default function MaterialsPage() {
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">ABC Classification (Pareto)</h3>
+                <div className="flex items-start justify-between flex-wrap gap-4 border-b border-app-border pb-4 mb-4">
+                    <h3 className="text-lg font-semibold text-app-fg">ABC Classification (Pareto)</h3>
+                    <div className="flex items-center gap-3 text-xs">
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-600" />
+                            <span className="text-app-fg-muted"><strong className="text-app-fg">A</strong> — Top 80% revenue</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-600" />
+                            <span className="text-app-fg-muted"><strong className="text-app-fg">B</strong> — Next 15%</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-600" />
+                            <span className="text-app-fg-muted"><strong className="text-app-fg">C</strong> — Bottom 5%</span>
+                        </span>
+                    </div>
+                </div>
                 <DataTable
                     data={tablePareto}
                     searchable={true}
@@ -115,7 +131,7 @@ export default function MaterialsPage() {
                             header: 'Material Group',
                             accessorKey: 'MaterialGroup',
                             sortable: true,
-                            cell: (item: any) => <span className="font-medium text-app-fg">{(item.MaterialGroup ?? '').slice(0, 45)}</span>
+                            cell: (item: any) => <span className="font-medium text-app-fg" title={item.MaterialGroup ?? ''}>{(item.MaterialGroup ?? '').slice(0, 45)}{(item.MaterialGroup ?? '').length > 45 ? '…' : ''}</span>
                         },
                         {
                             header: 'Revenue',

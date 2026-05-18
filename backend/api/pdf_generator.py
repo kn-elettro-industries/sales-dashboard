@@ -1718,6 +1718,7 @@ def generate_pdf_report(
     specific_entity: str = None,
     filter_customer: str = None,
     filter_state: str = None,
+    filter_city: str = None,
     filter_material: str = None,
     customers: Optional[str] = None,
     states: Optional[str] = None,
@@ -1733,7 +1734,7 @@ def generate_pdf_report(
         return _generate_pdf_report_inner(
             df=df, report_type=report_type, tenant=tenant,
             specific_entity=specific_entity, filter_customer=filter_customer,
-            filter_state=filter_state, filter_material=filter_material,
+            filter_state=filter_state, filter_city=filter_city, filter_material=filter_material,
             customers=customers, states=states, cities=cities,
             material_groups=material_groups, months=months, fiscal_years=fiscal_years,
             start_date=start_date, end_date=end_date,
@@ -1750,6 +1751,7 @@ def _generate_pdf_report_inner(
     specific_entity,
     filter_customer,
     filter_state,
+    filter_city,
     filter_material,
     customers,
     states,
@@ -1779,7 +1781,13 @@ def _generate_pdf_report_inner(
     
     if filter_state and filter_state != "All" and "STATE" in df.columns:
         df = df[df["STATE"] == filter_state]
-        
+
+    if filter_city and filter_city != "All":
+        city_col_fc = "CITY" if "CITY" in df.columns else None
+        if city_col_fc:
+            fc = str(filter_city).strip()
+            df = df[df[city_col_fc].astype(str).str.strip().str.upper() == fc.upper()]
+
     if filter_material and filter_material != "All":
         material_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
         if material_col in df.columns:
@@ -2322,6 +2330,128 @@ def _generate_pdf_report_inner(
             pdf.set_text_color(100, 100, 100)
             pdf.cell(0, 10, "No state/region data found in the selected dataset.", 0, 1)
             pdf.set_text_color(0, 0, 0)
+
+    # 9b. City Deep Dive (City Wise report only)
+    if report_type == "City Wise":
+        city_col = "CITY" if "CITY" in df.columns else None
+        if city_col:
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 14)
+            pdf.cell(0, 10, "9. City Revenue Breakdown", 0, 1)
+            pdf.ln(5)
+
+            city_df = df[~df[city_col].astype(str).str.upper().str.contains("NOT FOUND", na=False)].copy()
+
+            if not city_df.empty:
+                city_agg = city_df.groupby(city_col).agg(
+                    Revenue=("AMOUNT", "sum"),
+                    Orders=("INVOICE_NO", "nunique"),
+                    Customers=("CUSTOMER_NAME", "nunique") if "CUSTOMER_NAME" in city_df.columns else ("INVOICE_NO", "count"),
+                ).sort_values("Revenue", ascending=False)
+
+                total_city_rev = city_agg["Revenue"].sum()
+
+                # Horizontal bar chart — top 15 cities by revenue
+                top_cities = city_agg.head(15)
+                chart_h = max(3.5, len(top_cities) * 0.45)
+                fig = Figure(figsize=(10, chart_h))
+                canvas = FigureCanvas(fig)
+                ax = fig.add_subplot(111)
+                fig.patch.set_facecolor("white")
+                ax.set_facecolor("white")
+                sorted_ct = top_cities["Revenue"].sort_values()
+                ax.barh(range(len(sorted_ct)), sorted_ct.values, color="#333333", edgecolor="#FFD700", height=0.65)
+                ax.set_yticks(range(len(sorted_ct)))
+                ax.set_yticklabels([str(c)[:30] for c in sorted_ct.index], fontsize=9)
+                ax.set_title("City Revenue Ranking (Top 15)", fontsize=13, fontweight="bold", pad=12)
+                ax.set_xlabel("Revenue", fontsize=10, fontweight="bold")
+                _configure_matplotlib_revenue_ticks(ax, "x")
+                _max_val = sorted_ct.values[-1] if len(sorted_ct) else 1
+                for i, v in enumerate(sorted_ct.values):
+                    ax.text(v + (_max_val * 0.01), i, format_currency_pdf(v), va="center", fontsize=8)
+                fig.tight_layout()
+                img_path = create_chart(fig)
+                _pdf_need_space(pdf, 110.0)
+                pdf.image(img_path, x=10, w=185)
+                os.remove(img_path)
+                pdf.ln(6)
+
+                # City summary table (all cities)
+                def _city_tbl_header() -> None:
+                    pdf.set_font("Arial", "B", 9)
+                    pdf.set_fill_color(33, 37, 41)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(65, 10, "City", 0, 0, "L", 1)
+                    pdf.cell(45, 10, "Revenue", 0, 0, "R", 1)
+                    pdf.cell(25, 10, "Share %", 0, 0, "R", 1)
+                    pdf.cell(25, 10, "Orders", 0, 0, "R", 1)
+                    pdf.cell(25, 10, "Customers", 0, 1, "R", 1)
+                    pdf.set_font("Arial", "", 9)
+                    pdf.set_text_color(0, 0, 0)
+
+                _city_tbl_header()
+                ct_i = 0
+                for city_name, row in city_agg.iterrows():
+                    if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                        pdf.add_page()
+                        _city_tbl_header()
+                    ct_i += 1
+                    fill = ct_i % 2 == 0
+                    share = (row["Revenue"] / total_city_rev * 100) if total_city_rev > 0 else 0
+                    pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                    pdf.cell(65, 8, _pdf_text(str(city_name)[:32]), 0, 0, "L", fill)
+                    pdf.cell(45, 8, format_currency_pdf(row["Revenue"]), 0, 0, "R", fill)
+                    pdf.cell(25, 8, f"{share:.1f}%", 0, 0, "R", fill)
+                    pdf.cell(25, 8, str(int(row["Orders"])), 0, 0, "R", fill)
+                    pdf.cell(25, 8, str(int(row["Customers"])), 0, 1, "R", fill)
+                pdf.ln(5)
+
+                # If a specific city is focused, show top customers for it
+                _focused_city = None
+                if filter_city and str(filter_city).strip() and str(filter_city).strip().lower() != "all":
+                    _focused_city = str(filter_city).strip()
+                elif specific_entity and str(specific_entity).strip() and str(specific_entity).strip().lower() != "all":
+                    _focused_city = str(specific_entity).strip()
+
+                if _focused_city and "CUSTOMER_NAME" in city_df.columns:
+                    city_rows = city_df[city_df[city_col].astype(str).str.strip().str.upper() == _focused_city.upper()]
+                    if not city_rows.empty:
+                        _pdf_need_space(pdf, 24.0)
+                        pdf.set_font("Arial", "B", 12)
+                        pdf.set_fill_color(33, 37, 41)
+                        pdf.set_text_color(255, 255, 255)
+                        pdf.cell(0, 8, f"  Top Customers - {_focused_city}", 0, 1, "L", 1)
+                        pdf.set_text_color(0, 0, 0)
+                        pdf.set_font("Arial", "", 10)
+                        pdf.ln(2)
+
+                        cust_ct = city_rows.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(20)
+
+                        def _ct_cust_header() -> None:
+                            pdf.set_font("Arial", "B", 9)
+                            pdf.set_fill_color(33, 37, 41)
+                            pdf.set_text_color(255, 255, 255)
+                            pdf.cell(130, 10, "Customer", 0, 0, "L", 1)
+                            pdf.cell(55, 10, "Revenue", 0, 1, "R", 1)
+                            pdf.set_font("Arial", "", 9)
+                            pdf.set_text_color(0, 0, 0)
+
+                        _ct_cust_header()
+                        cc_i = 0
+                        for cust, amt in cust_ct.items():
+                            if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                                pdf.add_page()
+                                _ct_cust_header()
+                            cc_i += 1
+                            fill = cc_i % 2 == 0
+                            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                            pdf.cell(130, 8, _pdf_text(str(cust)[:65]), 0, 0, "L", fill)
+                            pdf.cell(55, 8, format_currency_pdf(amt), 0, 1, "R", fill)
+            else:
+                pdf.set_font("Arial", "", 11)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "No city data found in the selected dataset.", 0, 1)
+                pdf.set_text_color(0, 0, 0)
 
     # 10. Customer Specific Enhancement: Material Group Preference
     if report_type == "Customer Wise":

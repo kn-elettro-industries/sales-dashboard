@@ -351,17 +351,18 @@ def apply_filters(df: pd.DataFrame, states=None, cities=None, customers=None, ma
     if states and str(states).strip():
         state_list = [s.strip() for s in states.split(",") if s.strip()]
         if "STATE" in df.columns and state_list:
-            df = df[df["STATE"].isin(state_list)]
+            want = {s.lower() for s in state_list}
+            df = df[df["STATE"].astype(str).str.strip().str.lower().isin(want)]
     if cities and str(cities).strip():
         city_list = [c.strip() for c in cities.split(",") if c.strip()]
         if "CITY" in df.columns and city_list:
-            gser = df["CITY"].astype(str).str.strip()
             want = {c.lower() for c in city_list}
-            df = df[gser.str.lower().isin(want)]
+            df = df[df["CITY"].astype(str).str.strip().str.lower().isin(want)]
     if customers and str(customers).strip():
         cust_list = [c.strip() for c in customers.split(",") if c.strip()]
         if "CUSTOMER_NAME" in df.columns and cust_list:
-            df = df[df["CUSTOMER_NAME"].isin(cust_list)]
+            want = {c.lower() for c in cust_list}
+            df = df[df["CUSTOMER_NAME"].astype(str).str.strip().str.lower().isin(want)]
     mg_list: List[str] = []
     if material_groups is not None:
         if isinstance(material_groups, (list, tuple)):

@@ -56,9 +56,11 @@ function MultiSelect({ label, options, selected, onChange, longLabels = false }:
                 <button
                     type="button"
                     title={longLabels && selected.length > 0 ? selected.join("\n") : undefined}
-                    className={`flex w-full items-start justify-between gap-2 bg-app-bg border border-app-border rounded-lg px-3 py-2 hover:border-app-border-strong transition-colors text-sm text-app-fg min-h-[36px] text-left ${
-                        longLabels ? "min-w-0" : ""
-                    }`}
+                    className={`flex w-full items-start justify-between gap-2 border rounded-lg px-3 py-2 transition-colors text-sm min-h-[36px] text-left ${
+                        selected.length > 0
+                            ? "bg-app-gold/10 border-app-gold/40 text-app-gold hover:border-app-gold/60"
+                            : "bg-app-bg border-app-border text-app-fg hover:border-app-border-strong"
+                    } ${longLabels ? "min-w-0" : ""}`}
                 >
                     <span className={longLabels ? "break-words whitespace-normal leading-snug min-w-0 flex-1" : "truncate"}>
                         {summary}
@@ -430,54 +432,51 @@ export default function GlobalFilterBar() {
                     {activeFilterCount > 0 && (
                         <div className="flex items-center gap-2 mt-3 flex-wrap">
                             {selectedStates.map(s => (
-                                <span key={s} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
+                                <span key={s} className="inline-flex items-center bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-full font-medium">
                                     {s}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedStates(selectedStates.filter(x => x !== s))} />
+                                    <button type="button" onClick={() => setSelectedStates(selectedStates.filter(x => x !== s))}><X className="h-3 w-3 ml-1.5 cursor-pointer hover:opacity-70" /></button>
                                 </span>
                             ))}
                             {selectedCities.map(c => (
-                                <span key={c} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
+                                <span key={c} className="inline-flex items-center bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-full font-medium">
                                     {c}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedCities(selectedCities.filter(x => x !== c))} />
+                                    <button type="button" onClick={() => setSelectedCities(selectedCities.filter(x => x !== c))}><X className="h-3 w-3 ml-1.5 cursor-pointer hover:opacity-70" /></button>
                                 </span>
                             ))}
                             {selectedCustomers.map(c => (
-                                <span key={c} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
+                                <span key={c} className="inline-flex items-center bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-full font-medium">
                                     {c}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedCustomers(selectedCustomers.filter(x => x !== c))} />
+                                    <button type="button" onClick={() => setSelectedCustomers(selectedCustomers.filter(x => x !== c))}><X className="h-3 w-3 ml-1.5 cursor-pointer hover:opacity-70" /></button>
                                 </span>
                             ))}
                             {selectedMaterialGroups.map(m => (
-                                <span key={m} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
+                                <span key={m} className="inline-flex items-center bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-full font-medium">
                                     {m}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedMaterialGroups(selectedMaterialGroups.filter(x => x !== m))} />
+                                    <button type="button" onClick={() => setSelectedMaterialGroups(selectedMaterialGroups.filter(x => x !== m))}><X className="h-3 w-3 ml-1.5 cursor-pointer hover:opacity-70" /></button>
                                 </span>
                             ))}
                             {selectedFiscalYears.map(f => (
-                                <span key={f} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
+                                <span key={f} className="inline-flex items-center bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-full font-medium">
                                     FY: {f}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedFiscalYears(selectedFiscalYears.filter(x => x !== f))} />
+                                    <button type="button" onClick={() => setSelectedFiscalYears(selectedFiscalYears.filter(x => x !== f))}><X className="h-3 w-3 ml-1.5 cursor-pointer hover:opacity-70" /></button>
                                 </span>
                             ))}
                             {selectedMonths.map(m => (
-                                <span key={m} className="inline-flex items-center bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-full">
+                                <span key={m} className="inline-flex items-center bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-full font-medium">
                                     {m}
-                                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-app-gold" onClick={() => setSelectedMonths(selectedMonths.filter(x => x !== m))} />
+                                    <button type="button" onClick={() => setSelectedMonths(selectedMonths.filter(x => x !== m))}><X className="h-3 w-3 ml-1.5 cursor-pointer hover:opacity-70" /></button>
                                 </span>
                             ))}
                             {selectedItems.map(it => (
                                 <span
                                     key={it}
                                     title={it}
-                                    className="inline-flex items-start gap-1 max-w-full sm:max-w-xl bg-app-muted border border-app-border text-app-fg text-xs px-2 py-1 rounded-lg"
+                                    className="inline-flex items-start gap-1 max-w-full sm:max-w-xl bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs px-2.5 py-1 rounded-lg font-medium"
                                 >
                                     <span className="break-words whitespace-normal leading-snug min-w-0">
                                         Item: {it}
                                     </span>
-                                    <X
-                                        className="h-3 w-3 mt-0.5 cursor-pointer shrink-0 hover:text-app-gold"
-                                        onClick={() => setSelectedItems(selectedItems.filter(x => x !== it))}
-                                    />
+                                    <button type="button" onClick={() => setSelectedItems(selectedItems.filter(x => x !== it))}><X className="h-3 w-3 mt-0.5 cursor-pointer shrink-0 hover:opacity-70" /></button>
                                 </span>
                             ))}
                             <button onClick={() => { setSelectedStates([]); setSelectedCities([]); setSelectedCustomers([]); setSelectedMaterialGroups([]); setSelectedFiscalYears([]); setSelectedMonths([]); setSelectedItems([]); }}

@@ -252,12 +252,22 @@ export default function CustomersPage() {
             <div className="bg-app-card border border-app-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">Customer Segments</h3>
                 <div className="flex gap-3 flex-wrap">
-                    {Object.entries(segCounts).length > 0 ? Object.entries(segCounts).map(([seg, count]) => (
-                        <div key={seg} className={`${SEGMENT_COLORS[seg] || 'bg-gray-600'} rounded-lg px-4 py-3 text-center min-w-[120px]`}>
-                            <div className="text-2xl font-bold text-app-fg">{count}</div>
-                            <div className="text-sm text-app-fg-muted">{seg}</div>
-                        </div>
-                    )) : <div className="text-app-fg-muted">No segmented customers found in this period.</div>}
+                    {Object.entries(segCounts).length > 0 ? Object.entries(segCounts).map(([seg, count]) => {
+                        const desc: Record<string, string> = {
+                            Champions: "High frequency, recent, high spend",
+                            Loyal: "Regular buyers, solid value",
+                            Potential: "Recent but low frequency",
+                            "At Risk": "Good history, not buying recently",
+                            Lost: "Low recency, low spend — churned",
+                        };
+                        return (
+                            <div key={seg} className={`${SEGMENT_COLORS[seg] || 'bg-gray-600'} rounded-lg px-4 py-3 min-w-[160px]`}>
+                                <div className="text-2xl font-bold text-white">{count}</div>
+                                <div className="text-sm font-semibold text-white mt-0.5">{seg}</div>
+                                {desc[seg] && <div className="text-xs text-white/70 mt-1">{desc[seg]}</div>}
+                            </div>
+                        );
+                    }) : <div className="text-app-fg-muted">No segmented customers found in this period.</div>}
                 </div>
             </div>
 

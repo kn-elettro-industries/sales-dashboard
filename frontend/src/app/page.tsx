@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { fetchDashboardSummary, fetchAnomalies, fetchKpiSummary, fetchSalesTrend, fetchMaterialGroups, fetchTopCustomers, saveSalesTargets } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { GradientAreaChart, InteractiveDonutChart, CategoryHorizontalBarChart } from "@/components/ui/Charts";
-import { IndianRupee, ShoppingCart, Users, TrendingUp, AlertTriangle } from "lucide-react";
+import { IndianRupee, ShoppingCart, Users, TrendingUp, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { formatAmount } from "@/lib/format";
 
 /** Columns from API that are not the material group name */
@@ -27,6 +27,7 @@ export default function DashboardPage() {
     const [savingTargets, setSavingTargets] = useState(false);
     const [targetError, setTargetError] = useState<string | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [showInstructions, setShowInstructions] = useState(false);
     const migratedLocalTargets = React.useRef(false);
 
     /** One-time migration: browser-only targets → database */
@@ -229,14 +230,28 @@ export default function DashboardPage() {
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap p-4 bg-app-card border border-app-border rounded-xl">
                 <div>
-                    <h2 className="text-xl font-semibold text-app-fg">Executive Summary</h2>
-                    <p className="text-xs text-app-fg-muted mt-1 max-w-3xl">
-                        <strong className="text-app-fg">Month or year?</strong> The app does not label targets as monthly vs yearly — it stores one revenue and one orders figure per tenant. They are compared to{" "}
-                        <strong className="text-app-fg">actual sales for your current filters</strong> (date range, months, fiscal year, etc. in the bar above). Fiscal year runs <strong className="text-app-fg">April to March</strong>. Set filters to the period you care about, then enter targets that match <em>that</em> period.
-                    </p>
-                    <p className="text-xs text-app-fg-muted mt-1.5 max-w-3xl">
-                        Tables below split the revenue target by <strong className="text-app-fg">each row’s % of filtered total</strong> (customers and material groups).
-                    </p>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-semibold text-app-fg">Executive Summary</h2>
+                        <button
+                            type="button"
+                            onClick={() => setShowInstructions(v => !v)}
+                            className="flex items-center gap-1 text-xs text-app-fg-muted hover:text-app-gold transition-colors px-2 py-1 rounded-md hover:bg-app-muted"
+                        >
+                            {showInstructions ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            {showInstructions ? "Hide guide" : "How targets work"}
+                        </button>
+                    </div>
+                    {showInstructions && (
+                        <div className="mt-2 space-y-1.5 animate-slide-down">
+                            <p className="text-xs text-app-fg-muted max-w-3xl">
+                                <strong className="text-app-fg">Month or year?</strong> The app stores one revenue and one orders figure per tenant — compared to{" "}
+                                <strong className="text-app-fg">actual sales for your current filters</strong> (date range, months, fiscal year, etc. above). Fiscal year runs <strong className="text-app-fg">April–March</strong>. Set filters to the period you care about, then enter targets that match <em>that</em> period.
+                            </p>
+                            <p className="text-xs text-app-fg-muted max-w-3xl">
+                                Tables below split the revenue target by <strong className="text-app-fg">each row’s % of filtered total</strong> (customers and material groups).
+                            </p>
+                        </div>
+                    )}
                 </div>
                 <div className="flex flex-wrap items-end gap-3 w-full sm:w-auto">
                     <label className="flex flex-col gap-1 text-xs text-app-fg-muted min-w-[140px]">

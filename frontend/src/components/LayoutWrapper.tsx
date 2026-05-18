@@ -52,7 +52,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                 <GlobalFilterBar />
                 <OnboardingBanner />
                 <ClientKeyboardShortcuts />
-                <div className="p-8 flex-1 overflow-y-auto">
+                <div className="p-6 lg:p-8 flex-1 overflow-y-auto">
                     <ErrorBoundary>{children}</ErrorBoundary>
                 </div>
             </main>

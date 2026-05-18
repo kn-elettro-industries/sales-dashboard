@@ -92,21 +92,37 @@ export default function ChatWidget() {
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-app-bg">
                 {messages.length === 0 && (
-                    <div className="text-center text-app-fg-muted text-sm mt-10">
-                        <p>Ask me anything about your current sales data!</p>
-                        <ul className="mt-4 space-y-2 text-xs">
-                            <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"Who are the top 5 customers?"</li>
-                            <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"What is the total revenue for wires?"</li>
-                            <li className="bg-app-card py-2 px-3 rounded-lg border border-app-border">"Total quantity ordered in Delhi"</li>
-                        </ul>
+                    <div className="text-app-fg-muted text-sm mt-4">
+                        <p className="text-center mb-3 font-medium text-app-fg text-xs uppercase tracking-wide">Try asking…</p>
+                        <div className="grid grid-cols-1 gap-1.5">
+                            {[
+                                "Give me a full summary",
+                                "Top 10 customers by revenue",
+                                "Monthly revenue trend",
+                                "Year-over-year growth",
+                                "Which was the best month?",
+                                "What % of revenue comes from each state?",
+                                "Average order value",
+                                "How many unique customers?",
+                            ].map((q) => (
+                                <button
+                                    key={q}
+                                    type="button"
+                                    onClick={() => { setInput(q); }}
+                                    className="text-left text-xs bg-app-card border border-app-border rounded-lg px-3 py-2 hover:border-app-gold/40 hover:text-app-gold transition-colors"
+                                >
+                                    {q}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed ${msg.role === 'user'
-                            ? 'bg-gradient-to-r from-app-gold-hover to-app-gold text-app-on-gold rounded-br-sm'
-                            : 'bg-app-hover border border-app-border text-app-fg rounded-bl-sm'
+                        <div className={`max-w-[92%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === 'user'
+                            ? 'bg-gradient-to-r from-app-gold-hover to-app-gold text-app-on-gold rounded-br-sm whitespace-pre-wrap'
+                            : 'bg-app-hover border border-app-border text-app-fg rounded-bl-sm font-mono text-xs whitespace-pre overflow-x-auto'
                             }`}>
                             {msg.content}
                         </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { Download, FileText, ChevronDown, Loader2, Filter, LayoutDashboard, FileBarChart, DollarSign, ShoppingCart, Users, TrendingUp, GitCompare, ArrowLeftRight } from "lucide-react";
 import { useFilter } from "@/components/FilterContext";
-import { fetchAllCustomers, fetchStateData, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, fetchFyComparison, fetchDashboardSummary, type FyComparisonRow, API_BASE_URL } from "@/lib/api";
+import { fetchAllCustomers, fetchStateData, fetchCityData, fetchKpiSummary, fetchMaterialPerformance, fetchItemDetails, fetchFyComparison, fetchDashboardSummary, type FyComparisonRow, API_BASE_URL } from "@/lib/api";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatAmount, formatCr } from "@/lib/format";
@@ -13,6 +13,7 @@ const REPORT_TYPES = [
     { id: "Executive Summary", label: "Executive Summary (All Data)", icon: FileText },
     { id: "Distributor Strategy Report", label: "Distributor Strategy Report", icon: FileText },
     { id: "State Wise", label: "State/Region Deep Dive", icon: FileText },
+    { id: "City Wise", label: "City Deep Dive", icon: FileText },
     { id: "Material Group Wise", label: "Material Category Deep Dive", icon: FileText },
 ];
 
@@ -49,6 +50,8 @@ export default function ReportsPage() {
     const [filterMaterial, setFilterMaterial] = useState("All");
     const [customerOptions, setCustomerOptions] = useState<string[]>([]);
     const [stateOptions, setStateOptions] = useState<string[]>([]);
+    const [cityOptions, setCityOptions] = useState<string[]>([]);
+    const [filterCity, setFilterCity] = useState("All");
 
     // Dynamic (Streamlit-like) builder state
     const [dynPrimary, setDynPrimary] = useState("customer");
@@ -184,6 +187,14 @@ export default function ReportsPage() {
                 const dataState = await fetchStateData({ tenant });
                 setStateOptions(dataState.map((s: any) => s.STATE).filter(Boolean).sort());
 
+                const dataCity = await fetchCityData({ tenant });
+                setCityOptions(
+                    dataCity
+                        .map((c: any) => c.CITY || c.STATE)
+                        .filter(Boolean)
+                        .sort()
+                );
+
             } catch (e) {
                 console.error("Failed to fetch advanced context", e);
             }
@@ -221,6 +232,7 @@ export default function ReportsPage() {
 
             if (filterCustomer !== "All") queryParams.append("filter_customer", filterCustomer);
             if (filterState !== "All") queryParams.append("filter_state", filterState);
+            if (filterCity !== "All") queryParams.append("filter_city", filterCity);
             if (filterMaterial !== "All") queryParams.append("filter_material", filterMaterial);
 
             if (selectedStates.length > 0) queryParams.append("states", selectedStates.join(','));
@@ -624,6 +636,27 @@ export default function ReportsPage() {
                                         </select>
                                         <p className="text-xs text-app-fg-muted mt-1">
                                             The report always includes the full state ranking. Selecting a state adds a customer-level breakdown for that state.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {selectedReport === "City Wise" && (
+                                    <div className="flex flex-col gap-1 rounded-lg border border-app-border bg-app-bg/60 px-4 py-3">
+                                        <label className="text-xs text-app-fg-muted font-medium">
+                                            Focus City <span className="text-app-fg-muted font-normal">(optional — show customer breakdown for one city)</span>
+                                        </label>
+                                        <select
+                                            value={filterCity}
+                                            onChange={(e) => setFilterCity(e.target.value)}
+                                            className="w-full bg-app-bg border border-app-border text-app-fg rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
+                                        >
+                                            <option value="All">All Cities (summary only)</option>
+                                            {cityOptions.map((c) => (
+                                                <option key={c} value={c}>{c}</option>
+                                            ))}
+                                        </select>
+                                        <p className="text-xs text-app-fg-muted mt-1">
+                                            The report always includes the full city ranking. Selecting a city adds a customer-level breakdown for that city.
                                         </p>
                                     </div>
                                 )}

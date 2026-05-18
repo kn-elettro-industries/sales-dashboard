@@ -31,6 +31,7 @@ export default function CustomersPage() {
     const [minRevenueLakh, setMinRevenueLakh] = useState("0");
     const [maxRevenueLakh, setMaxRevenueLakh] = useState("5.5");
     const [exportingBelow, setExportingBelow] = useState(false);
+    const [exportError, setExportError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -126,10 +127,11 @@ export default function CustomersPage() {
     };
 
     const handleDownloadBelowThreshold = () => {
+        setExportError(null);
         const minInr = parseLakhToInr(minRevenueLakh, 0);
         const maxInr = parseLakhToInr(maxRevenueLakh, 550_000);
         if (minInr > maxInr) {
-            alert("Minimum (₹ lakh) must be less than or equal to maximum (₹ lakh).");
+            setExportError("Minimum (₹ lakh) must be less than or equal to maximum (₹ lakh).");
             return;
         }
         try {
@@ -235,6 +237,9 @@ export default function CustomersPage() {
                         {exportingBelow ? "Downloading…" : "Download CSV"}
                     </button>
                 </div>
+                {exportError && (
+                    <p className="text-sm text-red-400 mt-2">{exportError}</p>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

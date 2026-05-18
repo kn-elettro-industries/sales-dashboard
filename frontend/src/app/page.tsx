@@ -25,6 +25,7 @@ export default function DashboardPage() {
     const [draftRevenue, setDraftRevenue] = useState("");
     const [draftOrders, setDraftOrders] = useState("");
     const [savingTargets, setSavingTargets] = useState(false);
+    const [targetError, setTargetError] = useState<string | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
     const migratedLocalTargets = React.useRef(false);
 
@@ -159,15 +160,16 @@ export default function DashboardPage() {
 
     const handleSaveSalesTargets = async () => {
         setSavingTargets(true);
+        setTargetError(null);
         try {
             const rev = draftRevenue.trim() === "" ? null : Number(draftRevenue.replace(/,/g, ""));
             const ord = draftOrders.trim() === "" ? null : parseInt(draftOrders.replace(/,/g, ""), 10);
             if (rev != null && (Number.isNaN(rev) || rev < 0)) {
-                alert("Revenue target must be a non-negative number.");
+                setTargetError("Revenue target must be a non-negative number.");
                 return;
             }
             if (ord != null && (Number.isNaN(ord) || ord < 0)) {
-                alert("Orders target must be a non-negative integer.");
+                setTargetError("Orders target must be a non-negative integer.");
                 return;
             }
             await saveSalesTargets({
@@ -177,7 +179,7 @@ export default function DashboardPage() {
             });
             setRefreshKey((k) => k + 1);
         } catch (e) {
-            alert(e instanceof Error ? e.message : "Could not save sales targets.");
+            setTargetError(e instanceof Error ? e.message : "Could not save sales targets.");
         } finally {
             setSavingTargets(false);
         }
@@ -268,6 +270,9 @@ export default function DashboardPage() {
                         {savingTargets ? "Saving…" : "Save targets"}
                     </button>
                 </div>
+                {targetError && (
+                    <p className="text-sm text-red-400 mt-2">{targetError}</p>
+                )}
             </div>
             {loadError && (
                 <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl">

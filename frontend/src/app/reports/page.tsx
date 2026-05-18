@@ -59,6 +59,7 @@ export default function ReportsPage() {
     const [dynTopN, setDynTopN] = useState<number>(12);
     const [dynIncludePivot, setDynIncludePivot] = useState<boolean>(false);
     const [dynDownloading, setDynDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
     /** Advanced cross-filter PDF — tucked away; rarely used */
     const [advancedExportOpen, setAdvancedExportOpen] = useState(false);
 
@@ -255,9 +256,10 @@ export default function ReportsPage() {
             const res = await fetch(url, { cache: "no-store" });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ detail: "Report generation failed." }));
-                alert(err?.detail || "No data for the selected filters. Widen filters or choose a different period.");
+                setDownloadError(err?.detail || "No data for the selected filters. Widen filters or choose a different period.");
                 return;
             }
+            setDownloadError(null);
             const blob = await res.blob();
             const disposition = res.headers.get("Content-Disposition");
             const filename = disposition?.match(/filename="?([^";]+)"?/)?.[1] || "KN_Elettro_Intelligence_Report.pdf";
@@ -271,7 +273,7 @@ export default function ReportsPage() {
             document.body.removeChild(a);
         } catch (error) {
             console.error("Error triggering download:", error);
-            alert("Network error triggering download.");
+            setDownloadError("Network error triggering download.");
         } finally {
             setDownloading(false);
         }
@@ -311,9 +313,10 @@ export default function ReportsPage() {
 
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ detail: "Dynamic report generation failed." }));
-                alert(err?.detail || "Dynamic report generation failed.");
+                setDownloadError(err?.detail || "Dynamic report generation failed.");
                 return;
             }
+            setDownloadError(null);
 
             const blob = await res.blob();
             const disposition = res.headers.get("Content-Disposition");
@@ -328,7 +331,7 @@ export default function ReportsPage() {
             document.body.removeChild(a);
         } catch (error) {
             console.error("Error generating dynamic report:", error);
-            alert("Network error generating dynamic report.");
+            setDownloadError("Network error generating dynamic report.");
         } finally {
             setDynDownloading(false);
         }
@@ -367,6 +370,9 @@ export default function ReportsPage() {
                 )}
             </button>
             <p className="text-xs text-app-fg-muted text-center">Large reports may take 15–30 seconds.</p>
+            {downloadError && (
+                <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-4 py-3">{downloadError}</p>
+            )}
         </div>
     );
 
@@ -765,6 +771,9 @@ export default function ReportsPage() {
                                                     </>
                                                 )}
                                             </button>
+                                            {downloadError && (
+                                                <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-4 py-3">{downloadError}</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>

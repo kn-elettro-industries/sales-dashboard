@@ -7,7 +7,6 @@ import { format, subDays, startOfYear } from "date-fns";
 import * as Popover from "@radix-ui/react-popover";
 
 import { API_BASE_URL } from "@/lib/api";
-const API_BASE = API_BASE_URL;
 
 const datePresets = [
     { label: "All Time", getRange: () => ({ from: undefined, to: undefined }) },
@@ -169,7 +168,7 @@ export default function GlobalFilterBar() {
         if (selectedMaterialGroups.length > 0) {
             params.set("material_groups_json", JSON.stringify(selectedMaterialGroups));
         }
-        fetch(`${API_BASE}/filters/options?${params.toString()}`)
+        fetch(`${API_BASE_URL}/filters/options?${params.toString()}`)
             .then((r) => {
                 if (!r.ok) return null;
                 return r.json();
@@ -240,7 +239,7 @@ export default function GlobalFilterBar() {
             if (selectedMonths.length > 0) params.append("months", selectedMonths.join(","));
             if (selectedItems.length > 0) params.append("items", selectedItems.join(","));
 
-            const url = `${API_BASE}/export/data?${params.toString()}`;
+            const url = `${API_BASE_URL}/export/data?${params.toString()}`;
             const a = document.createElement("a");
             a.style.display = "none";
             a.href = url;

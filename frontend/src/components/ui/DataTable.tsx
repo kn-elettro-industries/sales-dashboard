@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 
 export interface ColumnDef<T> {
     header: string;
-    accessorKey: keyof T | string; // Using string to allow nested or computed keys if needed, though mostly keyof T
+    accessorKey: keyof T | string;
     sortable?: boolean;
     cell?: (item: T, rowIndex: number) => React.ReactNode;
     align?: 'left' | 'center' | 'right';
-    className?: string; // Additional classes for the th/td
+    className?: string;
 }
 
 interface DataTableProps<T> {
@@ -17,7 +17,7 @@ interface DataTableProps<T> {
     columns: ColumnDef<T>[];
     searchable?: boolean;
     searchPlaceholder?: string;
-    searchKeys?: (keyof T)[]; // Which fields to search across
+    searchKeys?: (keyof T)[];
     pageSizeOptions?: number[];
     defaultPageSize?: number;
     maxHeight?: string;
@@ -33,9 +33,9 @@ export function DataTable<T extends Record<string, any>>({
     pageSizeOptions = [10, 25, 50, 100],
     defaultPageSize = 10,
     maxHeight = "500px",
-    onRowClick
+    onRowClick,
 }: DataTableProps<T>) {
-    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -43,132 +43,110 @@ export function DataTable<T extends Record<string, any>>({
     // 1. Filter
     const filteredData = useMemo(() => {
         if (!searchTerm || !searchKeys || searchKeys.length === 0) return data;
-        const lowerSearch = searchTerm.toLowerCase();
-        return data.filter(item => {
-            return searchKeys.some(key => {
+        const lower = searchTerm.toLowerCase();
+        return data.filter(item =>
+            searchKeys.some(key => {
                 const val = item[key];
-                if (val === null || val === undefined) return false;
-                return String(val).toLowerCase().includes(lowerSearch);
-            });
-        });
+                return val != null && String(val).toLowerCase().includes(lower);
+            })
+        );
     }, [data, searchTerm, searchKeys]);
 
     // 2. Sort
     const sortedData = useMemo(() => {
-        let sortableItems = [...filteredData];
-        if (sortConfig !== null) {
-            sortableItems.sort((a, b) => {
-                const aValue = a[sortConfig.key];
-                const bValue = b[sortConfig.key];
-
-                // Handle string comparison
-                if (typeof aValue === 'string' && typeof bValue === 'string') {
-                    return sortConfig.direction === 'asc'
-                        ? aValue.localeCompare(bValue)
-                        : bValue.localeCompare(aValue);
-                }
-
-                // Handle numeric or other comparison
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'asc' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'asc' ? 1 : -1;
-                }
-                return 0;
-            });
-        }
-        return sortableItems;
+        if (!sortConfig) return filteredData;
+        return [...filteredData].sort((a, b) => {
+            const av = a[sortConfig.key];
+            const bv = b[sortConfig.key];
+            if (typeof av === 'string' && typeof bv === 'string')
+                return sortConfig.direction === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+            if (av < bv) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (av > bv) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
     }, [filteredData, sortConfig]);
 
     // 3. Paginate
     const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
-
     useEffect(() => {
-        if (currentPage > totalPages && totalPages > 0) {
-            setCurrentPage(totalPages);
-        }
+        if (currentPage > totalPages) setCurrentPage(totalPages);
     }, [currentPage, totalPages]);
 
     const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * pageSize;
-        return sortedData.slice(startIndex, startIndex + pageSize);
+        const start = (currentPage - 1) * pageSize;
+        return sortedData.slice(start, start + pageSize);
     }, [sortedData, currentPage, pageSize]);
 
     const handleSort = (key: string) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
-        setCurrentPage(1); // Reset to first page on sort
+        setSortConfig(prev =>
+            prev?.key === key
+                ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+                : { key, direction: 'asc' }
+        );
+        setCurrentPage(1);
     };
 
-    const getAlignClass = (align?: 'left' | 'center' | 'right') => {
-        switch (align) {
-            case 'center': return 'text-center';
-            case 'right': return 'text-right';
-            default: return 'text-left';
-        }
-    };
+    const alignClass = (align?: 'left' | 'center' | 'right') =>
+        align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+
+    const startEntry = (currentPage - 1) * pageSize + 1;
+    const endEntry = Math.min(currentPage * pageSize, sortedData.length);
 
     return (
         <div className="flex flex-col w-full h-full">
-            {/* Top Controls: Search & Page Size */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
                 {searchable && searchKeys && (
-                    <div className="relative w-full sm:w-64">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-app-fg-muted" />
-                        </div>
+                    <div className="relative w-full sm:w-60">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-app-fg-muted pointer-events-none" />
                         <input
                             type="text"
                             placeholder={searchPlaceholder}
                             value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="block w-full pl-10 pr-3 py-2 border border-app-border rounded-md leading-5 bg-app-bg text-app-fg placeholder:text-app-fg-muted focus:outline-none focus:ring-1 focus:ring-app-gold/50 focus:border-app-gold sm:text-sm"
+                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                            className="w-full pl-9 pr-3 py-2 bg-app-bg border border-app-border rounded-lg text-sm text-app-fg placeholder:text-app-fg-muted
+                                       focus:outline-none focus:ring-2 focus:ring-app-gold/30 focus:border-app-gold/60 transition-all duration-200"
                         />
                     </div>
                 )}
-
-                <div className="flex items-center space-x-2 text-sm text-app-fg-muted ml-auto">
+                <div className="flex items-center gap-2 text-xs text-app-fg-muted ml-auto">
                     <span>Show</span>
                     <select
                         value={pageSize}
-                        onChange={(e) => {
-                            setPageSize(Number(e.target.value));
-                            setCurrentPage(1);
-                        }}
-                        className="bg-app-bg border border-app-border text-app-fg rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-app-gold/50"
+                        onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                        className="bg-app-bg border border-app-border text-app-fg text-xs rounded-md px-2 py-1.5
+                                   focus:outline-none focus:ring-2 focus:ring-app-gold/30 focus:border-app-gold/60 transition-all"
                     >
-                        {pageSizeOptions.map(size => (
-                            <option key={size} value={size}>{size}</option>
-                        ))}
+                        {pageSizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <span>entries</span>
+                    <span>rows</span>
                 </div>
             </div>
 
-            {/* Table Area */}
-            <div className="overflow-x-auto overflow-y-auto border border-app-border rounded-lg" style={{ maxHeight }}>
+            {/* Table */}
+            <div className="overflow-x-auto overflow-y-auto border border-app-border rounded-xl" style={{ maxHeight }}>
                 <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-app-card shadow-[0_1px_0_0_var(--app-border)] z-10">
-                        <tr className="text-app-fg-muted">
+                    <thead className="sticky top-0 z-10">
+                        <tr className="bg-app-muted border-b border-app-border">
                             {columns.map((col, i) => (
                                 <th
                                     key={i}
-                                    className={`py-3 px-4 select-none ${getAlignClass(col.align)} ${col.className || ''} ${col.sortable !== false ? 'cursor-pointer hover:bg-app-muted' : ''}`}
+                                    className={`py-3 px-4 text-xs font-semibold text-app-fg-muted uppercase tracking-wide select-none
+                                        ${alignClass(col.align)} ${col.className || ''}
+                                        ${col.sortable !== false ? 'cursor-pointer hover:text-app-fg transition-colors' : ''}`}
                                     onClick={() => col.sortable !== false && handleSort(col.accessorKey as string)}
                                 >
-                                    <div className={`flex items-center space-x-1 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'}`}>
+                                    <div className={`flex items-center gap-1 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''}`}>
                                         <span>{col.header}</span>
                                         {col.sortable !== false && (
-                                            <span className="flex flex-col text-[10px] leading-[0.5] opacity-50">
-                                                <ChevronUp className={`w-3 h-3 ${sortConfig?.key === col.accessorKey && sortConfig.direction === 'asc' ? 'text-blue-500 opacity-100' : ''}`} />
-                                                <ChevronDown className={`w-3 h-3 -mt-1 ${sortConfig?.key === col.accessorKey && sortConfig.direction === 'desc' ? 'text-blue-500 opacity-100' : ''}`} />
+                                            <span className="flex flex-col ml-0.5">
+                                                <ChevronUp className={`w-3 h-3 -mb-0.5 transition-colors
+                                                    ${sortConfig?.key === col.accessorKey && sortConfig.direction === 'asc'
+                                                        ? 'text-app-gold' : 'opacity-25'}`} />
+                                                <ChevronDown className={`w-3 h-3 -mt-0.5 transition-colors
+                                                    ${sortConfig?.key === col.accessorKey && sortConfig.direction === 'desc'
+                                                        ? 'text-app-gold' : 'opacity-25'}`} />
                                             </span>
                                         )}
                                     </div>
@@ -176,19 +154,22 @@ export function DataTable<T extends Record<string, any>>({
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-app-border">
+                    <tbody>
                         {paginatedData.length > 0 ? (
                             paginatedData.map((row, rowIndex) => (
                                 <tr
                                     key={rowIndex}
-                                    className={`bg-app-bg hover:bg-app-hover transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
-                                    onClick={() => onRowClick && onRowClick(row)}
+                                    className={`border-b border-app-border/50 transition-colors duration-150
+                                        ${rowIndex % 2 === 1 ? 'bg-app-muted/25' : 'bg-app-bg'}
+                                        hover:bg-app-hover
+                                        ${onRowClick ? 'cursor-pointer' : ''}`}
+                                    onClick={() => onRowClick?.(row)}
                                 >
-                                    {columns.map((col, colIndex) => {
-                                        const absoluteIndex = ((currentPage - 1) * pageSize) + rowIndex;
+                                    {columns.map((col, ci) => {
+                                        const absIdx = (currentPage - 1) * pageSize + rowIndex;
                                         return (
-                                            <td key={colIndex} className={`py-3 px-4 ${getAlignClass(col.align)} ${col.className || ''}`}>
-                                                {col.cell ? col.cell(row, absoluteIndex) : (row[col.accessorKey as keyof T] as React.ReactNode)}
+                                            <td key={ci} className={`py-3 px-4 ${alignClass(col.align)} ${col.className || ''}`}>
+                                                {col.cell ? col.cell(row, absIdx) : (row[col.accessorKey as keyof T] as React.ReactNode)}
                                             </td>
                                         );
                                     })}
@@ -196,8 +177,20 @@ export function DataTable<T extends Record<string, any>>({
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={columns.length} className="py-8 text-center text-app-fg-muted bg-app-bg">
-                                    No data available
+                                <td colSpan={columns.length} className="py-16 bg-app-bg">
+                                    <div className="flex flex-col items-center gap-3 text-center">
+                                        <div className="h-12 w-12 rounded-full bg-app-muted border border-app-border flex items-center justify-center">
+                                            <Inbox className="h-5 w-5 text-app-fg-muted" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-app-fg-muted">No data found</p>
+                                            {searchTerm && (
+                                                <p className="text-xs text-app-fg-muted mt-1 opacity-70">
+                                                    No results for &ldquo;{searchTerm}&rdquo; — try a different term
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         )}
@@ -205,32 +198,36 @@ export function DataTable<T extends Record<string, any>>({
                 </table>
             </div>
 
-            {/* Pagination Controls */}
+            {/* Pagination */}
             {sortedData.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between mt-4 text-sm text-app-fg-muted">
-                    <div className="mb-4 sm:mb-0">
-                        Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} entries
-                    </div>
-                    <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row items-center justify-between mt-3 gap-2">
+                    <p className="text-xs text-app-fg-muted">
+                        Showing <span className="font-medium text-app-fg">{startEntry}–{endEntry}</span> of{" "}
+                        <span className="font-medium text-app-fg">{sortedData.length}</span> entries
+                    </p>
+                    <div className="flex items-center gap-1.5">
                         <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                             disabled={currentPage === 1}
-                            className="p-1 rounded-md border border-app-border bg-app-hover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-app-border-strong transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-md border border-app-border bg-app-bg
+                                       text-app-fg-muted hover:border-app-gold/40 hover:text-app-gold
+                                       disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
-                            <ChevronLeft className="w-5 h-5" />
+                            <ChevronLeft className="h-4 w-4" />
                         </button>
-                        <div className="flex space-x-1">
-                            {/* Simple pagination: show current page and surrounding pages */}
-                            <span className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-md font-medium">
-                                {currentPage} / {totalPages}
-                            </span>
-                        </div>
+
+                        <span className="px-3 h-8 flex items-center rounded-md bg-app-gold/10 border border-app-gold/30 text-app-gold text-xs font-semibold tabular-nums">
+                            {currentPage} / {totalPages}
+                        </span>
+
                         <button
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                             disabled={currentPage === totalPages}
-                            className="p-1 rounded-md border border-app-border bg-app-hover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-app-border-strong transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-md border border-app-border bg-app-bg
+                                       text-app-fg-muted hover:border-app-gold/40 hover:text-app-gold
+                                       disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
-                            <ChevronRight className="w-5 h-5" />
+                            <ChevronRight className="h-4 w-4" />
                         </button>
                     </div>
                 </div>

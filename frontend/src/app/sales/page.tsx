@@ -14,6 +14,7 @@ export default function SalesPage() {
     const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ monthly: [], daily: [], growth: null });
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -32,6 +33,7 @@ export default function SalesPage() {
             };
 
             try {
+                setLoadError(null);
                 const [monthly, daily, growth] = await Promise.all([
                     fetchMonthlySales(p).catch(() => []),
                     fetchDailySales(30, p).catch(() => []),
@@ -40,6 +42,7 @@ export default function SalesPage() {
                 setData({ monthly, daily, growth });
             } catch (e) {
                 console.error("Failed to fetch sales data", e);
+                setLoadError("Failed to load sales data. Please try refreshing.");
             } finally {
                 setLoading(false);
             }
@@ -53,6 +56,9 @@ export default function SalesPage() {
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            {loadError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">{loadError}</div>
+            )}
             <div>
                 <h2 className="text-2xl font-bold text-app-fg">Sales & Growth Analysis</h2>
                 <p className="text-app-fg-muted mt-1">Month-over-month trends and growth indicators.</p>

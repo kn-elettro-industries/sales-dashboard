@@ -25,6 +25,7 @@ export default function CustomersPage() {
     const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ customers: [], rfm: [] });
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     /** Focus tables and chart on lower-purchase customers (RFM Potential / At Risk / Lost) */
     const [buyerFocus, setBuyerFocus] = useState<"all" | "low">("all");
     /** Revenue band in ₹ lakh for CSV export (inclusive). Default 0 … 5.5 L. */
@@ -50,6 +51,7 @@ export default function CustomersPage() {
             };
 
             try {
+                setLoadError(null);
                 const [customers, rfm] = await Promise.all([
                     fetchAllCustomers(p).catch(() => []),
                     fetchRfmSegments(p).catch(() => []),
@@ -57,6 +59,7 @@ export default function CustomersPage() {
                 setData({ customers, rfm });
             } catch (e) {
                 console.error("Failed to fetch customer data", e);
+                setLoadError("Failed to load customer data. Please try refreshing.");
             } finally {
                 setLoading(false);
             }
@@ -154,6 +157,9 @@ export default function CustomersPage() {
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            {loadError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">{loadError}</div>
+            )}
             <div>
                 <h2 className="text-2xl font-bold text-app-fg">Customer Intelligence</h2>
                 <p className="text-app-fg-muted mt-1">RFM segmentation and customer analysis.</p>

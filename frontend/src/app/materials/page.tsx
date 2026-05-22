@@ -15,6 +15,7 @@ export default function MaterialsPage() {
     const [revenueChartView, setRevenueChartView] = useState<"treemap" | "bar">("treemap");
     const [data, setData] = useState<any>({ performance: [], pareto: [] });
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -33,6 +34,7 @@ export default function MaterialsPage() {
             };
 
             try {
+                setLoadError(null);
                 const [performance, pareto] = await Promise.all([
                     fetchMaterialPerformance(p).catch(() => []),
                     fetchParetoData(p).catch(() => []),
@@ -40,6 +42,7 @@ export default function MaterialsPage() {
                 setData({ performance, pareto });
             } catch (e) {
                 console.error("Failed to fetch material data", e);
+                setLoadError("Failed to load material data. Please try refreshing.");
             } finally {
                 setLoading(false);
             }
@@ -70,6 +73,9 @@ export default function MaterialsPage() {
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            {loadError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">{loadError}</div>
+            )}
             <div>
                 <h2 className="text-2xl font-bold text-app-fg">Material Performance</h2>
                 <p className="text-app-fg-muted mt-1">Pareto analysis and category breakdown.</p>

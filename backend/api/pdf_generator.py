@@ -214,10 +214,19 @@ def _pdf_draw_fy_material_group_table(
         fy0, fy1 = fy_compare[0], fy_compare[1]
         fy_totals = {fy: float(df_mix.loc[df_mix["_FY"] == fy, "AMOUNT"].sum()) for fy in (fy0, fy1)}
         mix = df_mix.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(max_categories)
-        w_num, w_cat, w_r1, w_s1, w_r2, w_s2, w_y = 7, 60, 27, 15, 27, 15, 20
+        w_num, w_s1, w_s2, w_y = 7, 15, 15, 20
         row_h = 7
         hdr_h = 9
         footer_block_h = 21.0  # subtotal + total rows (3 x 7mm)
+        # Auto-size category column from actual content; clamp to [45, 70] mm
+        pdf.set_font("Arial", "B", 7)
+        _cat2 = (
+            [str(c)[:48] for c in mix.index]
+            + [f"Subtotal (top {max_categories} categories)", "Total (FY revenue, all categories)", "Product Category"]
+        )
+        w_cat = min(70, max(45, max(pdf.get_string_width(t) for t in _cat2) + 5))
+        rem2 = 187 - w_num - w_cat - w_s1 - w_s2 - w_y  # remaining for 2 rev columns
+        w_r1 = w_r2 = max(22, rem2 / 2)
 
         def fy2_header() -> None:
             pdf.set_font("Arial", "B", 7)
@@ -293,10 +302,16 @@ def _pdf_draw_fy_material_group_table(
     fy_totals = {fy: float(df_mix.loc[df_mix["_FY"] == fy, "AMOUNT"].sum()) for fy in fy_compare}
     mix = df_mix.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(max_categories)
     w_num = 7
-    w_cat = 54
     w_yoy = 26
     nfy = len(fy_compare)
-    rem = 187 - w_num - w_cat - w_yoy  # 100mm for revenue columns
+    # Auto-size category column from actual content; clamp to [40, 65] mm
+    pdf.set_font("Arial", "B", 7)
+    _cat_candidates = (
+        [str(c)[:48] for c in mix.index]
+        + [f"Subtotal (top {max_categories} categories)", "Total (FY revenue, all categories)", "Product Category"]
+    )
+    w_cat = min(65, max(40, max(pdf.get_string_width(t) for t in _cat_candidates) + 5))
+    rem = 187 - w_num - w_cat - w_yoy
     w_rev_each = max(20, rem / max(nfy, 1))
     row_h = 7
     hdr_h = 9

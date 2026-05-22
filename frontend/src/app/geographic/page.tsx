@@ -19,6 +19,7 @@ export default function GeographicPage() {
     const { dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems } = useFilter();
     const [data, setData] = useState<any>({ states: [], cities: [] });
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [drilldownState, setDrilldownState] = useState<string | null>(null);
     const [drilldownCities, setDrilldownCities] = useState<any[]>([]);
     const [drilldownLoading, setDrilldownLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function GeographicPage() {
         async function loadData() {
             setLoading(true);
             try {
+                setLoadError(null);
                 const [states, cities] = await Promise.all([
                     fetchStateData(baseParams).catch(() => []),
                     fetchCityData(baseParams).catch(() => []),
@@ -48,6 +50,7 @@ export default function GeographicPage() {
                 if (!cancelled) setData({ states, cities });
             } catch (e) {
                 console.error("Failed to fetch geographic data", e);
+                if (!cancelled) setLoadError("Failed to load geographic data. Please try refreshing.");
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -96,6 +99,9 @@ export default function GeographicPage() {
 
     return (
         <div className={`space-y-8 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            {loadError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">{loadError}</div>
+            )}
             <div>
                 <h2 className="text-2xl font-bold text-app-fg">Geographic Intelligence</h2>
                 <p className="text-app-fg-muted mt-1">Interactive map with state and city level revenue analysis.</p>

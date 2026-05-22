@@ -846,7 +846,8 @@ def download_pdf_report(
             fy_parts = []
             if fiscal_years:
                 fy_parts = [p.strip() for p in str(fiscal_years).split(",") if p.strip()]
-                analysis_period = fy_parts[0] if len(fy_parts) == 1 else (fiscal_years if isinstance(fiscal_years, str) else "YTD")
+                fy_parts_sorted = sorted(fy_parts)
+                analysis_period = fy_parts_sorted[0] if len(fy_parts_sorted) == 1 else ", ".join(fy_parts_sorted)
             elif start_date and end_date:
                 analysis_period = f"{start_date} to {end_date}"
             else:

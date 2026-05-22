@@ -292,26 +292,26 @@ def _pdf_draw_fy_material_group_table(
     # 3+ fiscal years: revenue per FY + YoY (last vs previous)
     fy_totals = {fy: float(df_mix.loc[df_mix["_FY"] == fy, "AMOUNT"].sum()) for fy in fy_compare}
     mix = df_mix.groupby(grp_col)["AMOUNT"].sum().sort_values(ascending=False).head(max_categories)
-    w_num = 6
-    w_yoy = 18
+    w_num = 7
+    w_cat = 54
+    w_yoy = 26
     nfy = len(fy_compare)
-    w_cat = 38
-    rem = 187 - w_num - w_cat - w_yoy
-    w_rev_each = max(18, rem / max(nfy, 1))
+    rem = 187 - w_num - w_cat - w_yoy  # 100mm for revenue columns
+    w_rev_each = max(20, rem / max(nfy, 1))
     row_h = 7
     hdr_h = 9
     footer_block_h = 21.0
     f_prev, f_last = fy_compare[-2], fy_compare[-1]
 
     def fyn_header() -> None:
-        pdf.set_font("Arial", "B", 6)
+        pdf.set_font("Arial", "B", 7)
         pdf.set_fill_color(218, 165, 32)
         pdf.set_text_color(255, 255, 255)
         pdf.cell(w_num, hdr_h, "#", 1, 0, "C", True)
         pdf.cell(w_cat, hdr_h, "Product Category", 1, 0, "L", True)
         for fy in fy_compare:
             pdf.cell(w_rev_each, hdr_h, _pdf_text(f"{fy} Rev")[:18], 1, 0, "R", True)
-        pdf.cell(w_yoy, hdr_h, "YoY (last vs prev)", 1, 1, "R", True)
+        pdf.cell(w_yoy, hdr_h, "YoY %", 1, 1, "R", True)
         pdf.set_font("Arial", "", 7)
         pdf.set_text_color(0, 0, 0)
 
@@ -324,7 +324,7 @@ def _pdf_draw_fy_material_group_table(
             row_fill = i % 2 == 0
             pdf.set_fill_color(248, 249, 250) if row_fill else pdf.set_fill_color(255, 255, 255)
             pdf.cell(w_num, row_h, str(i), 1, 0, "C", row_fill)
-            pdf.cell(w_cat, row_h, _pdf_text(str(cat))[:36], 1, 0, "L", row_fill)
+            pdf.cell(w_cat, row_h, _pdf_text(str(cat))[:48], 1, 0, "L", row_fill)
             rv_prev = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == f_prev), "AMOUNT"].sum())
             rv_last = float(df_mix.loc[(df_mix[grp_col] == cat) & (df_mix["_FY"] == f_last), "AMOUNT"].sum())
             for fy in fy_compare:

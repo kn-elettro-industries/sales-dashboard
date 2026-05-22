@@ -1152,17 +1152,42 @@ _MIN_CELL_W = 5.0
 class PDF(FPDF):
 
     def cell(self, *args, **kwargs):
-        """Override cell() to sanitize text for fpdf2 compatibility."""
-        # Support legacy 'txt' kwarg used in older fpdf versions
+        """Override cell() to sanitize text and remap old fpdf2 positional API.
+
+        Old API (fpdf2 < 2.7.9): cell(w, h, txt, border, ln, align, fill)
+        New API (fpdf2 >= 2.7.9): cell(w, h, text, border, new_x, new_y, align, fill)
+
+        ln mapping: 0 → RIGHT/TOP, 1 → LMARGIN/NEXT, 2 → RIGHT/NEXT
+        """
+        args = list(args)
+
+        # Sanitize text (3rd positional arg)
         if "txt" in kwargs:
             kwargs["txt"] = _pdf_text(kwargs["txt"])
         elif "text" in kwargs:
             kwargs["text"] = _pdf_text(kwargs["text"])
         elif len(args) >= 3:
-            # text is the 3rd positional argument (after w, h)
-            args = list(args)
-            args[2] = _pdf_text(args[2])
-            args = tuple(args)
+            args[2] = _pdf_text(str(args[2]))
+
+        def _ln_to_xy(ln):
+            if ln == 1:
+                return "LMARGIN", "NEXT"
+            if ln == 2:
+                return "RIGHT", "NEXT"
+            return "RIGHT", "TOP"
+
+        # Old-style call: cell(w, h, text, border, ln:int, align:str, fill?)
+        # New-style has new_x (str/XPos) and new_y (str/YPos) at positions 4-5.
+        # Detect old API when pos 4 is int and pos 5 is align string.
+        if len(args) >= 6 and isinstance(args[4], int) and isinstance(args[5], str) and args[5] in ("L", "C", "R", ""):
+            old_ln, old_align = args[4], args[5]
+            old_fill = bool(args[6]) if len(args) >= 7 else False
+            new_x, new_y = _ln_to_xy(old_ln)
+            args = args[:4] + [new_x, new_y, old_align, old_fill] + list(args[7:])
+        elif len(args) == 5 and isinstance(args[4], int):
+            new_x, new_y = _ln_to_xy(args[4])
+            args = args[:4] + [new_x, new_y]
+
         return super().cell(*args, **kwargs)
 
     def _truncate_text_to_fit(self, text: str, max_w: float) -> str:

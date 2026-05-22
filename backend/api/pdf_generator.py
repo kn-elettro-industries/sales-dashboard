@@ -371,7 +371,7 @@ def _pdf_draw_fy_material_group_table(
             den = fy_totals.get(fy, 0)
             pct = (sub_by_fy[fy] / den * 100.0) if den > 0 else 0.0
             cap_parts.append(f"{fy}: subtotal = {pct:.1f}% of FY total")
-        pdf.multi_cell(0, 3.5, _pdf_text(" | ".join(cap_parts)), 0, 1)
+        pdf.multi_cell(0, 3.5, _pdf_text(" | ".join(cap_parts)), 0, "L")
         pdf.set_text_color(0, 0, 0)
     else:
         pdf.set_font("Arial", "", 9)

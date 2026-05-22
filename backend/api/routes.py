@@ -625,7 +625,7 @@ def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[p
 async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form("default_elettro")):
     try:
         content = await file.read()
-        if file.filename.endswith('.csv'):
+        if file.filename and file.filename.endswith('.csv'):
             df = pd.read_csv(io.BytesIO(content))
         else:
             df = pd.read_excel(io.BytesIO(content))

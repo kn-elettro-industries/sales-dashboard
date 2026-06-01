@@ -253,6 +253,26 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
     except Exception as e:
         logging.warning("apply_customer_overrides: %s", e)
 
+    # Enrich STATE/CITY from persisted customer master for rows where it is missing.
+    # This runs at query time so a page refresh after uploading the master is enough —
+    # no need to re-upload historical sales data.
+    try:
+        if "CUSTOMER_NAME" in df.columns:
+            master = load_customer_master(tenant_id)
+            if master is not None and not master.empty:
+                master_cols = [c for c in ["CUSTOMER_NAME", "STATE", "CITY"] if c in master.columns]
+                if len(master_cols) >= 2:
+                    merged = df.merge(master[master_cols], on="CUSTOMER_NAME", how="left", suffixes=("", "_m"))
+                    for col in ["STATE", "CITY"]:
+                        mc = f"{col}_m"
+                        if mc in merged.columns:
+                            empty = merged[col].isna() | (merged[col].astype(str).str.strip() == "")
+                            merged.loc[empty, col] = merged.loc[empty, mc]
+                            merged.drop(columns=[mc], inplace=True)
+                    df = merged
+    except Exception as e:
+        logging.warning("query-time customer master enrich: %s", e)
+
     return df
 
 

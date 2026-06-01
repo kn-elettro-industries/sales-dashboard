@@ -530,6 +530,12 @@ def _merge_customer_master(df: pd.DataFrame, tenant_id: str) -> pd.DataFrame:
     """Enrich sales data with STATE/CITY from the customer master if available."""
     master = _customer_masters.get(tenant_id)
     if master is None or master.empty:
+        # In-memory dict is empty (server restarted) — load from DB
+        from .db import load_customer_master
+        master = load_customer_master(tenant_id)
+        if master is not None and not master.empty:
+            _customer_masters[tenant_id] = master  # warm the cache
+    if master is None or master.empty:
         return df
     if "CUSTOMER_NAME" not in df.columns or "CUSTOMER_NAME" not in master.columns:
         return df
@@ -573,6 +579,9 @@ async def upload_customer_master(file: UploadFile = File(...), tenant_id: str = 
             master = pd.read_excel(io.BytesIO(content))
         master = standardize(master)
         _customer_masters[tenant_id] = master
+        # Persist to DB so it survives server restarts
+        from .db import save_customer_master
+        save_customer_master(tenant_id, master)
         cols = list(master.columns)
         return {"filename": file.filename, "rows": len(master), "columns": cols, "tenant": tenant_id}
     except Exception as e:

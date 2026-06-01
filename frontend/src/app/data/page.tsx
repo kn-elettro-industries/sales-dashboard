@@ -66,7 +66,7 @@ export default function DataUploadPage() {
                     method: "POST",
                     body: formData,
                 });
-                const result = await response.json();
+                const result = await response.json().catch(() => ({}));
                 if (response.ok) {
                     totalRows += result.rows_inserted || 0;
                     totalDroppedDates += Number(result.rows_dropped_invalid_date) || 0;

@@ -256,6 +256,33 @@ def get_tenant_data(tenant_id: str = "default_elettro", start_date: Optional[str
     return df
 
 
+def save_customer_master(tenant_id: str, df: pd.DataFrame) -> None:
+    """Persist customer master to DB so it survives server restarts."""
+    eng = get_engine()
+    if eng is None or df is None or df.empty:
+        return
+    try:
+        save_df = df.copy()
+        save_df["tenant_id"] = tenant_id
+        with eng.begin() as conn:
+            conn.execute(text("CREATE TABLE IF NOT EXISTS customer_master (tenant_id TEXT, \"CUSTOMER_NAME\" TEXT, \"STATE\" TEXT, \"CITY\" TEXT)"))
+            conn.execute(text("DELETE FROM customer_master WHERE tenant_id = :tid"), {"tid": tenant_id})
+        save_df.to_sql("customer_master", eng, if_exists="append", index=False)
+    except Exception as e:
+        logging.error("save_customer_master: %s", e)
+
+
+def load_customer_master(tenant_id: str) -> pd.DataFrame:
+    """Load customer master from DB (fallback when in-memory dict is empty after restart)."""
+    eng = get_engine()
+    if eng is None:
+        return pd.DataFrame()
+    try:
+        return pd.read_sql(text("SELECT * FROM customer_master WHERE tenant_id = :tid"), eng, params={"tid": tenant_id})
+    except Exception:
+        return pd.DataFrame()
+
+
 def _normalize_invoice_no_key(val) -> str:
     """Stable string for matching DB INVOICE_NO (handles Excel 12345.0 vs 12345)."""
     if val is None:

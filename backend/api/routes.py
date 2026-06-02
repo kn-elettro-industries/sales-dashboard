@@ -1762,6 +1762,42 @@ def get_pareto_data(tenant_id: str = "default_elettro", start_date: Optional[str
     pareto["Class"] = pareto["Cumulative"].apply(lambda x: "A" if x <= 80 else ("B" if x <= 95 else "C"))
     return serialize_df(pareto)
 
+@router.get("/materials/items")
+def get_material_items(
+    tenant_id: str = "default_elettro",
+    material_group: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    states: Optional[str] = None,
+    cities: Optional[str] = None,
+    customers: Optional[str] = None,
+    fiscal_years: Optional[str] = None,
+    months: Optional[str] = None,
+    items: Optional[str] = None,
+    limit: int = 25,
+):
+    """Return top items within a specific material group for treemap drilldown."""
+    df = get_tenant_data(tenant_id, start_date, end_date)
+    df = apply_filters(df, states, cities, customers, material_group, fiscal_years, months, items)
+    if df.empty or "ITEMNAME" not in df.columns:
+        return []
+    grp_col = _material_group_column(df)
+    if material_group and grp_col:
+        mg = str(material_group).strip()
+        df = df[df[grp_col].astype(str).str.strip().str.lower() == mg.lower()]
+    if df.empty:
+        return []
+    result = (
+        df.groupby("ITEMNAME")
+        .agg(Revenue=("AMOUNT", "sum"), Orders=("INVOICE_NO", "nunique"))
+        .sort_values("Revenue", ascending=False)
+        .head(limit)
+        .reset_index()
+    )
+    total = result["Revenue"].sum()
+    result["Share"] = (result["Revenue"] / total * 100).round(1) if total > 0 else 0
+    return serialize_df(result)
+
 # ─── REPORTS API ───
 
 @router.get("/reports/item-details")

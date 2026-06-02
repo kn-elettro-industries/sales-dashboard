@@ -490,7 +490,7 @@ export function ParetoChart({ data, nameKey, shareKey, cumulativeKey }: {
                     <Tooltip
                         {...CHART_TOOLTIP_BASE}
                         contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 12 }}
-                        formatter={(value: any, name: string) => [`${Number(value).toFixed(1)}%`, name]}
+                        formatter={(value: any, name: string | undefined) => [`${Number(value).toFixed(1)}%`, name ?? ""]}
                         labelFormatter={(label) => String(label).slice(0, 40)}
                     />
                     {/* 80% and 95% threshold lines */}

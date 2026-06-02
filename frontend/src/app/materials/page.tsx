@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { useFilter } from "@/components/FilterContext";
-import { fetchMaterialPerformance, fetchParetoData } from "@/lib/api";
+import { fetchMaterialPerformance, fetchParetoData, fetchMaterialItems } from "@/lib/api";
 import { ModernTreemap, CategoryHorizontalBarChart, ParetoChart } from "@/components/ui/Charts";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable"; // Added this import
-import { Package, Award, Layers } from "lucide-react";
+import { Package, Award, Layers, ChevronLeft, Loader2 } from "lucide-react";
 import { formatAmount } from "@/lib/format";
 
 export default function MaterialsPage() {
@@ -16,6 +16,9 @@ export default function MaterialsPage() {
     const [data, setData] = useState<any>({ performance: [], pareto: [] });
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [drillGroup, setDrillGroup] = useState<string | null>(null);
+    const [drillItems, setDrillItems] = useState<any[]>([]);
+    const [drillLoading, setDrillLoading] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -50,6 +53,28 @@ export default function MaterialsPage() {
 
         loadData();
     }, [dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedMaterialGroups, selectedFiscalYears, selectedMonths, selectedItems]);
+
+    // Fetch items when a treemap tile is clicked
+    useEffect(() => {
+        if (!drillGroup) { setDrillItems([]); return; }
+        let cancelled = false;
+        setDrillLoading(true);
+        const p = {
+            tenant,
+            startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+            endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+            states: selectedStates.length > 0 ? selectedStates.join(',') : undefined,
+            cities: selectedCities.length > 0 ? selectedCities.join(',') : undefined,
+            customers: selectedCustomers.length > 0 ? selectedCustomers.join(',') : undefined,
+            fiscalYears: selectedFiscalYears.length > 0 ? selectedFiscalYears.join(',') : undefined,
+            months: selectedMonths.length > 0 ? selectedMonths.join(',') : undefined,
+            items: selectedItems.length > 0 ? selectedItems.join(',') : undefined,
+        };
+        fetchMaterialItems(drillGroup, p)
+            .then(d => { if (!cancelled) setDrillItems(Array.isArray(d) ? d : []); })
+            .finally(() => { if (!cancelled) setDrillLoading(false); });
+        return () => { cancelled = true; };
+    }, [drillGroup, dateRange, tenant, selectedStates, selectedCities, selectedCustomers, selectedFiscalYears, selectedMonths, selectedItems]);
 
     const validPerf = Array.isArray(data.performance) ? data.performance : [];
     const validPareto = Array.isArray(data.pareto) ? data.pareto : [];
@@ -99,10 +124,49 @@ export default function MaterialsPage() {
                     revenueChartView === "bar" ? (
                         <CategoryHorizontalBarChart data={validPerf.slice(0, 15)} nameKey={Object.keys(validPerf[0] || {}).find(k => !["Revenue", "Orders", "Customers", "AvgPrice", "Share", "CumulativeShare"].includes(k)) || "name"} valueKey="Revenue" />
                     ) : (
-                        <ModernTreemap data={validPerf.slice(0, 15)} nameKey={Object.keys(validPerf[0] || {}).find(k => !["Revenue", "Orders", "Customers", "AvgPrice", "Share", "CumulativeShare"].includes(k)) || "name"} valueKey="Revenue" />
+                        <ModernTreemap
+                            data={validPerf.slice(0, 15)}
+                            nameKey={Object.keys(validPerf[0] || {}).find(k => !["Revenue", "Orders", "Customers", "AvgPrice", "Share", "CumulativeShare"].includes(k)) || "name"}
+                            valueKey="Revenue"
+                            onCellClick={(name) => setDrillGroup(name)}
+                        />
                     )
                 ) : (
                     <div className="h-80 flex items-center justify-center text-app-fg-muted">No data</div>
+                )}
+
+                {/* Treemap drilldown panel */}
+                {drillGroup && (
+                    <div className="mt-6 border-t border-app-border pt-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <button onClick={() => setDrillGroup(null)} className="flex items-center gap-1 text-sm text-app-gold hover:underline">
+                                <ChevronLeft className="h-4 w-4" />Back
+                            </button>
+                            <span className="text-app-fg font-semibold">{drillGroup} — Individual Items</span>
+                        </div>
+                        {drillLoading ? (
+                            <div className="h-32 flex items-center justify-center text-app-fg-muted gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />Loading items...
+                            </div>
+                        ) : drillItems.length > 0 ? (
+                            <DataTable
+                                data={drillItems}
+                                searchable={true}
+                                searchPlaceholder="Search items..."
+                                searchKeys={['ITEMNAME']}
+                                pageSizeOptions={[10, 25]}
+                                defaultPageSize={10}
+                                columns={[
+                                    { header: 'Item', accessorKey: 'ITEMNAME', sortable: true },
+                                    { header: 'Revenue', accessorKey: 'Revenue', sortable: true, align: 'right', cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span> },
+                                    { header: 'Share %', accessorKey: 'Share', sortable: true, align: 'right', cell: (item: any) => <span className="text-app-gold">{item.Share}%</span> },
+                                    { header: 'Orders', accessorKey: 'Orders', sortable: true, align: 'right' },
+                                ]}
+                            />
+                        ) : (
+                            <p className="text-app-fg-muted text-sm">No item-level data for this group.</p>
+                        )}
+                    </div>
                 )}
             </div>
 

@@ -192,6 +192,9 @@ export default function DashboardPage() {
     const goals = data.goals || null;
 
     const validTrend = Array.isArray(data.trend) ? data.trend : [];
+    const revenueSparkline = validTrend.map((t: any) => Number(t.Revenue) || 0);
+    const ordersSparkline = validTrend.map((t: any) => Number(t.Orders) || 0);
+    const customersSparkline = validTrend.map((t: any) => Number(t.Customers) || 0);
     const validMat = Array.isArray(data.materials) ? data.materials : [];
     const validCust = Array.isArray(data.customers) ? data.customers : [];
 
@@ -339,6 +342,7 @@ export default function DashboardPage() {
                     trendUp={comp ? comp.revenue_pct >= 0 : undefined}
                     goalPct={goals?.revenue_achievement_pct}
                     targetLabel={goals?.revenue_target != null ? `Target ${fmt(goals.revenue_target)}` : undefined}
+                    sparklineData={revenueSparkline}
                 />
                 <KpiCard
                     animationDelay={50}
@@ -349,6 +353,7 @@ export default function DashboardPage() {
                     trendUp={comp ? comp.orders_pct >= 0 : undefined}
                     goalPct={goals?.orders_achievement_pct}
                     targetLabel={goals?.orders_target != null ? `Target ${goals.orders_target.toLocaleString()} orders` : undefined}
+                    sparklineData={ordersSparkline}
                 />
                 <KpiCard
                     animationDelay={100}
@@ -357,6 +362,7 @@ export default function DashboardPage() {
                     icon={Users}
                     trend={comp ? `${comp.customers_pct >= 0 ? "+" : ""}${comp.customers_pct}%` : undefined}
                     trendUp={comp ? comp.customers_pct >= 0 : undefined}
+                    sparklineData={customersSparkline}
                 />
                 <KpiCard
                     animationDelay={150}
@@ -365,6 +371,7 @@ export default function DashboardPage() {
                     icon={TrendingUp}
                     trend={comp ? `${comp.average_order_value_pct >= 0 ? "+" : ""}${comp.average_order_value_pct}%` : undefined}
                     trendUp={comp ? comp.average_order_value_pct >= 0 : undefined}
+                    sparklineData={revenueSparkline}
                 />
             </div>
 

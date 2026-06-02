@@ -318,7 +318,9 @@ const CustomizedContent = (props: any) => {
     );
 };
 
-export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKey: string; valueKey: string }) {
+export function ModernTreemap({ data, nameKey, valueKey, onCellClick }: {
+    data: any[]; nameKey: string; valueKey: string; onCellClick?: (name: string) => void;
+}) {
     if (!data || data.length === 0) return <ChartEmpty message="No data available" />;
 
     const total = data.reduce((s, d) => s + (Number(d[valueKey]) || 0), 0);
@@ -326,6 +328,9 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
     return (
         <ChartWrapper className="min-h-[380px]">
             <div className="flex flex-col w-full">
+                {onCellClick && (
+                    <p className="text-xs text-app-fg-muted mb-2">Click a tile to see individual items</p>
+                )}
                 <div className="w-full" style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height={280}>
                         <Treemap
@@ -335,6 +340,11 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                             stroke={TREEMAP_STROKE}
                             fill="var(--app-gold)"
                             content={<CustomizedContent />}
+                            onClick={(node: any) => {
+                                const name = node?.[nameKey] ?? node?.name ?? node?.root?.[nameKey];
+                                if (name && onCellClick) onCellClick(String(name));
+                            }}
+                            style={onCellClick ? { cursor: "pointer" } : undefined}
                         >
                             <Tooltip
                                 {...CHART_TOOLTIP_BASE}
@@ -354,7 +364,11 @@ export function ModernTreemap({ data, nameKey, valueKey }: { data: any[]; nameKe
                         const pct = total > 0 ? (val / total) * 100 : 0;
                         const name = String(entry[nameKey] ?? "").trim();
                         return (
-                            <div key={index} className="flex items-center gap-3 py-1.5 rounded px-2 -mx-2 hover:bg-app-hover transition-colors">
+                            <div
+                                key={index}
+                                className={`flex items-center gap-3 py-1.5 rounded px-2 -mx-2 transition-colors ${onCellClick ? "cursor-pointer hover:bg-app-hover" : "hover:bg-app-hover"}`}
+                                onClick={() => onCellClick && onCellClick(name)}
+                            >
                                 <div className="w-4 h-4 rounded flex-shrink-0 border border-app-border" style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }} />
                                 <span className="text-app-fg text-sm flex-1 min-w-0 break-words" title={name}>
                                     {name}

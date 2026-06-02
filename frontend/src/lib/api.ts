@@ -43,6 +43,7 @@ type FilterParams = {
     items?: string;
     goalRevenue?: number;
     goalOrders?: number;
+    material_group?: string;
 };
 
 function buildQueryString(params: FilterParams = {}) {
@@ -60,6 +61,7 @@ function buildQueryString(params: FilterParams = {}) {
     if (params.items) query.append("items", params.items);
     if (params.goalRevenue != null && params.goalRevenue > 0) query.append("goal_revenue", String(params.goalRevenue));
     if (params.goalOrders != null && params.goalOrders > 0) query.append("goal_orders", String(params.goalOrders));
+    if (params.material_group) query.append("material_group", params.material_group);
 
     const str = query.toString();
     return str ? `?${str}` : "";
@@ -190,6 +192,7 @@ export const fetchCityData = (p?: FilterParams) => apiFetch("/geographic/cities"
 // Material Performance
 export const fetchMaterialPerformance = (p?: FilterParams) => apiFetch("/materials/performance", p).then(d => d || []).catch(() => []);
 export const fetchParetoData = (p?: FilterParams) => apiFetch("/materials/pareto", p).then(d => d || []).catch(() => []);
+export const fetchMaterialItems = (materialGroup: string, p?: FilterParams) => apiFetch("/materials/items", { ...p, material_group: materialGroup }).then(d => d || []).catch(() => []);
 
 // Reports
 export const fetchItemDetails = (p?: FilterParams) => apiFetch("/reports/item-details", p).then(d => d || []).catch(() => []);

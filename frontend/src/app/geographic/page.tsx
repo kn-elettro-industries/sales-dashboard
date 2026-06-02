@@ -188,9 +188,9 @@ export default function GeographicPage() {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Cities */}
                                 <div className="bg-app-card border border-app-border rounded-xl p-6">
-                                    <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4 flex items-center gap-2">
-                                        <Building2 className="h-4 w-4 text-app-gold" />
-                                        Cities in {drilldownState}
+                                    <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4 flex items-center justify-between">
+                                        <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-app-gold" />Cities in {drilldownState}</span>
+                                        {drilldownTableCities.length > 10 && <span className="text-xs font-normal text-app-fg-muted">Showing top 10 by revenue</span>}
                                     </h3>
                                     {drilldownTableCities.length > 0 ? (
                                         <div className="space-y-4">

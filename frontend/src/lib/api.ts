@@ -190,6 +190,7 @@ export const fetchCityData = (p?: FilterParams) => apiFetch("/geographic/cities"
 // Material Performance
 export const fetchMaterialPerformance = (p?: FilterParams) => apiFetch("/materials/performance", p).then(d => d || []).catch(() => []);
 export const fetchParetoData = (p?: FilterParams) => apiFetch("/materials/pareto", p).then(d => d || []).catch(() => []);
+export const fetchMaterialItems = (materialGroup: string, p?: FilterParams) => apiFetch("/materials/items", { ...p, material_group: materialGroup }).then(d => d || []).catch(() => []);
 
 // Reports
 export const fetchItemDetails = (p?: FilterParams) => apiFetch("/reports/item-details", p).then(d => d || []).catch(() => []);

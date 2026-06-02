@@ -77,12 +77,13 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
         // Custom attribution
         L.control.attribution({ prefix: "ELETTRO Intelligence" }).addTo(map);
 
-        // Build revenue lookup
-        const revenueLookup: Record<string, StateData> = {};
+        // Build revenue lookup with rank
+        const revenueLookup: Record<string, StateData & { rank: number }> = {};
         let maxRevenue = 0;
-        states.forEach(s => {
+        const sorted = [...states].sort((a, b) => b.Revenue - a.Revenue);
+        sorted.forEach((s, i) => {
             const key = normalizeStateName(s.STATE);
-            revenueLookup[key] = s;
+            revenueLookup[key] = { ...s, rank: i + 1 };
             if (s.Revenue > maxRevenue) maxRevenue = s.Revenue;
         });
 
@@ -106,6 +107,7 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
                             opacity: 0.8,
                             color: "#FFD70040",
                             fillOpacity: stateData ? 0.75 : 0.15,
+                            transition: "fill-opacity 0.2s ease",
                         };
                     },
                     onEachFeature: (feature, layer) => {
@@ -114,10 +116,12 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
 
                         // Tooltip
                         if (stateData) {
+                            const rankLabel = stateData.rank === 1 ? "🥇 #1" : stateData.rank === 2 ? "🥈 #2" : stateData.rank === 3 ? "🥉 #3" : `#${stateData.rank}`;
                             layer.bindTooltip(
-                                `<div style="font-family: 'Inter', system-ui, sans-serif; min-width: 180px;">
-                                    <div style="font-size: 14px; font-weight: 700; color: var(--app-gold); margin-bottom: 6px; border-bottom: 1px solid var(--app-border); padding-bottom: 6px;">
-                                        ${stateData.STATE}
+                                `<div style="font-family: 'Inter', system-ui, sans-serif; min-width: 190px;">
+                                    <div style="font-size: 14px; font-weight: 700; color: var(--app-gold); margin-bottom: 6px; border-bottom: 1px solid var(--app-border); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>${stateData.STATE}</span>
+                                        <span style="font-size: 12px; color: var(--chart-axis);">${rankLabel}</span>
                                     </div>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 12px;">
                                         <span style="color: var(--chart-axis);">Revenue</span>

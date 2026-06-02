@@ -280,7 +280,7 @@ export default function CustomersPage() {
             <div className="bg-app-card border border-app-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4">RFM Customer Map</h3>
                 {filteredRfm.length > 0 ? (
-                    <ScatterBubbleChart data={filteredRfm} xKey="Recency" yKey="Frequency" zKey="Monetary" nameKey="CUSTOMER_NAME" />
+                    <ScatterBubbleChart data={filteredRfm} xKey="Recency" yKey="Frequency" zKey="Monetary" nameKey="CUSTOMER_NAME" segmentKey="Segment" />
                 ) : (
                     <div className="h-40 flex items-center justify-center text-app-fg-muted">
                         {buyerFocus === "low" ? "No low-purchase segments in this period. Try All customers or widen filters." : "No data"}

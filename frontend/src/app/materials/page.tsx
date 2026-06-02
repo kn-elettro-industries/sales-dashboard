@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { useFilter } from "@/components/FilterContext";
 import { fetchMaterialPerformance, fetchParetoData } from "@/lib/api";
-import { ModernTreemap, CategoryHorizontalBarChart } from "@/components/ui/Charts";
+import { ModernTreemap, CategoryHorizontalBarChart, ParetoChart } from "@/components/ui/Charts";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { DataTable } from "@/components/ui/DataTable"; // Added this import
 import { Package, Award, Layers } from "lucide-react";
@@ -107,6 +107,12 @@ export default function MaterialsPage() {
             </div>
 
             <div className="bg-app-card border border-app-border rounded-xl p-6">
+                {tablePareto.length > 0 && (
+                    <div className="mb-6">
+                        <p className="text-sm text-app-fg-muted mb-2">Pareto curve — bars show individual share, line shows cumulative %</p>
+                        <ParetoChart data={tablePareto} nameKey="MaterialGroup" shareKey="Percentage" cumulativeKey="Cumulative" />
+                    </div>
+                )}
                 <div className="flex items-start justify-between flex-wrap gap-4 border-b border-app-border pb-4 mb-4">
                     <h3 className="text-lg font-semibold text-app-fg">ABC Classification (Pareto)</h3>
                     <div className="flex items-center gap-3 text-xs">

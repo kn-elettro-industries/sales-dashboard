@@ -1,66 +1,59 @@
-# K.N. Elettro — Sales Intelligence Platform
+# KN Elettro — Sales Intelligence Platform
 
-A cloud-deployed sales analytics platform built for Indian manufacturers. Upload invoices, get instant dashboards with GST breakdowns, customer analytics, and revenue forecasting.
+A cloud-deployed sales analytics platform built for KN Elettro Industries. Upload daily invoices, get instant dashboards with geographic intelligence, customer analytics, product mix analysis, and PDF reporting.
 
-## Live URLs
+## Live
 
 | Service | URL |
 |---|---|
-| **Dashboard** | [elettro-dashboard.onrender.com](https://elettro-dashboard.onrender.com) |
-| **API** | [sales-dashboard-wfay.onrender.com](https://sales-dashboard-wfay.onrender.com) |
+| **Dashboard** | [sales-dashboard-eight-xi.vercel.app](https://sales-dashboard-eight-xi.vercel.app) |
+| **Backend API** | Render (auto-deploy on push to `main`) |
 
 ## Architecture
-
-**Current (default):** Next.js dashboard + FastAPI API.
 
 ```
 Browser
    ↓
-Next.js (port 3000)  ←→  FastAPI (port 8000)
-                                ↓
-                       Supabase (PostgreSQL)
+Next.js — Vercel
+   ↓  (proxy /api/*)
+FastAPI — Render
+   ↓
+PostgreSQL (Neon)
 ```
-
-**Legacy (optional):** Streamlit dashboard can run alongside; it uses the same FastAPI backend and DB.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | **Next.js** (primary); Streamlit (legacy, optional) |
-| Backend API | FastAPI + Uvicorn (port 8000) |
-| Database | Supabase (PostgreSQL) |
-| ETL | Pandas + Custom Pipeline (backend upload + legacy script) |
-| Analytics | Prophet, Scikit-learn, Plotly (legacy); Recharts (Next.js) |
-| Hosting | Render.com (Free Tier) |
+| Frontend | Next.js 14, TypeScript, Tailwind CSS v4, Recharts |
+| Backend | FastAPI, Uvicorn, Pandas, SQLAlchemy |
+| Database | PostgreSQL (Neon) |
+| Hosting | Vercel (frontend) + Render (backend) |
+| PDF Reports | fpdf2 |
+| Auth | JWT (bcrypt) |
 
-## Project Structure
+## Features
 
-See **STRUCTURE.md** for the full layout. Summary:
-
-```
-├── frontend/             # Next.js dashboard (current UI)
-├── backend/              # FastAPI API (current backend)
-├── legacy/               # Old Streamlit app (app.py, analytics/, …)
-├── docs/                 # DEPLOYMENT.md, PDF, engineering_journal
-├── assets/               # Logos, CSS
-├── data/                 # Data files (gitignored)
-├── scripts/              # Utility scripts
-├── docker-compose.yml    # Postgres (optional local)
-└── README.md
-```
+- **Executive Dashboard** — KPI cards with sparklines, revenue trend, material group donut, top customers
+- **Sales & Growth** — Monthly/daily trend charts, MoM growth %, monthly breakdown table
+- **Customer Intelligence** — RFM segmentation, scatter bubble chart with quadrant shading, segment colours
+- **Material Performance** — Treemap with drilldown to individual items, Pareto/ABC curve chart
+- **Geographic Intelligence** — Interactive India choropleth map, state → city → customer drilldown
+- **Risk Management** — Revenue concentration, inactive customers, single-order customers
+- **PDF Reports** — Executive summary, distributor strategy, dynamic reports with FY comparison tables
+- **AI Chatbot** — 15-intent rule-based engine with fuzzy customer/product matching
+- **Cloud Data Uploader** — Daily sales upload (CSV/Excel), customer master linking, data quality health score
+- **Industrial Reporting** — Distributor vs target tracking
 
 ## Local Development
-
-**Current stack (Next.js + FastAPI):**
 
 ```bash
 # 1. Backend (port 8000)
 cd backend
 pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
-# 2. Frontend (port 3000) — in another terminal
+# 2. Frontend (port 3000) — separate terminal
 cd frontend
 npm install
 npm run dev
@@ -69,64 +62,45 @@ npm run dev
 - Dashboard: **http://localhost:3000**
 - API docs: **http://localhost:8000/docs**
 
-**Legacy Streamlit app (optional):** runs on port 8501. Use the same FastAPI backend (8000); do not start a second backend.
-
-```bash
-cd legacy
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Or from repo root: `streamlit run legacy/app.py`
-
-### Git commits (optional)
-
-If your editor appends a `Made-with: Cursor` line to commit messages, turn that off in the editor’s Git/commit settings. To strip it automatically for this repo, enable the bundled hook:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-The hook removes that trailer line before the commit is recorded. (History was also rewritten locally to remove past trailers.)
-
-## Auth & Access
-
-**Signup is disabled by default.** Only you (the admin) can create accounts.
-
-### Create the default admin
-```bash
-python scripts/seed_admin.py
-```
-→ Username: `admin`, Password: `admin123`
-
-### Add more users (admin only)
-```bash
-python scripts/seed_admin.py add <username> <password>
-```
-Example: `python scripts/seed_admin.py add sales1 MyP@ss123`
-
-### Open signup (optional)
-Set `SIGNUP_ENABLED=true` in Render environment to allow anyone to sign up at `/signup`.
-
 ## Environment Variables
 
+### Backend (Render)
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | Supabase PostgreSQL connection string (backend + legacy ETL) |
-| `API_URL` | FastAPI base URL (legacy Streamlit, e.g. `http://localhost:8000`) |
-| `NEXT_PUBLIC_API_URL` | Full API base for Next.js (e.g. `http://localhost:8000/api`). Defaults to `http://localhost:8000/api` if unset. |
-| `TENANT_CACHE_MAXSIZE` | (Optional) Max tenants kept in RAM cache; default `10`. See [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md). |
-| `TENANT_CACHE_TTL_SECONDS` | (Optional) Tenant DataFrame cache TTL in seconds; default `14400` (4h). |
-| `EGRESS_MAX_YEARS` | (Optional) Limit DB read to last N years; `0` = load all (default). |
+| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `JWT_SECRET` | Secret key for JWT signing (set a strong value in production) |
+| `TENANT_CACHE_TTL_SECONDS` | Tenant DataFrame cache TTL; default `14400` (4h) |
+| `EGRESS_MAX_YEARS` | Limit DB read to last N years; `0` = load all (default) |
 
-Performance notes: **[docs/OPTIMIZATION.md](docs/OPTIMIZATION.md)** — indexes, tuning, backlog.
+### Frontend (Vercel)
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | FastAPI base URL, e.g. `https://your-backend.onrender.com/api` |
 
-## Deploy
+## Data Upload Workflow
 
-- **Quick path:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Render (backend) + Vercel (frontend).
-- **Full options:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — VPS, Docker, CORS, env vars.
-- Repo root **render.yaml** can be used for a Render Blueprint (backend only).
+1. Go to **Cloud Data Uploader** in the sidebar
+2. Upload **Customer Master** first (columns: `CUSTOMER_NAME`, `STATE`, `CITY`) — saved to DB permanently
+3. Upload daily sales Excel/CSV files — STATE/CITY is auto-enriched from the customer master at query time
+4. Refresh any page — geographic data updates immediately
+
+## Auth
+
+Signup is disabled by default. Create users via:
+
+```bash
+python scripts/seed_admin.py              # creates admin / admin123
+python scripts/seed_admin.py add <user> <password>
+```
+
+Set `SIGNUP_ENABLED=true` in Render env to open public signup.
+
+## Deployment
+
+- **Frontend**: Push to `main` → Vercel auto-deploys
+- **Backend**: Push to `main` → Render auto-deploys
+- See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full setup
 
 ## License
 
-Proprietary — K.N. Elettro Industries
+Proprietary — KN Elettro Industries

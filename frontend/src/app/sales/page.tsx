@@ -98,7 +98,16 @@ export default function SalesPage() {
             <div className="bg-app-card border border-app-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-app-fg border-b border-app-border pb-4 mb-4">Monthly Breakdown</h3>
                 <DataTable
-                    data={Array.isArray(data.monthly) ? data.monthly : []}
+                    data={(() => {
+                        const rows = Array.isArray(data.monthly) ? data.monthly : [];
+                        return rows.map((row: any, i: number) => {
+                            const prev = rows[i - 1];
+                            const growth = prev && prev.Revenue > 0
+                                ? ((row.Revenue - prev.Revenue) / prev.Revenue * 100)
+                                : null;
+                            return { ...row, _growth: growth };
+                        });
+                    })()}
                     pageSizeOptions={[12, 24]}
                     defaultPageSize={12}
                     columns={[
@@ -109,6 +118,17 @@ export default function SalesPage() {
                             sortable: true,
                             align: 'right',
                             cell: (item: any) => <span className="text-app-fg font-semibold">{fmt(item.Revenue)}</span>
+                        },
+                        {
+                            header: 'vs Prev Month',
+                            accessorKey: '_growth',
+                            sortable: true,
+                            align: 'right',
+                            cell: (item: any) => item._growth === null
+                                ? <span className="text-app-fg-muted text-xs">—</span>
+                                : <span className={item._growth >= 0 ? 'text-green-400 font-semibold' : 'text-red-400 font-semibold'}>
+                                    {item._growth >= 0 ? '+' : ''}{item._growth.toFixed(1)}%
+                                  </span>
                         },
                         {
                             header: 'Orders',

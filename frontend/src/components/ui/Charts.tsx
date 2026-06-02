@@ -18,7 +18,8 @@ import {
     ZAxis,
     Treemap,
     BarChart as RechartsBarChart,
-    Bar
+    Bar,
+    LabelList,
 } from "recharts";
 
 // High-contrast segment colors — each slice clearly distinct (donut & treemap)
@@ -58,7 +59,10 @@ function ChartWrapper({ children, className = "min-h-[320px] w-full mt-4" }: { c
 
 function ChartEmpty({ message = "No data to display" }: { message?: string }) {
     return (
-        <div className="flex flex-col items-center justify-center h-[320px] w-full text-app-fg-muted">
+        <div className="flex flex-col items-center justify-center h-[320px] w-full text-app-fg-muted gap-2">
+            <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
             <div className="text-sm">{message}</div>
         </div>
     );
@@ -366,23 +370,20 @@ export function CategoryHorizontalBarChart({ data, nameKey, valueKey, title }: {
                             <span className="text-app-fg text-sm min-w-0 flex-[1_1_35%] max-w-[50%] break-words" title={name}>
                                 {name}
                             </span>
-                            <div className="flex-1 min-w-0 h-7 bg-app-hover rounded overflow-hidden">
+                            <div className="flex-1 min-w-0 h-7 bg-app-hover rounded overflow-hidden relative">
                                 <div
-                                    className="h-full rounded flex items-center justify-end pr-2 transition-all"
+                                    className="h-full rounded transition-all"
                                     style={{
                                         width: `${barW}%`,
                                         minWidth: val > 0 ? "2rem" : 0,
                                         backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length],
                                     }}
-                                >
-                                    {barW > 15 && (
-                                        <span className="text-xs font-semibold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.75)]">
-                                            {formatAmount(val)}
-                                        </span>
-                                    )}
-                                </div>
+                                />
                             </div>
-                            <span className="text-app-gold font-semibold text-sm w-12 text-right flex-shrink-0">
+                            <span className="text-xs font-semibold text-app-fg w-20 text-right flex-shrink-0">
+                                {formatAmount(val)}
+                            </span>
+                            <span className="text-app-gold text-xs w-10 text-right flex-shrink-0">
                                 {pct.toFixed(1)}%
                             </span>
                         </div>
@@ -422,7 +423,9 @@ export function BarChart({ data, xKey, yKey }: { data: any[]; xKey: string; yKey
                         contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 13 }}
                         formatter={(value: any) => formatTooltipAmount(Number(value || 0))}
                     />
-                    <Bar dataKey={yKey} fill="var(--app-gold)" radius={[4, 4, 0, 0]} barSize={40} />
+                    <Bar dataKey={yKey} fill="var(--app-gold)" radius={[4, 4, 0, 0]} barSize={40}>
+                        <LabelList dataKey={yKey} position="top" style={{ fill: "var(--chart-axis)", fontSize: 11 }} formatter={(v: any) => formatAxisTick(Number(v))} />
+                    </Bar>
                 </RechartsBarChart>
             </ResponsiveContainer>
         </ChartWrapper>

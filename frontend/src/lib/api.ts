@@ -43,6 +43,7 @@ type FilterParams = {
     items?: string;
     goalRevenue?: number;
     goalOrders?: number;
+    material_group?: string;
 };
 
 function buildQueryString(params: FilterParams = {}) {
@@ -60,6 +61,7 @@ function buildQueryString(params: FilterParams = {}) {
     if (params.items) query.append("items", params.items);
     if (params.goalRevenue != null && params.goalRevenue > 0) query.append("goal_revenue", String(params.goalRevenue));
     if (params.goalOrders != null && params.goalOrders > 0) query.append("goal_orders", String(params.goalOrders));
+    if (params.material_group) query.append("material_group", params.material_group);
 
     const str = query.toString();
     return str ? `?${str}` : "";

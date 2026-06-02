@@ -20,6 +20,10 @@ import {
     BarChart as RechartsBarChart,
     Bar,
     LabelList,
+    ComposedChart,
+    Line,
+    ReferenceLine,
+    ReferenceArea,
 } from "recharts";
 
 // High-contrast segment colors — each slice clearly distinct (donut & treemap)
@@ -29,6 +33,15 @@ const SEGMENT_COLORS = [
 ];
 // Legacy alias for other charts
 const COLORS = SEGMENT_COLORS;
+
+// RFM segment → colour (exported so customers page can reuse)
+export const RFM_SEGMENT_COLORS: Record<string, string> = {
+    "Champions": "#22c55e",
+    "Loyal":     "#3b82f6",
+    "Potential": "#f59e0b",
+    "At Risk":   "#f97316",
+    "Lost":      "#ef4444",
+};
 
 /** Recharts defaults tooltip *values* to black; itemStyle/labelStyle + globals.css fix contrast on dark UI */
 const CHART_TOOLTIP_BASE = {
@@ -181,18 +194,36 @@ export function InteractiveDonutChart({ data, nameKey, valueKey }: { data: any[]
 }
 
 // 3. Scatter Bubble Chart (3D Data Points for RFM Analysis)
-export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: any[]; xKey: string; yKey: string; zKey: string; nameKey: string }) {
+export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey, segmentKey }: {
+    data: any[]; xKey: string; yKey: string; zKey: string; nameKey: string; segmentKey?: string;
+}) {
     const formatAmt = (val: number) => formatTooltipAmount(val);
     const hasData = Array.isArray(data) && data.length > 0;
     if (!hasData) return <ChartEmpty message="No RFM data to display" />;
 
+    // Compute medians for quadrant reference lines
+    const xVals = data.map(d => Number(d[xKey]) || 0).sort((a, b) => a - b);
+    const yVals = data.map(d => Number(d[yKey]) || 0).sort((a, b) => a - b);
+    const xMid = xVals[Math.floor(xVals.length / 2)] ?? 0;
+    const yMid = yVals[Math.floor(yVals.length / 2)] ?? 0;
+    const xMax = xVals[xVals.length - 1] ?? xMid * 2;
+    const yMax = yVals[yVals.length - 1] ?? yMid * 2;
+
+    const segmentDot = (seg: string) => RFM_SEGMENT_COLORS[seg] ?? "#f4c430";
+
     return (
-        <ChartWrapper className="min-h-[384px] w-full mt-4">
-            <ResponsiveContainer width="100%" height={384}>
+        <ChartWrapper className="min-h-[420px] w-full mt-4">
+            <ResponsiveContainer width="100%" height={400}>
                 <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    {/* Quadrant background shading */}
+                    <ReferenceArea x1={0} x2={xMid} y1={yMid} y2={yMax * 1.1} fill="#22c55e" fillOpacity={0.06} />
+                    <ReferenceArea x1={xMid} x2={xMax * 1.1} y1={yMid} y2={yMax * 1.1} fill="#3b82f6" fillOpacity={0.06} />
+                    <ReferenceArea x1={0} x2={xMid} y1={0} y2={yMid} fill="#f59e0b" fillOpacity={0.06} />
+                    <ReferenceArea x1={xMid} x2={xMax * 1.1} y1={0} y2={yMid} fill="#ef4444" fillOpacity={0.06} />
+
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
-                    <XAxis type="number" dataKey={xKey} name="Recency (Days)" stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)" }} />
-                    <YAxis type="number" dataKey={yKey} name="Frequency" stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)" }} />
+                    <XAxis type="number" dataKey={xKey} name="Recency (Days)" stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)", fontSize: 11 }} label={{ value: "Recency (days since last order) →", position: "insideBottom", offset: -10, fill: "var(--chart-axis)", fontSize: 11 }} />
+                    <YAxis type="number" dataKey={yKey} name="Frequency" stroke="var(--chart-axis)" tick={{ fill: "var(--chart-axis)", fontSize: 11 }} label={{ value: "Frequency (orders) →", angle: -90, position: "insideLeft", fill: "var(--chart-axis)", fontSize: 11 }} />
                     <ZAxis type="number" dataKey={zKey} range={[50, 800]} name="Monetary" />
                     <Tooltip
                         cursor={{ strokeDasharray: "3 3" }}
@@ -203,52 +234,42 @@ export function ScatterBubbleChart({ data, xKey, yKey, zKey, nameKey }: { data: 
                             const row = (raw?.payload ?? raw) as Record<string, unknown> | undefined;
                             if (!row || typeof row !== "object") return null;
                             const customer = String(row[nameKey] ?? "").trim() || "—";
-                            const rec = row[xKey];
-                            const freq = row[yKey];
-                            const mon = row[zKey];
+                            const seg = segmentKey ? String(row[segmentKey] ?? "") : "";
+                            const rec = row[xKey]; const freq = row[yKey]; const mon = row[zKey];
                             const rowStyle = { color: "var(--chart-tooltip-row)" as const, fontSize: 12, margin: "2px 0 0 0" };
                             const labelStyle = { color: "var(--chart-axis)" as const, fontSize: 11, margin: "6px 0 0 0" };
                             return (
-                                <div
-                                    className="recharts-default-tooltip"
-                                    style={{
-                                        ...CHART_TOOLTIP_BASE.contentStyle,
-                                        padding: "10px 12px",
-                                        fontSize: 13,
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            color: "var(--app-gold)",
-                                            fontWeight: 700,
-                                            fontSize: 13,
-                                            marginBottom: 8,
-                                            lineHeight: 1.3,
-                                            wordBreak: "break-word",
-                                        }}
-                                    >
-                                        {customer}
-                                    </div>
+                                <div style={{ ...CHART_TOOLTIP_BASE.contentStyle, padding: "10px 12px", fontSize: 13 }}>
+                                    <div style={{ color: "var(--app-gold)", fontWeight: 700, fontSize: 13, marginBottom: 4, wordBreak: "break-word" }}>{customer}</div>
+                                    {seg && <div style={{ color: segmentDot(seg), fontWeight: 600, fontSize: 11, marginBottom: 8 }}>● {seg}</div>}
                                     <div style={labelStyle}>Recency (days)</div>
                                     <div style={rowStyle}>{rec != null ? Number(rec).toLocaleString("en-IN") : "—"}</div>
                                     <div style={labelStyle}>Frequency</div>
                                     <div style={rowStyle}>{freq != null ? Number(freq).toLocaleString("en-IN") : "—"}</div>
                                     <div style={labelStyle}>Monetary (revenue)</div>
-                                    <div style={{ ...rowStyle, color: "var(--app-gold)", fontWeight: 600 }}>
-                                        {mon != null ? formatAmt(Number(mon)) : "—"}
-                                    </div>
+                                    <div style={{ ...rowStyle, color: "var(--app-gold)", fontWeight: 600 }}>{mon != null ? formatAmt(Number(mon)) : "—"}</div>
                                 </div>
                             );
                         }}
                     />
-                    <Scatter name="Customers" data={data} fill="var(--app-gold)" fillOpacity={0.6}>
-                        {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                    <Scatter name="Customers" data={data} fillOpacity={0.75}>
+                        {data.map((entry, index) => {
+                            const seg = segmentKey ? String(entry[segmentKey] ?? "") : "";
+                            return <Cell key={`cell-${index}`} fill={seg ? (RFM_SEGMENT_COLORS[seg] ?? COLORS[index % COLORS.length]) : COLORS[index % COLORS.length]} />;
+                        })}
                     </Scatter>
                 </ScatterChart>
             </ResponsiveContainer>
-            <p className="text-center text-xs text-app-fg-muted mt-2">X: Recency (Days) | Y: Purchase Frequency | Bubble Size: Monetary Value</p>
+            {/* Segment legend */}
+            <div className="flex flex-wrap justify-center gap-4 mt-2">
+                {Object.entries(RFM_SEGMENT_COLORS).map(([seg, color]) => (
+                    <span key={seg} className="flex items-center gap-1.5 text-xs text-app-fg-muted">
+                        <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: color }} />
+                        {seg}
+                    </span>
+                ))}
+                <span className="text-xs text-app-fg-muted ml-2">· Bubble size = Revenue</span>
+            </div>
         </ChartWrapper>
     );
 }
@@ -428,6 +449,67 @@ export function BarChart({ data, xKey, yKey }: { data: any[]; xKey: string; yKey
                     </Bar>
                 </RechartsBarChart>
             </ResponsiveContainer>
+        </ChartWrapper>
+    );
+}
+
+// Pareto curve — bars (individual share %) + line (cumulative %) + 80/95 reference lines
+export function ParetoChart({ data, nameKey, shareKey, cumulativeKey }: {
+    data: any[]; nameKey: string; shareKey: string; cumulativeKey: string;
+}) {
+    if (!data || data.length === 0) return <ChartEmpty message="No Pareto data" />;
+
+    const classColor = (d: any) =>
+        d.Class === "A" ? "#22c55e" : d.Class === "B" ? "#f59e0b" : "#ef4444";
+
+    return (
+        <ChartWrapper className="min-h-[300px] w-full">
+            <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={data} margin={{ top: 16, right: 40, left: 0, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" vertical={false} />
+                    <XAxis dataKey={nameKey} tick={false} axisLine={false} tickLine={false} />
+                    <YAxis
+                        yAxisId="left"
+                        stroke="var(--chart-axis)"
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => `${v}%`}
+                        domain={[0, "auto"]}
+                    />
+                    <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="var(--chart-axis)"
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => `${v}%`}
+                        domain={[0, 100]}
+                    />
+                    <Tooltip
+                        {...CHART_TOOLTIP_BASE}
+                        contentStyle={{ ...CHART_TOOLTIP_BASE.contentStyle, fontSize: 12 }}
+                        formatter={(value: any, name: string) => [`${Number(value).toFixed(1)}%`, name]}
+                        labelFormatter={(label) => String(label).slice(0, 40)}
+                    />
+                    {/* 80% and 95% threshold lines */}
+                    <ReferenceLine yAxisId="right" y={80} stroke="#22c55e" strokeDasharray="6 3" strokeWidth={1.5}
+                        label={{ value: "80% (A)", position: "right", fill: "#22c55e", fontSize: 10 }} />
+                    <ReferenceLine yAxisId="right" y={95} stroke="#f59e0b" strokeDasharray="6 3" strokeWidth={1.5}
+                        label={{ value: "95% (B)", position: "right", fill: "#f59e0b", fontSize: 10 }} />
+                    <Bar yAxisId="left" dataKey={shareKey} name="Share %" radius={[2, 2, 0, 0]}>
+                        {data.map((entry, i) => <Cell key={i} fill={classColor(entry)} fillOpacity={0.8} />)}
+                    </Bar>
+                    <Line yAxisId="right" type="monotone" dataKey={cumulativeKey} name="Cumulative %" stroke="var(--app-gold)" strokeWidth={2} dot={false} />
+                </ComposedChart>
+            </ResponsiveContainer>
+            <div className="flex justify-center gap-6 mt-1 text-xs text-app-fg-muted">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-green-500" />A — top 80%</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-yellow-500" />B — next 15%</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-red-500" />C — bottom 5%</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-app-gold" />Cumulative %</span>
+            </div>
         </ChartWrapper>
     );
 }

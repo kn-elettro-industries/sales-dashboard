@@ -279,7 +279,7 @@ const TREEMAP_TILE_PADDING = 3;
 const TREEMAP_STROKE = "var(--chart-invert)";
 
 const CustomizedContent = (props: any) => {
-    const { depth, x, y, width, height, index, value, payload, root } = props;
+    const { depth, x, y, width, height, index, value, payload, root, name } = props;
     const nodeVal = Number(value ?? payload?.value ?? payload?.AMOUNT ?? 0);
     const totalVal = Number(root?.value ?? 1);
     const pct = totalVal > 0 ? (nodeVal / totalVal) * 100 : 0;
@@ -287,7 +287,18 @@ const CustomizedContent = (props: any) => {
     const pad = TREEMAP_TILE_PADDING;
     const innerW = Math.max(0, width - pad * 2);
     const innerH = Math.max(0, height - pad * 2);
-    const showPctOnly = innerW > 48 && innerH > 28;
+    const showText = innerW > 48 && innerH > 28;
+    const showName = innerW > 80 && innerH > 52;
+
+    // Shared text style: white fill + thick dark stroke outline = readable on any background
+    const textProps = {
+        fill: "#ffffff",
+        stroke: "rgba(0,0,0,0.75)",
+        strokeWidth: 3,
+        paintOrder: "stroke" as const,
+        fontWeight: 700 as const,
+        textAnchor: "middle" as const,
+    };
 
     return (
         <g>
@@ -300,19 +311,29 @@ const CustomizedContent = (props: any) => {
                 ry={4}
                 style={{ fill, stroke: TREEMAP_STROKE, strokeWidth: 2 }}
             />
-            {showPctOnly && totalVal > 0 && (
-                <text
-                    x={x + width / 2}
-                    y={y + height / 2}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="#fff"
-                    fontSize={14}
-                    fontWeight={700}
-                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
-                >
-                    {pct.toFixed(1)}%
-                </text>
+            {showText && totalVal > 0 && (
+                <>
+                    {showName && name && (
+                        <text
+                            x={x + width / 2}
+                            y={y + height / 2 - 10}
+                            dominantBaseline="middle"
+                            fontSize={11}
+                            {...textProps}
+                        >
+                            {String(name).length > 18 ? String(name).slice(0, 16) + "…" : String(name)}
+                        </text>
+                    )}
+                    <text
+                        x={x + width / 2}
+                        y={showName && name ? y + height / 2 + 8 : y + height / 2}
+                        dominantBaseline="middle"
+                        fontSize={14}
+                        {...textProps}
+                    >
+                        {pct.toFixed(1)}%
+                    </text>
+                </>
             )}
         </g>
     );

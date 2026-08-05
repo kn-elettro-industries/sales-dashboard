@@ -588,7 +588,20 @@ async def upload_customer_master(file: UploadFile = File(...), tenant_id: str = 
         raise HTTPException(status_code=500, detail=f"Failed to process customer master: {str(e)}")
 
 
-def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[pd.DataFrame, int]:
+def _customers_missing_location(df: pd.DataFrame) -> list[str]:
+    """Customer names whose STATE/CITY still resolve to a placeholder or blank after enrichment."""
+    if "CUSTOMER_NAME" not in df.columns:
+        return []
+    state = df["STATE"] if "STATE" in df.columns else pd.Series("", index=df.index)
+    city = df["CITY"] if "CITY" in df.columns else pd.Series("", index=df.index)
+    missing = (
+        state.isna() | (state.astype(str).str.strip() == "") | (state.astype(str).str.strip() == STATE_PLACEHOLDER)
+        | city.isna() | (city.astype(str).str.strip() == "") | (city.astype(str).str.strip() == "City Not Found")
+    )
+    return sorted(df.loc[missing, "CUSTOMER_NAME"].dropna().unique().tolist())
+
+
+def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[pd.DataFrame, int, list[str]]:
     """
     After ``standardize()`` column names: region coalesce, customer master, geo fixes,
     then strict DATE/AMOUNT validation and FY/MONTH derivation.
@@ -600,6 +613,7 @@ def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[p
     df = apply_customer_name_canonical(df)
     df = apply_customer_director_groups(df)
     df = apply_customer_geo_overrides(df)
+    customers_missing_location = _customers_missing_location(df)
     if "DATE" not in df.columns:
         raise HTTPException(
             status_code=400,
@@ -627,7 +641,7 @@ def _ingest_sales_after_standardize(df: pd.DataFrame, tenant_id: str) -> tuple[p
         df["CITY"] = "City Not Found"
     if "STATE" not in df.columns:
         df["STATE"] = STATE_PLACEHOLDER
-    return df, rows_dropped_invalid_date
+    return df, rows_dropped_invalid_date, customers_missing_location
 
 
 @router.post("/upload")
@@ -643,7 +657,7 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
         df = standardize(df)
-        df, rows_dropped_invalid_date = _ingest_sales_after_standardize(df, tenant_id)
+        df, rows_dropped_invalid_date, customers_missing_location = _ingest_sales_after_standardize(df, tenant_id)
 
         df = _apply_material_mappings(df)
         df = _exclude_material_groups(df)
@@ -657,6 +671,7 @@ async def handle_data_upload(file: UploadFile = File(...), tenant_id: str = Form
             "rows_inserted": rows_inserted,
             "rows_dropped_invalid_date": rows_dropped_invalid_date,
             "tenant": tenant_id,
+            "customers_missing_location": customers_missing_location,
         }
 
     except HTTPException:
@@ -690,7 +705,7 @@ async def v1_upload_batch(files: List[UploadFile] = File(...), tenant_id: str = 
             if df.empty:
                 continue
             df = standardize(df)
-            df, rows_dropped_invalid_date = _ingest_sales_after_standardize(df, tenant_id)
+            df, rows_dropped_invalid_date, customers_missing_location = _ingest_sales_after_standardize(df, tenant_id)
             df = _apply_material_mappings(df)
             df = _exclude_material_groups(df)
             df = calculate_taxes(df)
@@ -701,6 +716,7 @@ async def v1_upload_batch(files: List[UploadFile] = File(...), tenant_id: str = 
                 "rows_inserted": rows,
                 "rows_dropped_invalid_date": rows_dropped_invalid_date,
                 "tenant": tenant_id,
+                "customers_missing_location": customers_missing_location,
             }
         except HTTPException:
             raise

@@ -2364,7 +2364,8 @@ def _generate_pdf_report_inner(
             pdf.ln(5)
 
             # If one or more states are selected via filter_state (comma-separated), show a
-            # side-by-side comparison plus per-state monthly breakdown and full customer list.
+            # per-state monthly breakdown and full customer list. The full ranking table above
+            # already covers every selected state, so there's no separate comparison table here.
             _focused_states: list[str] = []
             _fs_raw = None
             if filter_state and str(filter_state).strip() and str(filter_state).strip().lower() != "all":
@@ -2373,51 +2374,6 @@ def _generate_pdf_report_inner(
                 _fs_raw = specific_entity
             if _fs_raw:
                 _focused_states = [s.strip() for s in str(_fs_raw).split(",") if s.strip()]
-
-            if len(_focused_states) >= 2:
-                _pdf_need_space(pdf, 24.0)
-                pdf.set_font("Arial", "B", 12)
-                pdf.set_fill_color(33, 37, 41)
-                pdf.set_text_color(255, 255, 255)
-                pdf.cell(0, 8, "  Selected States Comparison", 0, 1, "L", 1)
-                pdf.set_text_color(0, 0, 0)
-                pdf.ln(2)
-
-                def _cmp_header() -> None:
-                    pdf.set_font("Arial", "B", 9)
-                    pdf.set_fill_color(33, 37, 41)
-                    pdf.set_text_color(255, 255, 255)
-                    pdf.cell(45, 10, "State", 0, 0, "L", 1)
-                    pdf.cell(40, 10, "Revenue", 0, 0, "R", 1)
-                    pdf.cell(20, 10, "Share %", 0, 0, "R", 1)
-                    pdf.cell(25, 10, "Orders", 0, 0, "R", 1)
-                    pdf.cell(25, 10, "Customers", 0, 0, "R", 1)
-                    pdf.cell(30, 10, "AOV", 0, 1, "R", 1)
-                    pdf.set_font("Arial", "", 9)
-                    pdf.set_text_color(0, 0, 0)
-
-                _cmp_header()
-                cmp_i = 0
-                for _st_name in _focused_states:
-                    _match = state_agg[state_agg.index.astype(str).str.strip().str.upper() == _st_name.upper()]
-                    if _match.empty:
-                        continue
-                    _row = _match.iloc[0]
-                    if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
-                        pdf.add_page()
-                        _cmp_header()
-                    cmp_i += 1
-                    fill = cmp_i % 2 == 0
-                    share = (_row["Revenue"] / total_state_rev * 100) if total_state_rev > 0 else 0
-                    aov = (_row["Revenue"] / _row["Orders"]) if _row["Orders"] > 0 else 0
-                    pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-                    pdf.cell(45, 8, _pdf_text(str(_match.index[0])[:24]), 0, 0, "L", fill)
-                    pdf.cell(40, 8, format_currency_pdf(_row["Revenue"]), 0, 0, "R", fill)
-                    pdf.cell(20, 8, f"{share:.1f}%", 0, 0, "R", fill)
-                    pdf.cell(25, 8, str(int(_row["Orders"])), 0, 0, "R", fill)
-                    pdf.cell(25, 8, str(int(_row["Customers"])), 0, 0, "R", fill)
-                    pdf.cell(30, 8, format_currency_pdf(aov), 0, 1, "R", fill)
-                pdf.ln(5)
 
             for _focused_state in _focused_states:
                 if "CUSTOMER_NAME" not in state_df.columns:
@@ -2428,13 +2384,17 @@ def _generate_pdf_report_inner(
 
                 # --- Monthly breakdown within each fiscal year, for this state ---
                 if "FINANCIAL_YEAR" in state_rows.columns and "DATE" in state_rows.columns:
-                    _pdf_need_space(pdf, 24.0)
+                    pdf.add_page()
+                    pdf.set_font("Arial", "B", 14)
+                    pdf.set_text_color(33, 33, 33)
+                    pdf.cell(0, 10, f"State Detail: {_focused_state}", 0, 1, "L")
+                    pdf.ln(3)
                     pdf.set_font("Arial", "B", 12)
                     pdf.set_fill_color(33, 37, 41)
                     pdf.set_text_color(255, 255, 255)
                     pdf.cell(0, 8, f"  Monthly Breakdown (FY-wise) - {_focused_state}", 0, 1, "L", 1)
                     pdf.set_text_color(0, 0, 0)
-                    pdf.ln(2)
+                    pdf.ln(4)
 
                     _mb = state_rows.copy()
                     _mb["_MonthNum"] = pd.to_datetime(_mb["DATE"]).dt.month

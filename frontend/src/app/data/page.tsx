@@ -12,6 +12,7 @@ export default function DataUploadPage() {
     const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
     const [progress, setProgress] = useState({ current: 0, total: 0 });
+    const [customersMissingLocation, setCustomersMissingLocation] = useState<string[]>([]);
     const [health, setHealth] = useState<{ total_rows: number; missing_dates: number; duplicate_invoices: number; negative_amounts: number; score: number; status: string; message: string } | null>(null);
     const [healthLoading, setHealthLoading] = useState(true);
 
@@ -51,9 +52,11 @@ export default function DataUploadPage() {
 
         setStatus("uploading");
         setProgress({ current: 0, total: files.length });
+        setCustomersMissingLocation([]);
         let totalRows = 0;
         let totalDroppedDates = 0;
         let failedFiles: string[] = [];
+        let missingLocation = new Set<string>();
 
         for (let i = 0; i < files.length; i++) {
             setProgress({ current: i + 1, total: files.length });
@@ -70,6 +73,7 @@ export default function DataUploadPage() {
                 if (response.ok) {
                     totalRows += result.rows_inserted || 0;
                     totalDroppedDates += Number(result.rows_dropped_invalid_date) || 0;
+                    (result.customers_missing_location || []).forEach((name: string) => missingLocation.add(name));
                 } else {
                     failedFiles.push(`${files[i].name}: ${result.detail || "failed"}`);
                 }
@@ -77,6 +81,8 @@ export default function DataUploadPage() {
                 failedFiles.push(`${files[i].name}: network error`);
             }
         }
+
+        setCustomersMissingLocation(Array.from(missingLocation).sort());
 
         if (failedFiles.length === 0) {
             setStatus("success");
@@ -285,6 +291,20 @@ export default function DataUploadPage() {
                         <div>
                             <h4 className="text-red-500 font-medium">Upload Failed</h4>
                             <p className="text-sm text-red-400/80 mt-1">{message}</p>
+                        </div>
+                    </div>
+                )}
+
+                {status === "success" && customersMissingLocation.length > 0 && (
+                    <div className="mt-6 p-4 bg-yellow-900/20 border border-yellow-900 rounded-lg flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
+                        <div>
+                            <h4 className="text-yellow-500 font-medium">
+                                {customersMissingLocation.length} customer{customersMissingLocation.length > 1 ? "s" : ""} missing city/state
+                            </h4>
+                            <p className="text-sm text-yellow-400/80 mt-1">
+                                These customer names have no match in the customer master, so their location couldn&apos;t be filled in: {customersMissingLocation.join(", ")}. Add them to the customer master to fix.
+                            </p>
                         </div>
                     </div>
                 )}

@@ -542,7 +542,20 @@ def _merge_customer_master(df: pd.DataFrame, tenant_id: str) -> pd.DataFrame:
     master_cols = [c for c in ["CUSTOMER_NAME", "STATE", "CITY"] if c in master.columns]
     if len(master_cols) < 2:
         return df
-    merged = pd.merge(df, master[master_cols], on="CUSTOMER_NAME", how="left", suffixes=("_raw", "_master"))
+
+    # Join on a normalized (uppercased, whitespace-collapsed) name so differences in case or
+    # stray spaces between the sales upload and the customer master don't break enrichment.
+    def _norm_name(s: pd.Series) -> pd.Series:
+        return s.astype(str).str.strip().str.upper().str.replace(r"\s+", " ", regex=True)
+
+    df = df.copy()
+    df["_CUST_KEY"] = _norm_name(df["CUSTOMER_NAME"])
+    master_key = master[master_cols].copy()
+    master_key["_CUST_KEY"] = _norm_name(master_key["CUSTOMER_NAME"])
+    master_key = master_key.drop(columns=["CUSTOMER_NAME"]).drop_duplicates(subset="_CUST_KEY", keep="first")
+
+    merged = pd.merge(df, master_key, on="_CUST_KEY", how="left", suffixes=("_raw", "_master"))
+    merged.drop(columns=["_CUST_KEY"], inplace=True)
     for col in ["STATE", "CITY"]:
         mc = f"{col}_master"
         rc = f"{col}_raw"

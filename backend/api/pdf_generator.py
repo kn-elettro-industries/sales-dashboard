@@ -1791,10 +1791,14 @@ def _generate_pdf_report_inner(
     if filter_customer and filter_customer != "All" and "CUSTOMER_NAME" in df.columns:
         df = df[df["CUSTOMER_NAME"] == filter_customer]
     
-    if filter_state and filter_state != "All" and "STATE" in df.columns:
-        df = df[df["STATE"] == filter_state]
+    # On the "State Wise" report, Focus State only adds a customer breakdown for that
+    # state (section 9 handles it directly) — the ranking table always covers every state.
+    if filter_state and filter_state != "All" and "STATE" in df.columns and report_type != "State Wise":
+        fs = str(filter_state).strip()
+        df = df[df["STATE"].astype(str).str.strip().str.upper() == fs.upper()]
 
-    if filter_city and filter_city != "All":
+    # Same logic for "City Wise": Focus City only adds a customer breakdown (section 9b).
+    if filter_city and filter_city != "All" and report_type != "City Wise":
         city_col_fc = "CITY" if "CITY" in df.columns else None
         if city_col_fc:
             fc = str(filter_city).strip()

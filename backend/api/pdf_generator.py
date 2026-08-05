@@ -2443,7 +2443,24 @@ def _generate_pdf_report_inner(
                     monthly = _mb.groupby(["FINANCIAL_YEAR", "_FyOrder", "_MonthName"]).agg(
                         Revenue=("AMOUNT", "sum"),
                         Orders=("INVOICE_NO", "nunique"),
-                    ).reset_index().sort_values(["FINANCIAL_YEAR", "_FyOrder"])
+                    ).reset_index()
+
+                    # Zero-pad so every fiscal year shows all 12 months (Apr-Mar), even ones
+                    # with no sales, instead of silently skipping them.
+                    _fy_months = [
+                        (0, "Apr"), (1, "May"), (2, "Jun"), (3, "Jul"), (4, "Aug"), (5, "Sep"),
+                        (6, "Oct"), (7, "Nov"), (8, "Dec"), (9, "Jan"), (10, "Feb"), (11, "Mar"),
+                    ]
+                    _full_index = pd.MultiIndex.from_tuples(
+                        [(fy, order, name) for fy in monthly["FINANCIAL_YEAR"].unique() for order, name in _fy_months],
+                        names=["FINANCIAL_YEAR", "_FyOrder", "_MonthName"],
+                    )
+                    monthly = (
+                        monthly.set_index(["FINANCIAL_YEAR", "_FyOrder", "_MonthName"])
+                        .reindex(_full_index, fill_value=0)
+                        .reset_index()
+                        .sort_values(["FINANCIAL_YEAR", "_FyOrder"])
+                    )
 
                     def _mb_header() -> None:
                         pdf.set_font("Arial", "B", 9)

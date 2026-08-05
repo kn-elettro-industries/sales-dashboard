@@ -191,6 +191,69 @@ def _pdf_draw_aggregate_material_mix_table(
         pdf.cell(185, 7, "Insufficient data for product mix analysis.", 1, 1, "L", False)
 
 
+def _render_customers_fit_one_page(pdf: FPDF, cust_series: pd.Series) -> None:
+    """Render every (customer -> revenue) row in cust_series so the whole list fits within the
+    remaining space on the current page, splitting into side-by-side columns and shrinking row
+    height/font as needed. Caller should pdf.add_page() first so a full page is available."""
+    n = len(cust_series)
+    if n == 0:
+        return
+    available_h = pdf.h - pdf.b_margin - pdf.get_y()
+    header_h = 8.0
+    min_row_h = 2.6
+    max_row_h = 7.0
+    page_w = pdf.w - pdf.l_margin - pdf.r_margin
+
+    columns = 4
+    row_h = min_row_h
+    rows_per_col = -(-n // columns)
+    for cols in (1, 2, 3, 4):
+        candidate_rows_per_col = -(-n // cols)
+        candidate_row_h = (available_h - header_h) / max(candidate_rows_per_col, 1)
+        if candidate_row_h >= min_row_h:
+            columns = cols
+            rows_per_col = candidate_rows_per_col
+            row_h = min(max_row_h, candidate_row_h)
+            break
+
+    font_size = max(5.0, min(9.0, row_h * 1.5))
+    col_w = page_w / columns
+    name_w = col_w * 0.68
+    amt_w = col_w - name_w
+    start_y = pdf.get_y()
+    start_x = pdf.l_margin
+    max_chars = max(6, int(name_w / (font_size * 0.19)))
+
+    items = list(cust_series.items())
+    for c in range(columns):
+        col_items = items[c * rows_per_col: (c + 1) * rows_per_col]
+        if not col_items:
+            continue
+        x = start_x + c * col_w
+        pdf.set_xy(x, start_y)
+        pdf.set_font("Arial", "B", max(6.0, font_size))
+        pdf.set_fill_color(33, 37, 41)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(name_w, header_h, "Customer", 0, 0, "L", 1)
+        pdf.set_xy(x + name_w, start_y)
+        pdf.cell(amt_w, header_h, "Revenue", 0, 0, "R", 1)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", "", font_size)
+        y = start_y + header_h
+        for i, (cust, amt) in enumerate(col_items):
+            pdf.set_xy(x, y)
+            fill = i % 2 == 0
+            pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+            pdf.cell(name_w, row_h, _pdf_text(str(cust)[:max_chars]), 0, 0, "L", fill)
+            pdf.set_xy(x + name_w, y)
+            pdf.cell(amt_w, row_h, format_currency_pdf(amt), 0, 0, "R", fill)
+            y += row_h
+
+    # The list intentionally consumes the rest of the page — push the cursor to the bottom
+    # margin so subsequent sections correctly detect the page is full and start a new one.
+    pdf.set_y(min(pdf.h - pdf.b_margin, start_y + header_h + rows_per_col * row_h))
+
+
 def _pdf_draw_fy_material_group_table(
     pdf: FPDF,
     df_work: pd.DataFrame,
@@ -2300,47 +2363,126 @@ def _generate_pdf_report_inner(
                 pdf.cell(25, 8, str(int(row["Customers"])), 0, 1, "R", fill)
             pdf.ln(5)
 
-            # If a specific state is selected via filter_state, show top customers for it
-            _focused_state = None
+            # If one or more states are selected via filter_state (comma-separated), show a
+            # side-by-side comparison plus per-state monthly breakdown and full customer list.
+            _focused_states: list[str] = []
+            _fs_raw = None
             if filter_state and str(filter_state).strip() and str(filter_state).strip().lower() != "all":
-                _focused_state = str(filter_state).strip()
+                _fs_raw = filter_state
             elif specific_entity and str(specific_entity).strip() and str(specific_entity).strip().lower() != "all":
-                _focused_state = str(specific_entity).strip()
+                _fs_raw = specific_entity
+            if _fs_raw:
+                _focused_states = [s.strip() for s in str(_fs_raw).split(",") if s.strip()]
 
-            if _focused_state and "CUSTOMER_NAME" in state_df.columns:
+            if len(_focused_states) >= 2:
+                _pdf_need_space(pdf, 24.0)
+                pdf.set_font("Arial", "B", 12)
+                pdf.set_fill_color(33, 37, 41)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(0, 8, "  Selected States Comparison", 0, 1, "L", 1)
+                pdf.set_text_color(0, 0, 0)
+                pdf.ln(2)
+
+                def _cmp_header() -> None:
+                    pdf.set_font("Arial", "B", 9)
+                    pdf.set_fill_color(33, 37, 41)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(45, 10, "State", 0, 0, "L", 1)
+                    pdf.cell(40, 10, "Revenue", 0, 0, "R", 1)
+                    pdf.cell(20, 10, "Share %", 0, 0, "R", 1)
+                    pdf.cell(25, 10, "Orders", 0, 0, "R", 1)
+                    pdf.cell(25, 10, "Customers", 0, 0, "R", 1)
+                    pdf.cell(30, 10, "AOV", 0, 1, "R", 1)
+                    pdf.set_font("Arial", "", 9)
+                    pdf.set_text_color(0, 0, 0)
+
+                _cmp_header()
+                cmp_i = 0
+                for _st_name in _focused_states:
+                    _match = state_agg[state_agg.index.astype(str).str.strip().str.upper() == _st_name.upper()]
+                    if _match.empty:
+                        continue
+                    _row = _match.iloc[0]
+                    if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                        pdf.add_page()
+                        _cmp_header()
+                    cmp_i += 1
+                    fill = cmp_i % 2 == 0
+                    share = (_row["Revenue"] / total_state_rev * 100) if total_state_rev > 0 else 0
+                    aov = (_row["Revenue"] / _row["Orders"]) if _row["Orders"] > 0 else 0
+                    pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                    pdf.cell(45, 8, _pdf_text(str(_match.index[0])[:24]), 0, 0, "L", fill)
+                    pdf.cell(40, 8, format_currency_pdf(_row["Revenue"]), 0, 0, "R", fill)
+                    pdf.cell(20, 8, f"{share:.1f}%", 0, 0, "R", fill)
+                    pdf.cell(25, 8, str(int(_row["Orders"])), 0, 0, "R", fill)
+                    pdf.cell(25, 8, str(int(_row["Customers"])), 0, 0, "R", fill)
+                    pdf.cell(30, 8, format_currency_pdf(aov), 0, 1, "R", fill)
+                pdf.ln(5)
+
+            for _focused_state in _focused_states:
+                if "CUSTOMER_NAME" not in state_df.columns:
+                    break
                 state_rows = state_df[state_df["STATE"].astype(str).str.strip().str.upper() == _focused_state.upper()]
-                if not state_rows.empty:
+                if state_rows.empty:
+                    continue
+
+                # --- Monthly breakdown within each fiscal year, for this state ---
+                if "FINANCIAL_YEAR" in state_rows.columns and "DATE" in state_rows.columns:
                     _pdf_need_space(pdf, 24.0)
                     pdf.set_font("Arial", "B", 12)
                     pdf.set_fill_color(33, 37, 41)
                     pdf.set_text_color(255, 255, 255)
-                    pdf.cell(0, 8, f"  Top Customers - {_focused_state}", 0, 1, "L", 1)
+                    pdf.cell(0, 8, f"  Monthly Breakdown (FY-wise) - {_focused_state}", 0, 1, "L", 1)
                     pdf.set_text_color(0, 0, 0)
-                    pdf.set_font("Arial", "", 10)
                     pdf.ln(2)
 
-                    cust_st = state_rows.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False).head(20)
+                    _mb = state_rows.copy()
+                    _mb["_MonthNum"] = pd.to_datetime(_mb["DATE"]).dt.month
+                    _mb["_MonthName"] = pd.to_datetime(_mb["DATE"]).dt.strftime("%b")
+                    _mb["_FyOrder"] = _mb["_MonthNum"].apply(lambda m: m - 4 if m >= 4 else m + 8)
+                    monthly = _mb.groupby(["FINANCIAL_YEAR", "_FyOrder", "_MonthName"]).agg(
+                        Revenue=("AMOUNT", "sum"),
+                        Orders=("INVOICE_NO", "nunique"),
+                    ).reset_index().sort_values(["FINANCIAL_YEAR", "_FyOrder"])
 
-                    def _st_cust_header() -> None:
+                    def _mb_header() -> None:
                         pdf.set_font("Arial", "B", 9)
-                        pdf.set_fill_color(33, 37, 41)
+                        pdf.set_fill_color(80, 80, 80)
                         pdf.set_text_color(255, 255, 255)
-                        pdf.cell(130, 10, "Customer", 0, 0, "L", 1)
-                        pdf.cell(55, 10, "Revenue", 0, 1, "R", 1)
+                        pdf.cell(45, 9, "Fiscal Year", 0, 0, "L", 1)
+                        pdf.cell(45, 9, "Month", 0, 0, "L", 1)
+                        pdf.cell(50, 9, "Revenue", 0, 0, "R", 1)
+                        pdf.cell(45, 9, "Orders", 0, 1, "R", 1)
                         pdf.set_font("Arial", "", 9)
                         pdf.set_text_color(0, 0, 0)
 
-                    _st_cust_header()
-                    sc_i = 0
-                    for cust, amt in cust_st.items():
-                        if pdf.get_y() + 10 > pdf.h - pdf.b_margin:
+                    _mb_header()
+                    mb_i = 0
+                    for _, r in monthly.iterrows():
+                        if pdf.get_y() + 9 > pdf.h - pdf.b_margin:
                             pdf.add_page()
-                            _st_cust_header()
-                        sc_i += 1
-                        fill = sc_i % 2 == 0
+                            _mb_header()
+                        mb_i += 1
+                        fill = mb_i % 2 == 0
                         pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
-                        pdf.cell(130, 8, _pdf_text(str(cust)[:65]), 0, 0, "L", fill)
-                        pdf.cell(55, 8, format_currency_pdf(amt), 0, 1, "R", fill)
+                        pdf.cell(45, 7, str(r["FINANCIAL_YEAR"]), 0, 0, "L", fill)
+                        pdf.cell(45, 7, str(r["_MonthName"]), 0, 0, "L", fill)
+                        pdf.cell(50, 7, format_currency_pdf(r["Revenue"]), 0, 0, "R", fill)
+                        pdf.cell(45, 7, str(int(r["Orders"])), 0, 1, "R", fill)
+                    pdf.ln(5)
+
+                # --- Full customer list for this state, fit on a single page ---
+                cust_st = state_rows.groupby("CUSTOMER_NAME")["AMOUNT"].sum().sort_values(ascending=False)
+                if not cust_st.empty:
+                    pdf.add_page()
+                    pdf.set_font("Arial", "B", 12)
+                    pdf.set_fill_color(33, 37, 41)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(0, 8, f"  All Customers - {_focused_state} ({len(cust_st)} total)", 0, 1, "L", 1)
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.ln(2)
+
+                    _render_customers_fit_one_page(pdf, cust_st)
         else:
             pdf.set_font("Arial", "", 11)
             pdf.set_text_color(100, 100, 100)

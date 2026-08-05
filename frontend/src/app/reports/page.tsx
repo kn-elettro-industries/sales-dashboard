@@ -47,6 +47,9 @@ export default function ReportsPage() {
     const [distributorIncludeCover, setDistributorIncludeCover] = useState(true);
     const [filterCustomer, setFilterCustomer] = useState("All");
     const [filterState, setFilterState] = useState("All");
+    const [focusStates, setFocusStates] = useState<string[]>([]);
+    const [focusStateSearch, setFocusStateSearch] = useState("");
+    const [focusStateOpen, setFocusStateOpen] = useState(false);
     const [filterMaterial, setFilterMaterial] = useState("All");
     const [customerOptions, setCustomerOptions] = useState<string[]>([]);
     const [stateOptions, setStateOptions] = useState<string[]>([]);
@@ -208,8 +211,8 @@ export default function ReportsPage() {
         if (selectedCustomers.length === 1 && filterCustomer === "All") {
             setFilterCustomer(selectedCustomers[0]);
         }
-        if (selectedStates.length === 1 && filterState === "All") {
-            setFilterState(selectedStates[0]);
+        if (selectedStates.length >= 1 && focusStates.length === 0) {
+            setFocusStates(selectedStates);
         }
         if (selectedMaterialGroups.length === 1 && filterMaterial === "All") {
             setFilterMaterial(selectedMaterialGroups[0]);
@@ -219,9 +222,14 @@ export default function ReportsPage() {
         selectedStates,
         selectedMaterialGroups,
         filterCustomer,
-        filterState,
+        focusStates,
         filterMaterial,
     ]);
+
+    // Keep filterState (the comma-joined value sent to the backend) derived from focusStates.
+    useEffect(() => {
+        setFilterState(focusStates.length > 0 ? focusStates.join(",") : "All");
+    }, [focusStates]);
 
     const handleDownload = async () => {
         setDownloading(true);
@@ -636,20 +644,70 @@ export default function ReportsPage() {
                                 {selectedReport === "State Wise" && (
                                     <div className="flex flex-col gap-1 rounded-lg border border-app-border bg-app-bg/60 px-4 py-3">
                                         <label className="text-xs text-app-fg-muted font-medium">
-                                            Focus State <span className="text-app-fg-muted font-normal">(optional — show customer breakdown for one state)</span>
+                                            Focus States <span className="text-app-fg-muted font-normal">(optional — pick one for a customer breakdown, or 2+ for a side-by-side comparison)</span>
                                         </label>
-                                        <select
-                                            value={filterState}
-                                            onChange={(e) => setFilterState(e.target.value)}
-                                            className="w-full bg-app-bg border border-app-border text-app-fg rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
-                                        >
-                                            <option value="All">All States (summary only)</option>
-                                            {stateOptions.map((s) => (
-                                                <option key={s} value={s}>{s}</option>
-                                            ))}
-                                        </select>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFocusStateOpen((v) => !v)}
+                                                className="w-full flex items-center justify-between bg-app-bg border border-app-border text-app-fg rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold text-left"
+                                            >
+                                                <span className="truncate">
+                                                    {focusStates.length === 0
+                                                        ? "All States (summary only)"
+                                                        : focusStates.length === 1
+                                                          ? focusStates[0]
+                                                          : `${focusStates.length} states selected`}
+                                                </span>
+                                                <ChevronDown className="h-3 w-3 text-app-fg-muted shrink-0 ml-2" />
+                                            </button>
+                                            {focusStateOpen && (
+                                                <div className="absolute z-50 mt-1 w-full bg-app-card border border-app-border rounded-xl shadow-xl max-h-72 overflow-hidden">
+                                                    <div className="p-2 border-b border-app-border">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search states..."
+                                                            value={focusStateSearch}
+                                                            onChange={(e) => setFocusStateSearch(e.target.value)}
+                                                            className="w-full bg-app-bg border border-app-border text-app-fg rounded px-2 py-1.5 text-xs outline-none focus:border-app-gold"
+                                                        />
+                                                    </div>
+                                                    {focusStates.length > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFocusStates([])}
+                                                            className="w-full text-left text-xs text-app-gold px-3 py-1.5 hover:bg-app-muted border-b border-app-border"
+                                                        >
+                                                            Clear all
+                                                        </button>
+                                                    )}
+                                                    <div className="max-h-56 overflow-y-auto">
+                                                        {stateOptions
+                                                            .filter((s) => s.toLowerCase().includes(focusStateSearch.toLowerCase()))
+                                                            .map((s) => (
+                                                                <label
+                                                                    key={s}
+                                                                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-app-fg hover:bg-app-muted cursor-pointer"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={focusStates.includes(s)}
+                                                                        onChange={() =>
+                                                                            setFocusStates((prev) =>
+                                                                                prev.includes(s) ? prev.filter((v) => v !== s) : [...prev, s]
+                                                                            )
+                                                                        }
+                                                                        className="accent-app-gold"
+                                                                    />
+                                                                    <span className="truncate">{s}</span>
+                                                                </label>
+                                                            ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                         <p className="text-xs text-app-fg-muted mt-1">
-                                            The report always includes the full state ranking. Selecting a state adds a customer-level breakdown for that state.
+                                            The report always includes the full state ranking. Selecting states adds a monthly breakdown and full customer list for each; selecting 2+ also adds a side-by-side comparison.
                                         </p>
                                     </div>
                                 )}

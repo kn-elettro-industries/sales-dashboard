@@ -1476,12 +1476,25 @@ def get_dashboard_summary(
                 except Exception:
                     pass
 
+        # The revenue-target split ("implied target" = row's share of filtered
+        # revenue x the overall goal) only makes sense when the filtered set still
+        # represents the whole basket the goal applies to. Narrowing by customer
+        # collapses a customer's own share to ~100% (since the filtered revenue
+        # *is* that customer's revenue), which would wrongly imply the entire
+        # company-wide goal belongs to that one customer -- so suppress the split
+        # for a table once its own dimension has been filtered down.
+        customers_filtered = bool(customers and str(customers).strip())
+        material_groups_filtered = bool(
+            material_groups
+            and (str(material_groups).strip() if not isinstance(material_groups, (list, tuple)) else len(material_groups) > 0)
+        )
+
         grp_col = "ITEM_NAME_GROUP" if "ITEM_NAME_GROUP" in df.columns else "MATERIALGROUP"
         material_groups_list = []
         if grp_col in df.columns and amt_col is not None:
             mg = df.groupby(grp_col)[amt_col].sum().sort_values(ascending=False).head(material_limit).reset_index()
             # Split total revenue target by each row's share of filtered sales (same logic for customers & materials)
-            if eff_goal_rev is not None and eff_goal_rev > 0 and revenue > 0:
+            if eff_goal_rev is not None and eff_goal_rev > 0 and revenue > 0 and not material_groups_filtered:
                 mg["SHARE_PCT"] = (mg[amt_col] / revenue * 100).round(2)
                 mg["TARGET_REVENUE"] = (eff_goal_rev * mg[amt_col] / revenue).round(2)
                 _tr = mg["TARGET_REVENUE"]
@@ -1491,7 +1504,7 @@ def get_dashboard_summary(
         top_customers_list = []
         if "CUSTOMER_NAME" in df.columns and amt_col is not None:
             tc = df.groupby("CUSTOMER_NAME")[amt_col].sum().sort_values(ascending=False).head(top_customers_limit).reset_index()
-            if eff_goal_rev is not None and eff_goal_rev > 0 and revenue > 0:
+            if eff_goal_rev is not None and eff_goal_rev > 0 and revenue > 0 and not customers_filtered:
                 tc["SHARE_PCT"] = (tc[amt_col] / revenue * 100).round(2)
                 tc["TARGET_REVENUE"] = (eff_goal_rev * tc[amt_col] / revenue).round(2)
                 _trc = tc["TARGET_REVENUE"]

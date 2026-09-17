@@ -69,12 +69,15 @@ export default function IndiaMap({ states, onStateClick }: IndiaMapProps) {
         // Zoom control top-right
         L.control.zoom({ position: "topright" }).addTo(map);
 
-        // Ultra-dark base layer
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+        // Ultra-dark base layer — standard OSM tiles (no API key required), darkened via CSS filter
+        const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
-        }).addTo(map);
+            className: "map-tiles-dark",
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        });
+        baseLayer.addTo(map);
 
-        // Custom attribution
+        // Custom attribution (OSM attribution required by their tile usage policy, kept alongside ours)
         L.control.attribution({ prefix: "ELETTRO Intelligence" }).addTo(map);
 
         // Build revenue lookup with rank
